@@ -23,7 +23,7 @@ export default function App() {
 
   useEffect(() => {
     const checkFirstLaunch = async () => {
-      // await AsyncStorage.removeItem('alreadyLaunched')
+      await AsyncStorage.removeItem('alreadyLaunched')
       await AsyncStorage.getItem('alreadyLaunched').then(value => {
         console.log(value)
         if (value == null) {

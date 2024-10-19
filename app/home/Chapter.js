@@ -48,14 +48,11 @@ export default function Chapter({ navigate, route }) {
       await createRealtimeConnection(() => {
         const verses = getVersesFromChapter(book, chapter)
         setVerses(verses)
-        if (likesModalVisible) {
-          getLikesOfVerse(book, chapter)
-        }
+        getLikesOfVerse(book, chapter)
       }, () => {
         organizeComments()
-        if (likesModalVisible) {
-          getCommentsOfVerse(book, chapter, verseFocused)
-        }
+        getCommentsOfVerse(book, chapter, verseFocused)
+        getCommentsOfVerse(book, chapter, verseFocused)
       })
     }
 
