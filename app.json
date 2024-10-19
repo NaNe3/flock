@@ -22,6 +22,17 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/nunito-regular.ttf",
+            "./assets/fonts/nunito-bold.ttf"
+          ]
+        }
+      ]
+    ]
   }
 }
