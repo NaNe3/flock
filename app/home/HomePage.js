@@ -15,7 +15,7 @@ const HomeHeaderBar = () => {
         <Text style={[styles.text, { color: "#616161" }]}><Text style={{ color: "#05D5FA"}}>0</Text> GEMS</Text>
       </View>
     </View>
-  );
+  )
 }
 
 const LandingDisplay = ({ navigation }) => {
@@ -57,17 +57,21 @@ export default function HomePage({ navigation }) {
       <HomeHeaderBar />
       <ScrollView 
         showsVerticalScrollIndicator={false} 
-        style={{ width: '100%' }}
+        style={{ width: '100%', backgroundColor: '#eee' }}
         contentContainerStyle={{ alignItems: 'center' }}
       >
         <LandingDisplay navigation={navigation} />
         <View style={styles.homeContent}>
           <WeakContentBox title="DAILY CHALLENGES" />
           <StrongContentBox title="STUDY GROUPS" />
+          <StrongContentBox title="STUDY GROUPS" />
+          <StrongContentBox title="STUDY GROUPS" />
+          <StrongContentBox title="STUDY GROUPS" />
+          <StrongContentBox title="STUDY GROUPS" />
         </View>
       </ScrollView>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -99,6 +103,10 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     alignItems: 'center',
     paddingBottom: 30,
+
+    paddingTop: 600,
+    marginTop: -600,
+
   },
   text: {
     fontSize: 18,

@@ -5,7 +5,6 @@ export default function Commitment({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.commitText}>ARE YOU COMMITED?</Text>
-      <Text style={styles.subtleText}>ITS WORTH IT!</Text>
       <BasicButton
         title="I COMMIT"
         onPress={() => navigation.navigate('Screen5')}
@@ -23,7 +22,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   commitText: {
-    fontSize: 60,
+    fontSize: 50,
     textAlign: 'center',
     fontFamily: 'nunito-bold',
     marginBottom: 50

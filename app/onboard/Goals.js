@@ -9,7 +9,7 @@ export default function Goals({ navigation }) {
   const [goal, setGoal] = useState(null)
   const [disabled, setDisabled] = useState(true)
   
-  const SelectionBox = ({ option }) => {
+  const SelectionBox = ({ option, icon }) => {
     return (
       <TouchableOpacity
         onPress={async () => {
@@ -32,7 +32,7 @@ export default function Goals({ navigation }) {
               ? [styles.optionText, styles.boxSelected]
               : styles.optionText
           }
-          >{option} MINUTES</Text>
+          >{icon}{icon ? " " : ""}{option} MINUTES</Text>
         </View>
       </TouchableOpacity>
     );
@@ -40,16 +40,16 @@ export default function Goals({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>LET'S SET SOME GOALS! ⏱️</Text>
+      <Text style={styles.header}>LET'S SET SOME GOALS!</Text>
       <View style={styles.questionBox}>
-        <Text style={styles.medium}>How much time would you like to study per day?</Text>
-        <SelectionBox option="5" />
-        <SelectionBox option="10" />
-        <SelectionBox option="20" />
-        <SelectionBox option="30" />
+        <Text style={styles.medium}>DAILY STUDY TIME: </Text>
+        <SelectionBox icon="🚶" option="5" />
+        <SelectionBox icon="🏃️" option="10" />
+        <SelectionBox icon="🚴" option="20" />
+        <SelectionBox icon="👑" option="30" />
       </View>
       <BasicButton
-        title="Next"
+        title="NEXT"
         onPress={() => {
           AsyncStorage.setItem('goal', goal)
           navigation.navigate('Screen4')
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
   medium: {
     fontSize: 18,
-    fontFamily: 'nunito-regular',
+    fontFamily: 'nunito-bold',
     marginBottom: 20,
   },
   optionText: {

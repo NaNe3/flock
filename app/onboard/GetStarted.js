@@ -34,7 +34,7 @@ export default function GetStarted({ navigation }) {
           title="LETS STUDY"
           onPress={async () => {
             await getUserInformation(name)
-            navigation.navigate('HomeNavigation')
+            navigation.navigate('AppNavigation')
           }}
           style={{ position: 'absolute', bottom: 60 }}
           disabled={name.length === 0}

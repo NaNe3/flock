@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Dimensions, LogBox } from "react-native";
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/FontAwesome'
 import { getVersesFromChapter } from "../utils/read";
 import { createRealtimeConnection, doesTheUserLikeTheVerse, getAllVersesWithLikesInChapter, getCommentsForVerse, getCommentsFromChapter, getNamesFromListOfIds, postComment } from "../utils/authenticate"
@@ -161,7 +161,7 @@ export default function Chapter({ navigate, route }) {
   }
   
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView 
         style={{ width: '100%', flex: 1 }}
         contentContainerStyle={{ alignItems: 'center' }}
@@ -314,7 +314,7 @@ export default function Chapter({ navigate, route }) {
           </View>
         </TouchableWithoutFeedback>
       </BasicModal>
-    </GestureHandlerRootView>
+    </View>
   )
 }
 

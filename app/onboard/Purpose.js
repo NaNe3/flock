@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Animated, Image } from 'react-native';
 import BasicButton from '../components/BasicButton';
 import { hapticError } from '../utils/haptics';
 
-const TextBlock = ({ children, delay }) => {
-  const fadeAnim = useState(new Animated.Value(0))[0];
+const TextBlock = ({ children, delay, handleAnimationComplete }) => {
+  const fadeAnim = useState(new Animated.Value(0))[0]
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -12,8 +12,10 @@ const TextBlock = ({ children, delay }) => {
       duration: 500,
       delay: delay,
       useNativeDriver: true,
-    }).start();
-  }, [fadeAnim, delay]);
+    }).start(() => {
+      handleAnimationComplete()
+    })
+  }, [fadeAnim, delay])
 
   return (
     <Animated.View style={{ ...styles.textBlock, opacity: fadeAnim }}>
@@ -22,32 +24,65 @@ const TextBlock = ({ children, delay }) => {
   );
 };
 
-const EmptySpace = ({ size }) => {
-  return <View style={{ height: size }} />;
-};
+const highlightText = (text) => {
+  const parts = text.split('"')
+  return (
+    <Text>
+      {parts[0]}
+      <Text style={styles.textHighlight}>"{parts[1]}"</Text>
+      {parts[2]}
+    </Text>
+  )
+}
+
+const EmptySpace = ({ size }) => <View style={{ height: size }} />
 
 export default function Purpose({ navigation }) {
-  const [disabled, setDisabled] = useState(true);
+  const [disabled, setDisabled] = useState(true)
+  const [messagesRendered, setMessagesRendered] = useState(0)
+  const messages = [
+    'HEY! Nice to meet you! My name is Rue',
+    'Well.. My name is actually "רוּחַ ru\'ahh" buuuuuuuut you can call me Rue for short!!!',
+    'I am here to help YOU improve your scripture study and connect with your friends! Think of me as your guardian angel',
+    'I will help you set goals, track your progress, and keep you accountable',
+    'LETS GET STARTED!!! 🎉',
+  ]
+
+  const handleAnimationComplete = () => {
+    setMessagesRendered(prev => {
+      const newCount = prev + 1
+      return newCount
+    });
+  }
+
+  useEffect(() => {
+    if (messagesRendered === messages.length) {
+      setDisabled(false);
+    }
+  }, [messagesRendered])
+
   return (
     <View style={styles.container}>
       <View style={styles.scrollContainer}>
+        <Image 
+          source={require('../../assets/duo.png')} 
+          style={styles.rueIcon} 
+        />
         <ScrollView showsVerticalScrollIndicator={false}>
           <EmptySpace size={80} />
-          <TextBlock delay={0}>
-            <Text style={styles.convoText}>HEY! Nice to meet you! My name is Rue</Text>
-          </TextBlock>
-          <TextBlock delay={1500}>
-            <Text style={styles.convoText}>Well.. My name is actually <Text style={styles.textHighlight}>"רוּחַ ru'ahh"</Text> buuuuuuuut </Text>
-            <Text style={styles.convoText}>you can call me Rue for short!!!</Text>
-          </TextBlock>
-          <TextBlock delay={3000}>
-            <Text style={styles.convoText}>I am here to help YOU improve your scripture study and connect with your friends! Think of me as your guardian angel</Text>
-          </TextBlock>
-          <TextBlock delay={4500}>
-            <Text style={styles.convoText}>I will help you set goals, track your progress, and keep you accountable</Text>
-            <Text></Text>
-            <Text style={styles.convoText}>LETS GET STARTED!!! 🎉</Text>
-          </TextBlock>
+          {
+            messages.map((message, index) => (
+              <TextBlock 
+                key={index} 
+                delay={index * 1500}
+                handleAnimationComplete={handleAnimationComplete}
+              >
+                <Text style={styles.convoText}>
+                  {message.includes('"') ? highlightText(message) : message}
+                </Text>
+              </TextBlock>
+            ))
+          }
           <EmptySpace size={130} />
         </ScrollView>
       </View>
@@ -56,6 +91,7 @@ export default function Purpose({ navigation }) {
         title="NEXT"
         onPress={() => navigation.navigate('Screen3')}
         style={{ position: 'absolute', bottom: 60 }}
+        disabled={disabled}
       />
     </View>
   );
@@ -69,12 +105,21 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    width: '90%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+  },
+  rueIcon: {
+    // THIS IS THE SAME AS THE FIRST EMPTYSPACE SIZE
+    marginTop: 85,
+    marginRight: 20,
+    width: 40,
+    height: 40,
   },
   textBlock: {
-    width: '80%',
     marginBottom: 20,
     padding: 20,
+    display: 'inline',
     backgroundColor: '#f9f9f9',
     borderRadius: 10,
   },
