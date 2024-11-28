@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Text, View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 
 import BasicButton from '../components/BasicButton';
 import { hapticSelect } from '../utils/haptics';
+import { gen } from '../utils/styling/colors';
 
-export default function Goals({ navigation }) {
+export default function Goals({ setCurrentScreen, planData, setPlanData }) {
   const [goal, setGoal] = useState(null)
   const [disabled, setDisabled] = useState(true)
   
@@ -16,7 +16,7 @@ export default function Goals({ navigation }) {
           hapticSelect()
           setGoal(option)
           setDisabled(false)
-          await AsyncStorage.setItem('goal', option.toString())
+          setPlanData({ ...planData, goal: goal })
         }}
         activeOpacity={1}
       >
@@ -41,22 +41,29 @@ export default function Goals({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>LET'S SET SOME GOALS!</Text>
-      <View style={styles.questionBox}>
-        <Text style={styles.medium}>DAILY STUDY TIME: </Text>
-        <SelectionBox icon="🚶" option="5" />
-        <SelectionBox icon="🏃️" option="10" />
-        <SelectionBox icon="🚴" option="20" />
-        <SelectionBox icon="👑" option="30" />
-      </View>
-      <BasicButton
-        title="NEXT"
-        onPress={() => {
-          AsyncStorage.setItem('goal', goal)
-          navigation.navigate('Screen4')
-        }}
-        style={{ position: 'absolute', bottom: 60 }}
-        disabled={disabled}
-      />
+      <ScrollView
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={{ flex: 1, alignItems: 'center' }}
+        style={{ width: '100%' }}
+      >
+        <View style={styles.questionBox}>
+          <Text style={styles.medium}>DAILY STUDY TIME: </Text>
+          <SelectionBox icon="🚶" option="5" />
+          <SelectionBox icon="🏃️" option="10" />
+          <SelectionBox icon="🚴" option="20" />
+          <SelectionBox icon="👑" option="30" />
+        </View>
+        <BasicButton
+          title="NEXT"
+          onPress={() => {
+            setPlanData({ ...planData, goal: goal })
+            setCurrentScreen(prev => prev + 1)
+          }}
+          style={{ position: 'absolute', bottom: 60 }}
+          disabled={disabled}
+        />
+
+      </ScrollView>
     </View>
   );
 }
@@ -85,13 +92,13 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 20,
     borderWidth: 3,
-    borderColor: '#D3D3D3',
+    borderColor: gen.lightGray,
     borderRadius: 10,
     marginBottom: 13,
   },
   boxSelected: {
-    borderColor: "#FFBF00",
-    color: "#FFBF00",
+    borderColor: gen.orange,
+    color: gen.orange,
   },
   medium: {
     fontSize: 18,
@@ -100,7 +107,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
-    color: '#616161',
+    color: gen.darkGray,
     fontFamily: 'nunito-bold',
   }
 })

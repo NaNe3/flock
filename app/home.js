@@ -1,46 +1,35 @@
-import { View, Text, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import HomePage from './home/HomePage';
-import Library from './home/Library';
-import Chapter from './home/Chapter';
-import NavigationBar from './components/NavigationBar';
+import GroupPage from './home/GroupPage';
+import LibraryPage from './home/LibraryPage';
 
-const Stack = createStackNavigator();
+import InteractiveHeaderBar from './components/InteractiveHeaderBar';
+import { View } from 'react-native';
 
-export default function Home({ navigation }) {
+const Stack = createStackNavigator()
+
+export default function Home() {
   return (
-    <>
+    <View style={{ flex: 1 }}>
+      <InteractiveHeaderBar />
       <Stack.Navigator initialRouteName='Home'>
         <Stack.Screen 
           name="Home"
           component={HomePage}
+          options={{ headerShown: false, animationEnabled: false}}
+        />
+        <Stack.Screen 
+          name="GroupPage" 
+          component={GroupPage} 
           options={{ headerShown: false, animationEnabled: false }}
         />
         <Stack.Screen 
-          name="Library" 
-          component={Library} 
+          name="LibraryPage" 
+          component={LibraryPage} 
           options={{ headerShown: false, animationEnabled: false }}
         />
-        <Stack.Screen
-          name='Chapter'
-          component={Chapter}
-          options={{ headerShown: false, animationEnabled: false }}
-        />
-
       </Stack.Navigator>
-    
-      <NavigationBar />
-    </>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    padding: 20,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-  }
-})

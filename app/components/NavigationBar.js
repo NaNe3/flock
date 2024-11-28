@@ -1,12 +1,12 @@
-import { useNavigation } from "@react-navigation/native";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
-import Icon from 'react-native-vector-icons/FontAwesome'
-import { hapticSelect } from "../utils/haptics";
-import { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import Icon from 'react-native-vector-icons/FontAwesome6'
 
-export default function NavigationBar() {
+import { hapticSelect } from "../utils/haptics";
+import { gen } from "../utils/styling/colors";
+
+export default function NavigationBar({ currentRoute, setCurrentRoute }) {
   const navigation = useNavigation()
-  const [currentRoute, setCurrentRoute] = useState('Home')
 
   const changePage = (route) => {
     hapticSelect()
@@ -16,19 +16,26 @@ export default function NavigationBar() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.iconContainer} 
+      <TouchableOpacity
+        style={styles.iconContainer}
         onPress={() => changePage('Home')}
       >
-        <Icon name="home" size={30} color={currentRoute === 'Home' ? "#FFBF00" : "#616161"} />
+        <Icon name="house" size={23} color={currentRoute === 'Home' ? gen.orange : gen.darkGray }/>
         <Text style={[styles.iconText, currentRoute === 'Home' && styles.iconTextSelected]}>HOME</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.iconContainer} 
-        onPress={() => changePage('Library')}
+        onPress={() => changePage('GroupPage')}
       >
-        <Icon name="book" size={30} color={currentRoute === 'Library' || currentRoute === "Chapter" ? "#FFBF00" : "#616161"} />
-        <Text style={[styles.iconText, currentRoute === 'Library' && styles.iconTextSelected]}>LIBRARY</Text>
+        <Icon name="people-pulling" size={23} color={currentRoute === 'GroupPage' ? gen.orange : gen.darkGray} />
+        <Text style={[styles.iconText, currentRoute === 'GroupPage' && styles.iconTextSelected]}>GROUPS</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.iconContainer} 
+        onPress={() => changePage('LibraryPage')}
+      >
+        <Icon name="book" size={23} color={currentRoute === 'LibraryPage' || currentRoute === "Chapter" ? gen.orange : gen.darkGray} />
+        <Text style={[styles.iconText, currentRoute === 'LibraryPage' && styles.iconTextSelected]}>LIBRARY</Text>
       </TouchableOpacity>
     </View>
   )
@@ -51,11 +58,11 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   iconText: {
-    color: '#616161',
+    color: gen.darkGray,
     fontSize: 12,
     fontFamily: 'nunito-bold',
   },
   iconTextSelected: {
-    color: '#FFBF00',
+    color: gen.orange,
   }
 })

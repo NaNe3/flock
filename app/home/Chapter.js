@@ -1,226 +1,191 @@
-import { useEffect, useRef, useState } from "react";
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Dimensions, LogBox } from "react-native";
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/FontAwesome'
+import { useCallback, useEffect, useRef, useState } from "react";
+import { StyleSheet, View, Text, ScrollView, Keyboard, LogBox, Animated, TouchableOpacity } from "react-native";
+import { Gesture, GestureDetector, gestureHandlerRootHOC, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/FontAwesome6'
+
+import SimpleHeader from "../components/SimpleHeader"
+import VerseInteractModal from "./components/VerseInteractModal";
+
 import { getVersesFromChapter } from "../utils/read";
 import { createRealtimeConnection, doesTheUserLikeTheVerse, getAllVersesWithLikesInChapter, getCommentsForVerse, getCommentsFromChapter, getNamesFromListOfIds, postComment } from "../utils/authenticate"
-import { getLocallyStoredVariable } from "../utils/localStorage";
-import { hapticSelect, hapticSuccess } from "../utils/haptics";
-import BasicModal from "../components/BasicModal";
-import BasicTextInput from "../components/BasicTextInput";
-import BasicComment from "../components/BasicComment";
+import { hapticSelect } from "../utils/haptics";
+import { gen } from "../utils/styling/colors";
+import { getAttributeFromObjectInLocalStorage, getUserIdFromLocalStorage } from "../utils/localStorage"
+import { invokeLikeVerse } from "../utils/db-invoke-edge";
+import UserDisplayInteraction from "../components/UserDisplayInteraction";
+import { useFocusEffect } from "@react-navigation/native";
 
-LogBox.ignoreAllLogs();
-
-export default function Chapter({ navigate, route }) {
-  const { book, chapter } = route.params
+function Chapter({ navigation, route }) {
+  const { work, book, chapter } = route.params
   const [verses, setVerses] = useState([])
+  const [userInformation, setUserInformation] = useState({})
+  const [showChapterTitle, setShowChapterTitle] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [verseSelected, setVerseSelected] = useState(null)
+
+  // hooks to track likes
+  const [versesLiking, setVersesLiking] = useState([])
   const [likes, setLikes] = useState([])
-  const [versesWithLikes, setVersesWithLikes] = useState([])
   const [uniqueVersesWithUserLikes, setUniqueVersesWithUserLikes] = useState([])
-  const [comments, setComments] = useState([])
-  const [versesWithComments, setVersesWithComments] = useState([])
-
-  // MODAL STUFF
-  const [likesModalVisible, setLikesModalVisible] = useState(false)
-  const [peopleWhoLikedVerse, setPeopleWhoLikedVerse] = useState([])
-  const [peopleWhoCommented, setPeopleWhoCommented] = useState([])
-  const [commentsOfVerse, setCommentsOfVerse] = useState([])
-  const [commentInput, setCommentInput] = useState('')
-  const [modalSection, setModalSection] = useState('comments')
-  const [modalHeight, setModalHeight] = useState(500)
-  const [verseFocused, setVerseFocused] = useState(null)
-  const [commentBarStyling, setCommentBarStyling] = useState({
-    position: 'absolute',
-    bottom: 40,
-  })
-
-  const screenHeight = Dimensions.get('window').height
 
   useEffect(() => {
-    const verses = getVersesFromChapter(book, chapter)
-    setVerses(verses)
-    getLikesOfVerse(book, chapter)
-
-    organizeComments()
-
-    const realtimeUpdates = async () => {
-      await createRealtimeConnection(() => {
-        const verses = getVersesFromChapter(book, chapter)
-        setVerses(verses)
-        getLikesOfVerse(book, chapter)
-      }, () => {
-        organizeComments()
-        getCommentsOfVerse(book, chapter, verseFocused)
-        getCommentsOfVerse(book, chapter, verseFocused)
+    const getUserId = async () => {
+      const userId = await getUserIdFromLocalStorage()
+      const userPath = await getAttributeFromObjectInLocalStorage("userInformation", "avatar_path")
+      setUserInformation({
+        user_id: userId,
+        avatar_path: userPath
       })
+
+      const verses = await getVersesFromChapter(work, book, chapter)
+      setVerses(verses)
+    
+      // allLikes: raw data from the database
+      // versesWithLikes: unique verses that have been liked
+      const allLikes = await getAllVersesWithLikesInChapter(work, book, chapter, userId)
+      const versesWithLikes = findUniqueVersesWithUserLikes(allLikes)
+      setLikes(allLikes)
+      setUniqueVersesWithUserLikes(versesWithLikes)
     }
 
-    realtimeUpdates()
-    return () => {
-      realtimeUpdates()
-    }
+    // const realtimeUpdates = async () => {
+      // await createRealtimeConnection(() => {
+      //   // const verses = getVersesFromChapter(book, chapter)
+      //   // setVerses(verses)
+      //   // getLikesOfVerse(book, chapter)
+      // }, () => {
+      //   organizeComments()
+      //   // getCommentsOfVerse(book, chapter, verseFocused)
+      //   // getCommentsOfVerse(book, chapter, verseFocused)
+      // })
+    // }
+
+    getUserId()
+    // realtimeUpdates()
+    // return () => {
+    //   realtimeUpdates()
+    // }
   }, [])
 
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (event) => {
-      const keyboardHeight = event.endCoordinates.height;
-      setModalHeight(screenHeight - 45);
-      setCommentBarStyling({
-        position: 'absolute',
-        bottom: keyboardHeight + 20,
-      });
-    });
-
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setModalHeight(500);
-      setCommentBarStyling({
-        position: 'absolute',
-        bottom: 40,
-      });
-    });
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
-
-  const getLikesOfVerse = async (book, chapter) => {
-    const userId = await getLocallyStoredVariable('userId')
-    const data = await getAllVersesWithLikesInChapter(book, chapter)
-    if (data) setLikes(data)
-
-    const uniqueVersesWithLikes = Array.from(new Set(data.map(verse => {
-      if (JSON.parse(verse.people).length > 0) {
-        return verse.verse
+  const findUniqueVersesWithUserLikes = (likes) => {
+    const uniqueVerses = []
+    likes.forEach(like => {
+      if (!uniqueVerses.includes(like.verse)) {
+        uniqueVerses.push(like.verse)
       }
-    })))
-    setVersesWithLikes(uniqueVersesWithLikes)
-
-    const uniqueVersesWithUserLikes = data.filter(verse => JSON.parse(verse.people).includes(userId)).map(verse => verse.verse)
-    setUniqueVersesWithUserLikes(uniqueVersesWithUserLikes)
+    })
+    return uniqueVerses
   }
 
-  const getCommentsOfVerse = async (book, chapter, verse) => {
-    const data = await getCommentsForVerse(book, chapter, verse)
-    setCommentsOfVerse(data)
-    getAuthorsOfComments(data)
+  const handleVersePress = (verse) => {
+    setVerseSelected(verse)
+    setModalVisible(true)
   }
 
-  const handleVersePress = async (book, chapter, verse) => {
-    setPeopleWhoLikedVerse([])
-    setPeopleWhoCommented([])    
+  const handleVerseLike = async (verse) => {
+    if (versesLiking.includes[verse]) return
 
+    setVersesLiking(prev => [...prev, verse])
+    if (userInformation.user_id !== null) {
+      hapticSelect()
+      if (!likes.some(like => like.verse === verse && like.user_id === userInformation.user_id)) {
+        const newLikes = [...likes, { user_id: userInformation.user_id, verse: verse, user: { avatar_path: userInformation.avatar_path }}]
 
-    hapticSelect()
-    getPeopleWhoHaveLikedVerse(verse)
-    setVerseFocused(verse)
-    setLikesModalVisible(true)
-    await getCommentsOfVerse(book, chapter, verse)
-  }
-
-  const handleVerseLike = async (book, chapter, verse) => {
-    hapticSelect()
-    const userId = await getLocallyStoredVariable('userId')
-    await doesTheUserLikeTheVerse(userId, book, chapter, verse)
-    await getLikesOfVerse(book, chapter)
-  }
-
-  const getPeopleWhoHaveLikedVerse = async (verse) => {
-    const people = JSON.parse(likes.filter(like => like.verse === verse)[0].people)
-    const data = await getNamesFromListOfIds(people)
-
-    setPeopleWhoLikedVerse(data.map(person => person.name))
-  }
-
-  const getAuthorsOfComments = async (comments) => {
-    const people = Array.from(new Set(comments.map(comment => comment.user_id)))
-    const data = await getNamesFromListOfIds(people)
-
-    setPeopleWhoCommented(data)
-  }
-
-  const handleSendComment = async () => {
-    const userId = await getLocallyStoredVariable('userId')
-    const data = await postComment(userId, commentInput, book, chapter, verseFocused)
-  
-    if (data) {
-      hapticSuccess()
-      setCommentInput('')
-      Keyboard.dismiss()
-      setCommentsOfVerse(data)
-      getAuthorsOfComments(data)
+        setLikes(newLikes)
+        setUniqueVersesWithUserLikes([...uniqueVersesWithUserLikes, verse])
+      } else {
+        const newLikes = likes.filter(like => {
+          const result = like.verse !== verse || (like.verse === verse && like.user_id != userInformation.user_id)
+          return result
+        })
+        setLikes(newLikes)
+        setUniqueVersesWithUserLikes(findUniqueVersesWithUserLikes(newLikes))
+      }
+      const result = await invokeLikeVerse(work, book, chapter, verse, userInformation.user_id)
+      if (!result.ok) {
+        // Whatever happens when user like fails
+        console.error("Error liking verse", result)
+      }
     }
+    setVersesLiking(prev => prev.filter(v => v !== verse))
   }
 
-  const organizeComments = async () => {
-    const comments = await getCommentsFromChapter(book, chapter)
-    setComments(comments)
-    setVersesWithComments(comments.map(comment => comment.verse))
+  const handleScroll = (event) => {
+    const scrollPosition = event.nativeEvent.contentOffset.y
+    if (scrollPosition > 60) setShowChapterTitle(true)
+    else setShowChapterTitle(false)
   }
-  
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Focused on chapter")
+      // Reset any state or gestures if necessary
+      return () => {
+        console.log("Unfocused on chapter")
+        // Cleanup function to reset state on unmount
+      };
+    }, [])
+  );
+
+
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
+      <SimpleHeader 
+        navigation={navigation} 
+        middleTitle={`${book} ${chapter}`}
+        showChapterTitle={showChapterTitle}
+        rightIcon={
+          <TouchableOpacity
+            onPress={() => {
+              hapticSelect()
+            }}
+          >
+            <Icon 
+              name='bars'
+              size={20}
+              color='#000'
+              style={{ marginLeft: 30 }}
+            />
+          </TouchableOpacity>
+        }
+      />
       <ScrollView 
-        style={{ width: '100%', flex: 1 }}
-        contentContainerStyle={{ alignItems: 'center' }}
+        style={{ width: '100%', flex: 1, }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <Text style={styles.chapterHeading}>{book} {chapter}</Text>
         <View style={styles.verseContainer}>
           {
             Object.keys(verses).map((verse, index) => {
+              const tapGesture = Gesture.Tap().numberOfTaps(2).onEnd(() => handleVerseLike(index+1)).runOnJS(true).shouldCancelWhenOutside(true)
+              const longPressGesture = Gesture.LongPress().onStart(() => handleVersePress(index+1)).runOnJS(true).shouldCancelWhenOutside(true)
+ 
               return (
                 <GestureDetector
                   key={`verse-${index}`}
                   gesture={
-                    Gesture.Simultaneous(
-                      Gesture.LongPress().onStart(() => handleVersePress(book, chapter, index+1)),
-                      Gesture.Tap().numberOfTaps(2).onEnd(() => handleVerseLike(book, chapter, index+1))
-                    )
+                    Gesture.Simultaneous(tapGesture, longPressGesture)
                   }
                 >
                   <View style={styles.verseBox}>
-                    {
-                      versesWithLikes.includes(index+1) && (
-                        <View style={styles.likeContainer}>
-                          {
-                            uniqueVersesWithUserLikes.includes(index+1) ? (
-                              <Icon name="heart" size={20} color='red' />
-                            ) : (
-                              <Icon name="heart-o" size={20} color='#616161' />
-                            )
-                          }
-                          <Text style={styles.likeNumber}>
-                            {
-                              JSON.parse(likes.filter(like => like.verse === index+1)[0].people).length
-                            }
-                          </Text>
-                          
-                        </View>
-                      )
-                    }
-                    {
-                      versesWithComments.includes(index+1) && (
-                        <View style={styles.commentContainer}>
-                          <Icon name="comment" size={20} color='#616161' />
-                          <Text style={styles.likeNumber}>
-                            {
-                              comments.filter(comment => comment.verse === index+1).length
-                            }
-                          </Text>
-                        </View>
-
-                      )
-                    }
-                    <Text style={styles.verse}>
+                    <Text 
+                      style={styles.verse}
+                    >
                       {index+1} {verses[verse]}
                     </Text>
-                    {/* {
-                      versesWithComments.includes(index+1) && (
-                        <Icon name="comment" size={20} color='#616161' />
+                    {
+                      uniqueVersesWithUserLikes.includes(index+1) 
+                      && likes.filter(like => like.verse === index+1).map((person, index) =>
+                        // FIND AVATAR PATHS FROM PEOPLE WHO HAVE LIKED VERSE!
+                        <UserDisplayInteraction
+                          key={`like-${index}`}
+                          path={person.user.avatar_path}
+                          mediaType="like"
+                          top={index*35}
+                        />
                       )
-                    } */}
+                    }
                   </View>
                 </GestureDetector>
               )
@@ -228,114 +193,43 @@ export default function Chapter({ navigate, route }) {
           }
         </View>
       </ScrollView>
-      <BasicModal 
-        visible={likesModalVisible}
-        setVisible={setLikesModalVisible}
-        height={modalHeight}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={{ flex: 1 }}>
-            <View style={styles.modalSelectionBar}>
-              <TouchableOpacity 
-                onPress={() => {
-                  hapticSelect()
-                  setModalSection('likes')
-                }}
-              >
-                <Text style={[styles.modalOptions, modalSection === 'likes' && { color: "#FFBF00"}]}>LIKES</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={() => {
-                  hapticSelect()
-                  setModalSection('comments')
-                }}
-              >
-                <Text style={[styles.modalOptions, modalSection === 'comments' && { color: "#FFBF00"}]}>COMMENTS</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={{ width: '100%', flex: 1 }}>
-              <TouchableOpacity activeOpacity={1}>
-                {modalSection === "likes" && (peopleWhoLikedVerse.length > 0 ? (
-                  peopleWhoLikedVerse.map((person, index) => {
-                    return <Text style={styles.likedLog} key={`person-${index}`}>liked by <Text style={styles.personHighlight}>{person}</Text></Text>
-                  })
-                ) : (
-                  <Text style={[styles.likedLog, {color: "#616161"}]}>No likes yet</Text>
-                ))}
-                {modalSection === "comments" && (commentsOfVerse.length > 0 ? (
-                  commentsOfVerse.map((comment, index) => {
-                    return (
-                      <BasicComment 
-                        key={`comment-${index}`} 
-                        comment={comment} 
-                        user={peopleWhoCommented.filter(person => {
-                          return person.id === comment.user_id
-                        }).map(person => person.name)[0]}
-                      />
-
-                    )
-                  })
-                ) : (
-                  <Text style={[styles.likedLog, {color: "#616161"}]}>No comments yet</Text>
-                ))}
-              </TouchableOpacity>
-            </ScrollView>
-
-            {modalSection === "comments" && (
-              <View style={[styles.commentBar, commentBarStyling]}>
-                <BasicTextInput 
-                  placeholder="Add a comment"
-                  keyboardType="default"
-                  value={commentInput}
-                  onChangeText={(text) => setCommentInput(text)} 
-                  style={{
-                    padding: 10,
-                    backgroundColor: '#D3D3D3',
-                    borderRadius: 50,
-                  }}
-                  containerStyle={{
-                    flex: 1
-                  }}
-                  focus={false}
-                />
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPress={() => {
-                    hapticSelect()
-                    handleSendComment()
-                  }}
-                  style={styles.sendButton} 
-                >
-                  <Icon name="send" size={20} color="#616161" />
-                </TouchableOpacity>
-              </View>
-
-            )}
-          </View>
-        </TouchableWithoutFeedback>
-      </BasicModal>
-    </View>
+      {
+        modalVisible && (
+          <VerseInteractModal 
+            navigation={navigation}
+            modalVisible={modalVisible} 
+            setModalVisible={setModalVisible}
+            work={work}
+            book={book}
+            chapter={chapter}
+            verseSelected={verseSelected}
+            userId={userInformation.user_id}
+          />
+        )
+      }
+    </GestureHandlerRootView>
   )
 }
+
+export default gestureHandlerRootHOC(Chapter)
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: '100%',
-    padding: 20,
     backgroundColor: '#fff',
-    alignItems: 'center',
+    width: '100%',
   },
   chapterHeading: {
     fontSize: 48,
-    fontWeight: 'bold',
     marginBottom: 60,
-    marginTop: 110,
+    paddingHorizontal: 40,
     fontFamily: 'nunito-bold',
+    alignSelf: 'center',
   },
   verseContainer: {
-    width: '80%',
     flex: 1,
+    marginLeft: 50,
+    marginRight: 50,
     alignItems: 'center',
   },
   verseBox: {
@@ -346,12 +240,12 @@ const styles = StyleSheet.create({
     width: '100%',
     fontSize: 22,
     fontFamily: 'nunito-bold',
-    textAlign: 'center',
+    textAlign: 'left',
   },
   likeContainer: {
     position: 'absolute',
     top: 6,
-    left: -30,
+    right: -30,
     fontSize: 14,
     fontFamily: 'nunito-bold',
     color: '#000'
@@ -359,7 +253,7 @@ const styles = StyleSheet.create({
   commentContainer: {
     position: 'absolute',
     top: 56,
-    left: -30,
+    left: -40,
     fontSize: 14,
     fontFamily: 'nunito-bold',
     color: '#000'
@@ -367,7 +261,7 @@ const styles = StyleSheet.create({
   likeNumber: {
     fontFamily: 'nunito-regular', 
     fontSize: 14,
-    color: '#999',
+    color: gen.darkishGray,
     textAlign: 'center',
   },
   likedLog: {
@@ -378,10 +272,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   personHighlight: {
-    color: '#FFBF00',
+    color: gen.orange,
     backgroundColor: '#FFFFE0',
     fontFamily: 'nunito-bold',
-
   },
   modalSelectionBar: {
     width: '100%',
@@ -391,7 +284,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     borderBottomWidth: 1,
-    borderBottomColor: '#D3D3D3',
+    borderBottomColor: gen.lightGray,
   },
   modalOptions: {
     width: 100,
@@ -409,7 +302,7 @@ const styles = StyleSheet.create({
   sendButton: {
     height: 50,
     width: 50,
-    backgroundColor: '#D3D3D3',
+    backgroundColor: gen.lightGray,
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,8 +1,9 @@
 import { TextInput, TouchableOpacity, StyleSheet, View } from 'react-native'
 import { hapticSelect } from '../utils/haptics'
-import { useState } from 'react';
+import { forwardRef, useState } from 'react'
+import { gen } from '../utils/styling/colors'
 
-export default function BasicTextInput({ 
+const BasicTextInput = forwardRef(({
   placeholder, 
   keyboardType, 
   value, 
@@ -11,49 +12,46 @@ export default function BasicTextInput({
   containerStyle, 
   focus=true, 
   onFocus = () => {},
-  onBlur = () => {}
-}) {
+  onBlur = () => {},
+  selection,
+  multiline=false,
+}, ref) => {
   const [isFocused, setIsFocused] = useState(false)
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={() => hapticSelect()}
-        style={styles.touchable}
-      >
-        <TextInput
-          placeholder={placeholder}
-          keyboardType={keyboardType}
-          value={value}
-          onChangeText={onChangeText}
-          style={[
-            styles.textInput, 
-            style,
-            (isFocused && focus) && styles.textInputFocused
-          ]}
-          placeholderTextColor={(isFocused && focus) ? '#FFA300' : '#616161'}
-          onFocus={() => {
-            setIsFocused(true)
-            onFocus()
-          }}
-          onBlur={() => {
-            setIsFocused(false)
-            onBlur()
-          }}
-        />
-      </TouchableOpacity>
+      <TextInput
+        ref={ref}
+        placeholder={placeholder}
+        keyboardType={keyboardType}
+        value={value}
+        onChangeText={onChangeText}
+        style={[
+          styles.textInput,
+          style,
+          (isFocused && focus) && styles.textInputFocused
+        ]}
+        placeholderTextColor={(isFocused && focus) ? gen.orange : gen.darkGray}
+        onFocus={() => {
+          setIsFocused(true)
+          onFocus()
+        }}
+        onBlur={() => {
+          setIsFocused(false)
+          onBlur()
+        }}
+        multiline={multiline}
+        numberOfLines={4}
+        selection={selection}
+      />
     </View>
   )
-}
+})
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignItems: 'center',
-  },
-  touchable: {
-    width: '90%',
   },
   textInput: {
     width: '100%',
@@ -64,8 +62,11 @@ const styles = StyleSheet.create({
     borderColor: '#D3D3D3',
     fontFamily: 'nunito-bold',
     fontSize: 18,
+    maxHeight: 140,
   },
   textInputFocused: {
-    borderColor: '#FFBF00',
+    borderColor: gen.orange,
   },
 });
+
+export default BasicTextInput;

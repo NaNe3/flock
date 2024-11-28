@@ -1,18 +1,20 @@
 {
   "expo": {
-    "name": "rue",
-    "slug": "rue",
+    "name": "flock",
+    "slug": "flock",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -29,10 +31,37 @@
         {
           "fonts": [
             "./assets/fonts/nunito-regular.ttf",
-            "./assets/fonts/nunito-bold.ttf"
+            "./assets/fonts/nunito-bold.ttf",
+            "./assets/fonts/nunito-bold-italic.ttf",
+            "./assets/fonts/nunito-light.ttf",
+            "./assets/fonts/nunito-light-italic.ttf"
           ]
         }
-      ]
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow MEEEEE to access your contacts."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to allow you to share them with your friends."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-apple-authentication"
+      ],
+      "expo-video"
     ]
   }
 }

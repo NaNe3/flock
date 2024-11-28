@@ -1,4 +1,4 @@
-export const bookOfMormon = {
+export const book = {
     "1 Nephi": {
         "heading": "An account of Lehi and his wife Sariah, and his four sons, being called, (beginning at the eldest) Laman, Lemuel, Sam, and Nephi. The Lord warns Lehi to depart out of the land of Jerusalem, because he prophesieth unto the people concerning their iniquity and they seek to destroy his life. He taketh three days' journey into the wilderness with his family. Nephi taketh his brethren and returneth to the land of Jerusalem after the record of the Jews. The account of their sufferings. They take the daughters of Ishmael to wife. They take their families and depart into the wilderness. Their sufferings and afflictions in the wilderness. The course of their travels. They come to the large waters. Nephi's brethren rebel against him. He confoundeth them, and buildeth a ship. They call the name of the place Bountiful. They cross the large waters into the promised land, and so forth. This is according to the account of Nephi; or in other words, I, Nephi, wrote this record.",
         "1": {
@@ -7134,5 +7134,10 @@ export const bookOfMormon = {
         }
     },
     "last_modified": "2016-10-02",
-    "version": 2
+    "version": 2,
+}
+
+export const bookInfo = {
+    "words": 268163,
+    "time": 1073,
 }

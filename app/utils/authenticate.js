@@ -1,31 +1,64 @@
 import supabase from './supabase'
 
-export const upsertUserWithName = async (name, goal) => {
+export const initSession = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session
+}
+
+export const getUserInformationFromUUID = async (uuid) => {
   const { data, error } = await supabase
     .from('user')
-    .select('name')
-    .eq('name', name)
+    .select('id, uui, created_at, email, fname, lname, goal, phone_number, plan, avatar_path, last_active')
+    .eq('uui', uuid)
 
   if (error) {
     console.error(error)
     return error
   }
 
-  if (data.length === 0) {
-    const { data: userData, error } = await supabase
-      .from('user')
-      .insert([{ name, goal: parseInt(goal) }])
-      .select()
+  return data[0]
+}
 
-    if (error) {
-      console.error(error)
-      return error
-    }
+export const createUserThroughAppleAuthentication = async (credential, phone) => {
+  const {
+    error,
+    data: { user },
+  } = await supabase.auth.signInWithIdToken({
+    provider: 'apple',
+    token: credential.identityToken,
+  })
 
-    return userData[0]
+  if (!error) {
+    const { givenName, familyName } = credential.fullName
+    const { email } = credential
+    const uui = user?.id
+    
+    return await upsertUser(uui, givenName, familyName, email, phone)
   } else {
-    return data[0]
+    return { error: error }
   }
+}
+
+export const upsertUser = async (uui, fname, lname, email, phone) => {
+  const { data: userData, error } = await supabase
+    .from('user')
+    .upsert({
+      "uui": uui,
+      "fname": fname,
+      "lname": lname,
+      "email": email,
+      "phone_number": phone,
+      "goal": null,
+      "plan": null,
+    }, { onConflict: 'email' })
+    .select()
+
+  if (error) {
+    console.error(error)
+    return error
+  }
+
+  return userData[0]
 }
 
 const doesTheVerseExist = async (book, chapter, verse) => {
@@ -107,11 +140,18 @@ export const likeVerse = async (userId, book, chapter, verse) => {
   }
 }
 
-export const getAllVersesWithLikesInChapter = async (book, chapter) => {
+export const getAllVersesWithLikesInChapter = async (work, book, chapter, user_id) => {
   const { data, error } = await supabase
-    .from('likes')
-    .select()
-    .eq('location', `${book}-${chapter}`)
+    .from('activity')
+    .select(`
+      user_id,
+      verse,
+      user(avatar_path)
+    `)
+    .eq('work', work)
+    .eq('book', book)
+    .eq('chapter', chapter)
+    .not('like_id', 'is', null)
 
   if (error) {
     console.error(error)
@@ -157,9 +197,9 @@ export const getCommentsForVerse = async (book, chapter, verse) => {
 export const postComment = async (userId, comment, book, chapter, verse) => {
   const { error } = await supabase
     .from('comments')
-    .insert([{ 
-      location: `${book}-${chapter}`, 
-      verse: verse, 
+    .insert([{
+      location: `${book}-${chapter}`,
+      verse: verse,
       comment: comment,
       user_id: userId,
     }])

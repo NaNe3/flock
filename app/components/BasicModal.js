@@ -5,17 +5,17 @@ export default function BasicModal({ children, visible, setVisible, height }) {
 
   return (
     <Modal
-        isVisible={visible}
-        onBackdropPress={() => setVisible(false)}
-        swipeDirection={["down"]}
-        onSwipeComplete={() => setVisible(false)}
-        animationIn="slideInUp"
-        animationOut="slideOutDown"
-        backdropColor="black"
-        backdropOpacity={0.4}
-        style={styles.modal}
-        propagateSwipe={true}
-      >
+      isVisible={visible}
+      onBackdropPress={() => setVisible(false)}
+      swipeDirection={["down"]}
+      onSwipeComplete={() => setVisible(false)}
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
+      backdropColor="black"
+      backdropOpacity={0.4}
+      style={styles.modal}
+      propagateSwipe={true}
+    >
       <View style={[styles.modalContent, { height: height }]}>
         <View style={styles.draggableBar} />
         {children}

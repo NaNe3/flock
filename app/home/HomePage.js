@@ -1,49 +1,56 @@
+import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import Icon from "react-native-vector-icons/FontAwesome5";
 
 import BasicButton from "../components/BasicButton";
 import WeakContentBox from "../components/WeakContentBox";
 import StrongContentBox from "../components/StrongContentBox"
-import { getLocallyStoredVariable } from "../utils/localStorage";
+import InteractiveHeaderBar from "../components/InteractiveHeaderBar";
+
+import { getAttributeFromObjectInLocalStorage } from "../utils/localStorage";
 import { hapticSelect } from "../utils/haptics";
-import { useEffect, useState } from "react";
+import { gen } from "../utils/styling/colors";
 
-const HomeHeaderBar = () => {
-  return (
-    <View style={styles.headerBar}>
-      <View style={styles.headerContent}>
-        <Text style={[styles.text, { color: "#616161" }]}>WEEK 1</Text>
-        <Text style={[styles.text, { color: "#616161" }]}><Text style={{ color: "#05D5FA"}}>0</Text> GEMS</Text>
-      </View>
-    </View>
-  )
-}
+const LandingDisplay = ({ navigation, goal, plan }) => {
+  const [planButtonState, setPlanButtonState] = useState({
+    disabled: true
+  })
 
-const LandingDisplay = ({ navigation }) => {
-  const [goal, setGoal] = useState('')
-
-  const getGoalText = async () => {
-    const goal = await getLocallyStoredVariable('goal')
-    setGoal(goal)
-  }
   useEffect(() => {
-    getGoalText()
-  }, [])
+    if (goal) {
+      setPlanButtonState({
+        text: `${goal} min`,
+        icon: 'clock-o',
+        disabled: false,
+      })
+    } else {
+      setPlanButtonState({
+        text: "Create plan",
+        icon: 'calendar',
+        disabled: false,
+      })
+    }
+  }, [goal])
 
   return (
     <View style={styles.landingContainer}>
-      <Text style={styles.streakNumber}>1</Text>
-      <Text style={styles.streakText}>DAY STREAK</Text>
-    
+      {/* <Text style={styles.streakNumber}>0</Text>
+      <Text style={styles.streakText}>DAY STREAK</Text> */}
+      <Text style={[styles.streakText, { marginBottom: 20, marginTop: 30 }]}>PERSONAL STUDY</Text>
+      <Image source={require('../../assets/duo-half.png')} style={{ width: 200, height: 120, marginBottom: -30 }} />
+
       <BasicButton
-        title={`${goal} min`}
-        icon="clock-o"
+        title={planButtonState.text}
+        icon={planButtonState.icon}
         onPress={() => {
           hapticSelect()
-          navigation.navigate('Chapter', {
-            book: "3 Nephi",
-            chapter: 22,
-          })
+          navigation.navigate('CreatePlan')
+          // navigation.navigate('Chapter', {
+          //   book: "3 Nephi",
+          //   chapter: 22,
+          // })
         }}
+        disabled={planButtonState.disabled}
         style={{ marginTop: 20 }}
       />
     </View>
@@ -51,23 +58,72 @@ const LandingDisplay = ({ navigation }) => {
 }
 
 export default function HomePage({ navigation }) {
+  const [goal, setGoal] = useState('')
+  const [plan, setPlan] = useState('')
+
+  const getGoalText = async () => {
+    const [goal, plan] = await getAttributeFromObjectInLocalStorage("userInformation", ["goal", "plan"])
+    setGoal(goal)
+    setPlan(plan)
+  }
+
+  useEffect(() => {
+    getGoalText()
+  }, [])
+
+  const props = {
+    navigation,
+    goal,
+    plan,
+  }
 
   return (
     <View style={styles.container}>
-      <HomeHeaderBar />
       <ScrollView 
         showsVerticalScrollIndicator={false} 
-        style={{ width: '100%', backgroundColor: '#eee' }}
+        style={{ width: '100%', backgroundColor: gen.lightestGray }}
         contentContainerStyle={{ alignItems: 'center' }}
       >
-        <LandingDisplay navigation={navigation} />
+        <LandingDisplay {...props} />
         <View style={styles.homeContent}>
-          <WeakContentBox title="DAILY CHALLENGES" />
-          <StrongContentBox title="STUDY GROUPS" />
-          <StrongContentBox title="STUDY GROUPS" />
-          <StrongContentBox title="STUDY GROUPS" />
-          <StrongContentBox title="STUDY GROUPS" />
-          <StrongContentBox title="STUDY GROUPS" />
+          {/* <WeakContentBox title="TO DO LIST" /> */}
+          <StrongContentBox 
+            navigation={navigation}
+            title="ACTIVITY" 
+            icon="user-plus"
+          >
+            <View style={styles.friendBox}>
+              <View>
+                <Text style={styles.friendName}>Luke Michaelis</Text>
+                <Text style={styles.friendActivity}>active 3w</Text>
+              </View>
+              <View style={styles.scriptureBox}>
+                <Text style={styles.scripture}>3 NEPHI 27</Text>
+              </View>
+            </View>
+            <View style={styles.friendBox}>
+              <View>
+                <Text style={styles.friendName}>Justin Andrews</Text>
+                <Text style={styles.friendActivity}>Studied Today</Text>
+              </View>
+              <View style={styles.scriptureBox}>
+                <Text style={styles.scripture}>3 NEPHI 27</Text>
+                <Text style={styles.scripture}>MATT 5</Text>
+                <Text style={styles.scripture}>MATT 6</Text>
+              </View>
+            </View>
+            <View style={styles.friendBox}>
+              <View>
+                <Text style={styles.friendName}>Justin Andrews</Text>
+                <Text style={styles.friendActivity}>Studied Today</Text>
+              </View>
+              <View style={styles.scriptureBox}>
+                <Text style={styles.scripture}>3 NEPHI 27</Text>
+                <Text style={styles.scripture}>MATT 5</Text>
+                <Text style={styles.scripture}>MATT 6</Text>
+              </View>
+            </View>
+          </StrongContentBox>
         </View>
       </ScrollView>
     </View>
@@ -78,22 +134,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    backgroundColor: '#eee',
-    alignItems: 'center',
-  },
-  headerBar: {
-    width: '100%',
-    height: 110,
-    backgroundColor: '#fff',
-    paddingTop: 50,
-  },
-  headerContent: {
-    display: "flex",
-    height: 60,
-    paddingLeft: 20,
-    paddingRight: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: gen.lightestGray,
     alignItems: 'center',
   },
   landingContainer: {
@@ -103,30 +144,55 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     alignItems: 'center',
     paddingBottom: 30,
-
     paddingTop: 600,
     marginTop: -600,
-
-  },
-  text: {
-    fontSize: 18,
-    color: '#fff',
-    fontFamily: 'nunito-bold',
   },
   streakNumber: {
     fontSize: 90,
-    color: '#616161',
+    color: gen.darkGray,
     fontFamily: 'nunito-bold',
     textAlign: 'center',
   },
   streakText: {
     fontSize: 18,
-    color: '#616161',
+    color: gen.darkGray,
     fontFamily: 'nunito-bold',
     textAlign: 'center',
   },
   homeContent: {
     width: '85%',
     paddingVertical: 40,
-  }
+  },
+  friendBox: {
+    width: '100%',
+    padding: 20,
+    borderBottomWidth: 2,
+    borderColor: gen.lightGray,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  friendName: {
+    fontFamily: 'nunito-bold',
+    fontSize: 18,
+    color: gen.darkGray,
+  },
+  friendActivity: {
+    fontFamily: 'nunito-bold',
+    fontSize: 14,
+    color: gen.gray,
+  },
+  scriptureBox: {
+    backgroundColor: gen.lightOrange,
+    borderRadius: 10,
+  },
+  scripture: {
+    fontFamily: 'nunito-bold',
+    fontSize: 14,
+    color: gen.orange,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    textAlign: 'center',
+  },
 })

@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Touchable, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome'
 
-export default function StrongContentBox({ title }) {
+export default function StrongContentBox({ navigation, title, icon, children }) {
   return (
     <View style={styles.container}>
       <View style={{ 
@@ -11,10 +11,14 @@ export default function StrongContentBox({ title }) {
         <Text style={styles.containerTitle}>{title}</Text>
       </View>
       <View style={styles.groupRowContainer}>
+        {children}
         <TouchableOpacity 
-          onPress={() => console.log("HGELLO")}
+          onPress={() => navigation.navigate("AddFriends")}
+          style={{
+            padding: 15,
+          }}
         >
-          <Text style={styles.createGroupButton}><Icon name="pencil" size={18} color="#000" /> CREATE GROUP</Text>
+          <Text style={styles.createGroupButton}><Icon name="plus" size={18} color="#000" /> ADD FRIENDS</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -27,7 +31,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 15,
     marginTop: 30,
-  }, 
+  },
   containerTitle: {
     fontSize: 16,
     fontFamily: 'nunito-bold',
@@ -37,7 +41,6 @@ const styles = StyleSheet.create({
   }, 
   groupRowContainer: {
     width: '100%',
-    padding: 20,
   },
   createGroupButton: {
     textAlign: 'center',

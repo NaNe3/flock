@@ -36,7 +36,8 @@ export const hapticImpactMedium = () => {
 
 export const hapticImpactHeavy = () => {
   Haptics.impactAsync(
-    Haptics.ImpactFeedbackStyle.Heavy)
+    Haptics.ImpactFeedbackStyle.Heavy
+  )
 }
 
 export const hapticImpactRigid = () => {
