@@ -31,7 +31,7 @@ const GroupBox = ({
           members
         })
       }}
-      title={innunciated ? ["NEW ACTIVITY", gen.orange, "fire"] : null}
+      title={innunciated ? ["NEW ACTIVITY", gen.primaryColor, "fire"] : null}
       innunciated={innunciated}
     >
       <View style={styles.groupContainer}>
@@ -43,7 +43,7 @@ const GroupBox = ({
         <View style={styles.groupContent}>
           <View style={{ flex: 1 }}>
             <Text 
-              style={{ fontFamily: 'nunito-bold', fontSize: 18, color: gen.darkGray }}
+              style={{ fontFamily: 'nunito-bold', fontSize: 18, color: gen.actionText }}
               numberOfLines={1}
               ellipsizeMode='tail'
             >{group_name}</Text>
@@ -120,7 +120,7 @@ export default function GroupPage({ navigation }) {
           }}
         >
           <Text style={styles.createButtonText}>
-            <Icon name='plus' size={20} color={gen.darkGray} /> NEW GROUP
+            <Icon name='plus' size={20} color={gen.actionText} /> NEW GROUP
           </Text>
         </TouchableOpacity>
         <EmptySpace size={70} />
@@ -132,7 +132,7 @@ export default function GroupPage({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -169,13 +169,13 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
     borderRadius: 20,
-    borderColor: gen.lightGray,
+    borderColor: gen.primaryBorder,
     borderWidth: 5,
   },
   createButtonText: {
     fontFamily: 'nunito-bold', 
     fontSize: 18, 
-    color: gen.darkGray,
+    color: gen.actionText,
     textAlign: 'center', 
     paddingVertical: 20 
   }

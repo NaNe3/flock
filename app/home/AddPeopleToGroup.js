@@ -75,7 +75,9 @@ export default function AddPeopleToGroup({ friendsAdded, setFriendsAdded, setScr
           onChangeText={(text) => setSearchInput(text)}
           style={{
             padding: 10,
-            backgroundColor: gen.lightGray,
+            backgroundColor: gen.tertiaryBackground,
+            borderColor: gen.tertiaryBackground,
+            color: gen.primaryText,
             borderRadius: 50,
           }}
           focus={false}
@@ -103,7 +105,7 @@ export default function AddPeopleToGroup({ friendsAdded, setFriendsAdded, setScr
                     </View>
 
                     <TouchableOpacity 
-                      style={[styles.sendButton, { backgroundColor: friendInfo.added ? gen.red : gen.orange }]}
+                      style={[styles.sendButton, { backgroundColor: friendInfo.added ? gen.red : gen.primaryColor }]}
                       onPress={() => {
                         if (!friendInfo.added) {
                           setFriendsAdded((prevState) => [...prevState, friend])
@@ -180,11 +182,12 @@ const styles = StyleSheet.create({
     fontFamily: 'nunito-regular',
     flexShrink: 1,
     overflow: 'hidden',
+    color: gen.primaryText
   },
   sendButton: {
     paddingVertical: 5,
     paddingHorizontal: 12,
-    backgroundColor: gen.orange,
+    backgroundColor: gen.primaryColor,
     borderRadius: 15,
   },
   friendImage: {

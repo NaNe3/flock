@@ -101,7 +101,7 @@ export default function GetStarted({ setCurrentScreen, setSession, onboardingDat
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: gen.orange,
+    backgroundColor: gen.primaryColor,
     alignItems: 'center',
     paddingTop: 80,
   }, 

@@ -10,6 +10,7 @@ import InteractiveHeaderBar from "../components/InteractiveHeaderBar";
 import { getAttributeFromObjectInLocalStorage } from "../utils/localStorage";
 import { hapticSelect } from "../utils/haptics";
 import { gen } from "../utils/styling/colors";
+import WeekActivityTracker from "./components/WeekActivityTracker";
 
 const LandingDisplay = ({ navigation, goal, plan }) => {
   const [planButtonState, setPlanButtonState] = useState({
@@ -34,9 +35,7 @@ const LandingDisplay = ({ navigation, goal, plan }) => {
 
   return (
     <View style={styles.landingContainer}>
-      {/* <Text style={styles.streakNumber}>0</Text>
-      <Text style={styles.streakText}>DAY STREAK</Text> */}
-      <Text style={[styles.streakText, { marginBottom: 20, marginTop: 30 }]}>PERSONAL STUDY</Text>
+      {/* <Text style={[styles.streakText, { marginBottom: 20, marginTop: 30 }]}>PERSONAL STUDY</Text>
       <Image source={require('../../assets/duo-half.png')} style={{ width: 200, height: 120, marginBottom: -30 }} />
 
       <BasicButton
@@ -45,14 +44,41 @@ const LandingDisplay = ({ navigation, goal, plan }) => {
         onPress={() => {
           hapticSelect()
           navigation.navigate('CreatePlan')
-          // navigation.navigate('Chapter', {
-          //   book: "3 Nephi",
-          //   chapter: 22,
-          // })
         }}
         disabled={planButtonState.disabled}
         style={{ marginTop: 20 }}
-      />
+      /> */}
+      <WeekActivityTracker />
+      <Text style={styles.subHeader}>TODAY'S READING</Text>
+      <Text style={styles.header}>MORMON 8</Text>
+
+      <View style={styles.actionContainer}>
+        <View style={styles.actionPlanBox}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={[styles.book, { backgroundColor: gen.navy }]}>
+              <Text style={styles.bookName}>Book</Text>
+              <Text style={styles.bookName}>of</Text>
+              <Text style={styles.bookName}>Mormon</Text>
+            </View>
+            <View>
+              <Text style={{ fontSize: 16, fontFamily: 'nunito-bold', marginLeft: 10, color: gen.primaryText }}>COME FOLLOW ME</Text>
+              <Text style={{ fontSize: 12, fontFamily: 'nunito-bold', marginLeft: 10, color: gen.gray }}>Book of Mormon</Text>
+            </View>
+          </View>
+          <Icon name="chevron-down" size={20} color={gen.gray} />
+        </View>
+        <BasicButton
+          title="7 minutes"
+          icon={'clock-o'}
+          onPress={() => {
+            hapticSelect()
+            navigation.navigate('DailyReadingSummary')
+          }}
+          disabled={planButtonState.disabled}
+          style={{ width: '100%' }}
+        />
+
+      </View>
     </View>
   )
 }
@@ -81,7 +107,7 @@ export default function HomePage({ navigation }) {
     <View style={styles.container}>
       <ScrollView 
         showsVerticalScrollIndicator={false} 
-        style={{ width: '100%', backgroundColor: gen.lightestGray }}
+        style={{ width: '100%', backgroundColor: gen.secondaryBackground }}
         contentContainerStyle={{ alignItems: 'center' }}
       >
         <LandingDisplay {...props} />
@@ -134,12 +160,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    backgroundColor: gen.lightestGray,
+    backgroundColor: gen.secondaryBackground,
     alignItems: 'center',
   },
   landingContainer: {
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     alignItems: 'center',
@@ -167,7 +193,7 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 20,
     borderBottomWidth: 2,
-    borderColor: gen.lightGray,
+    borderColor: gen.primaryBorder,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -175,7 +201,7 @@ const styles = StyleSheet.create({
   friendName: {
     fontFamily: 'nunito-bold',
     fontSize: 18,
-    color: gen.darkGray,
+    color: gen.actionText,
   },
   friendActivity: {
     fontFamily: 'nunito-bold',
@@ -183,16 +209,62 @@ const styles = StyleSheet.create({
     color: gen.gray,
   },
   scriptureBox: {
-    backgroundColor: gen.lightOrange,
+    backgroundColor: gen.primaryColorLight,
     borderRadius: 10,
   },
   scripture: {
     fontFamily: 'nunito-bold',
     fontSize: 14,
-    color: gen.orange,
+    color: gen.primaryColor,
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 10,
     textAlign: 'center',
   },
+  actionContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  actionPlanBox: {
+    width: '100%', 
+    marginBottom: -10, 
+    marginTop: 40, 
+    paddingTop: 10, 
+    paddingBottom: 15, 
+    paddingHorizontal: 15, 
+    flexDirection: 'row',
+    alignItems: 'center', 
+    justifySelf: 'center', 
+    justifyContent: 'space-between',
+    borderTopLeftRadius: 10, 
+    borderTopRightRadius: 10, 
+    borderWidth: 5, 
+    borderColor: gen.primaryColor, 
+  },
+  book: {
+    width: 40,
+    height: 50,
+    borderRadius: 5,
+    backgroundColor: gen.navy,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bookName: {
+    fontSize: 6,
+    fontFamily: 'nunito-bold',
+    color: gen.orange,
+  },
+  header: {
+    fontFamily: 'nunito-bold', 
+    fontSize: 40, 
+    marginVertical: 0, 
+    color: gen.primaryText
+  },
+  subHeader: {
+    fontFamily: 'nunito-bold', 
+    fontSize: 16, 
+    marginTop: 40, 
+    color: gen.darkishGray
+  }
 })

@@ -1,6 +1,7 @@
 import { Text, View, StyleSheet, ScrollView } from 'react-native'
 
 import SimpleHeader from '../components/SimpleHeader';
+import { gen } from '../utils/styling/colors';
 
 export default function Notifications({ navigation }) {
 
@@ -17,6 +18,7 @@ export default function Notifications({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: gen.secondaryBackground,
   },
   notificationContainer: {
     flex: 1,

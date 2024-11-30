@@ -87,8 +87,8 @@ const styles = StyleSheet.create({
     marginBottom: 13,
   },
   boxSelected: {
-    borderColor: gen.orange,
-    color: gen.orange,
+    borderColor: gen.primaryColor,
+    color: gen.primaryColor,
   },
   medium: {
     fontSize: 18,

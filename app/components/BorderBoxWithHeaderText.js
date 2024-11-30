@@ -8,7 +8,7 @@ export default function BorderBoxWithHeaderText({
   recommended=false,
   innunciated=false,
   onPress=null,
-  backgroundColor='#fff',
+  backgroundColor=gen.primaryBackground,
   title=null
 }) {
   return (
@@ -21,7 +21,7 @@ export default function BorderBoxWithHeaderText({
           recommended ? (
             <View style={[styles.boxHeader, { backgroundColor: backgroundColor }]}>
               <Text style={[styles.boxHeaderText, styles.recommended]}>
-                <Icon name='star' size={15} color={gen.orange} />
+                <Icon name='star' size={15} color={gen.primaryColor} />
                 &nbsp;RECOMMENDED
               </Text>
             </View>
@@ -45,7 +45,7 @@ export default function BorderBoxWithHeaderText({
 const styles = StyleSheet.create({
   planBox: {
     width: '100%',
-    borderColor: gen.lightGray,
+    borderColor: gen.primaryBorder,
     borderWidth: 5,
     borderRadius: 15,
     marginBottom: 20,
@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   recommended: {
-    borderColor: gen.orange,
-    color: gen.orange,
+    borderColor: gen.primaryColor,
+    color: gen.primaryColor,
   },
   contentContainer: {
     flex: 1,

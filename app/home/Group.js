@@ -17,7 +17,7 @@ export default function Group({ navigation, route }) {
         // title={group_name}
         rightIcon={
           <TouchableOpacity activeOpacity={0.7} >
-            <Icon name="ellipsis-h" size={20} color="#000" />
+            <Icon name="ellipsis-h" size={20} color={gen.primaryText} />
           </TouchableOpacity>
         }
       />
@@ -98,14 +98,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: gen.secondaryBackground,
   },
   contentContainer: {
     flex: 1,
     width: '100%',
+    backgroundColor: gen.secondaryBackground,
   },
   landingContainer: {
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     alignItems: 'center',
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
   groupName: {
     fontSize: 32,
     fontFamily: 'nunito-bold',
-    color: '#000',
+    color: gen.primaryText,
   },
   activityBar: {
     width: '100%',
@@ -141,7 +143,7 @@ const styles = StyleSheet.create({
     height: 70,
     padding: 3,
     borderWidth: 4,
-    borderColor: gen.lightGray,
+    borderColor: gen.primaryBorder,
     borderRadius: 35,
     marginRight: 5
   },
@@ -157,7 +159,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 20,
     borderTopWidth: 5,
-    borderTopColor: gen.lightestGray,
+    borderTopColor: gen.secondaryText,
   },
   announcementContainer: {
 

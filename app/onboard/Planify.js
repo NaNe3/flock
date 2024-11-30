@@ -143,8 +143,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   boxSelected: {
-    borderColor: gen.orange,
-    color: gen.orange,
+    borderColor: gen.primaryColor,
+    color: gen.primaryColor,
   },
   optionText: {
     fontSize: 16,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   innerBookText: {
     fontSize: 10,
-    color: gen.orange,
+    color: gen.primaryColor,
     textAlign: 'center',
     fontFamily: 'nunito-bold',
   },

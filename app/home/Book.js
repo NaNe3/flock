@@ -3,6 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Text, ScrollView } from "react-nati
 import { getBooksFromWork, getChaptersFromBook } from "../utils/read"
 import SimpleHeader from "../components/SimpleHeader"
 import { hapticSelect } from "../utils/haptics"
+import { gen } from "../utils/styling/colors"
 
 export default function Book({ navigation, route }) {
   const { work } = route.params
@@ -35,7 +36,7 @@ export default function Book({ navigation, route }) {
                   }}
                   key={`book-${index}`}
                 >
-                  <Text style={{ fontFamily: 'nunito-bold', fontSize: 20, textAlign: 'center' }}>{book}</Text>
+                  <Text style={styles.bookText}>{book}</Text>
                 </TouchableOpacity>
               )
             })
@@ -49,6 +50,7 @@ export default function Book({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: gen.secondaryBackground,
   },
   contentContainer: {
     flex: 1,
@@ -60,4 +62,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
   },
+  bookText: {
+    fontFamily: 'nunito-bold', 
+    fontSize: 20, 
+    textAlign: 'center',
+    color: gen.primaryText
+  }
 });

@@ -155,12 +155,12 @@ export default function Friends({ setCurrentScreen }) {
             if (peopleInvited.includes(contact)) {
               buttonInfo.title = 'ADDED'
               buttonInfo.color = '#FFF'
-              buttonInfo.backgroundColor = gen.orangeDisabled
+              buttonInfo.backgroundColor = gen.primaryColorDisabled
               buttonInfo.icon = 'check'
             } else {
               buttonInfo.title = 'ADD'
               buttonInfo.color = '#FFF'
-              buttonInfo.backgroundColor = gen.orange
+              buttonInfo.backgroundColor = gen.primaryColor
               buttonInfo.icon = 'plus'
             }
           } else {

@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: 160,
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     marginBottom: 20,
   },
   containerStyle: {

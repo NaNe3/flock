@@ -48,14 +48,15 @@ const InteractiveHeaderBar = () => {
               navigation.navigate('Notifications')
             }}
           >
-            <Icon name="bell" size={25} color={gen.darkGray} />
-            <View style={[styles.newNotificationIndicator, { backgroundColor: 'test' === 'test' ? gen.red : '#fff' }]} />
+            <Icon name="bell" size={25} color={gen.actionText} />
+            <View style={[styles.newNotificationIndicator, { backgroundColor: 'test' === 'test' ? gen.red : gen.primaryBackground}]} />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.7}
             style={styles.profilePictureContainer}
             onPress={() => {
               hapticSelect()
+              navigation.navigate('Profile')
             }}
           >
           {userProfilePicture && (
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
   headerBar: {
     width: '100%',
     height: 110,
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     paddingTop: 50,
   },
   headerContent: {
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
     color: gen.darkGray,
   },
   premiumButton: {
-    backgroundColor: gen.blue,
+    backgroundColor: gen.secondaryColor,
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 20,
@@ -125,6 +126,6 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: gen.primaryBackground,
   },
 })

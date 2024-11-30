@@ -167,6 +167,7 @@ export default function VerseInteractModal({
         onAnimate={handleAnimate}
         enablePanDownToClose
         animateOnMount
+        backgroundStyle={{ backgroundColor: gen.primaryBackground }}
       >
         <BottomSheetView style={styles.contentContainer}>
           <Text style={styles.modalHeader}>{`${book} ${chapter}:${verse}`}</Text>
@@ -174,7 +175,7 @@ export default function VerseInteractModal({
             navigation={navigation} 
             location={{ work, book, chapter, verse }}
           />
-          <View style={{ flex: 1, width: '100%' }}>
+          <View style={styles.commentsList}>
             {
               numberOfComments > 0 ? (
                 <FlashList
@@ -192,6 +193,7 @@ export default function VerseInteractModal({
         </BottomSheetView>
       </BottomSheet>
       <Animated.View style={[
+        styles.commentBarContainer,
         { display: displayInputBar ? 'flex' : 'none' },
         { transform: [{ translateY: interpolatedTranslateY }] }
       ]}>
@@ -207,7 +209,7 @@ export default function VerseInteractModal({
                   Keyboard.dismiss()
                 }}
               >
-                <Icon name="close" size={14} color={gen.orange} />
+                <Icon name="close" size={14} color={gen.primaryColor} />
               </TouchableOpacity>
             </View>
           )
@@ -219,12 +221,7 @@ export default function VerseInteractModal({
             keyboardType="default"
             value={commentInput}
             onChangeText={(text) => setCommentInput(text)} 
-            style={{
-              padding: 10,
-              backgroundColor: '#D3D3D3',
-              borderRadius: 20,
-              marginTop: 0
-            }}
+            style={styles.commentTextInput}
             containerStyle={{
               flex: 1
             }}
@@ -236,7 +233,7 @@ export default function VerseInteractModal({
             onPress={submitComment}
             style={styles.sendButton}
           >
-            <Icon name="send" size={20} color="#616161" />
+            <Icon name="send" size={20} color={gen.actionText} />
           </TouchableOpacity>
 
         </View>
@@ -289,18 +286,21 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    backgroundColor: gen.primaryBackground
   },
   commentsList: {
     flex: 1,
     width: '100%',
+    backgroundColor: gen.primaryBackground
   },
   modalHeader: {
     fontSize: 22,
     marginBottom: 20,
     fontFamily: 'nunito-bold',
+    color: gen.primaryText
   },
   replyingInfo: {
-    backgroundColor: gen.lightOrange,
+    backgroundColor: gen.primaryColorLight,
     fontSize: 14,
     marginHorizontal: 20,
     marginBottom: 10,
@@ -312,11 +312,13 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start'
   },
   replyingInfoText: {
-    color: gen.orange,
+    color: gen.primaryColor,
     fontFamily: 'nunito-bold',
   },
+  commentBarContainer: {
+  },
   commentBar: {
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -326,7 +328,7 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     padding: 15,
-    backgroundColor: gen.lightGray,
+    backgroundColor: gen.tertiaryBackground,
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
@@ -352,4 +354,10 @@ const styles = StyleSheet.create({
     fontFamily: 'nunito-regular',
     marginTop: 5
   },
+  commentTextInput: {
+    padding: 10,
+    backgroundColor: gen.tertiaryBackground,
+    borderRadius: 20,
+    marginTop: 0,
+  }
 })

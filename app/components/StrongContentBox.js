@@ -1,12 +1,13 @@
 import { View, Text, StyleSheet, Touchable, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome'
+import { gen } from '../utils/styling/colors'
 
 export default function StrongContentBox({ navigation, title, icon, children }) {
   return (
     <View style={styles.container}>
       <View style={{ 
         borderBottomWidth: 2,
-        borderColor: '#D3D3D3', 
+        borderColor: gen.primaryBorder, 
       }}>
         <Text style={styles.containerTitle}>{title}</Text>
       </View>
@@ -18,7 +19,7 @@ export default function StrongContentBox({ navigation, title, icon, children }) 
             padding: 15,
           }}
         >
-          <Text style={styles.createGroupButton}><Icon name="plus" size={18} color="#000" /> ADD FRIENDS</Text>
+          <Text style={styles.createGroupButton}><Icon name="plus" size={18} color={gen.actionText} /> ADD FRIENDS</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -28,14 +29,14 @@ export default function StrongContentBox({ navigation, title, icon, children }) 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    backgroundColor: "#fff",
+    backgroundColor: gen.primaryBackground,
     borderRadius: 15,
     marginTop: 30,
   },
   containerTitle: {
     fontSize: 16,
     fontFamily: 'nunito-bold',
-    color: '#616161',
+    color: gen.actionText,
     marginLeft: 15,
     marginVertical: 15,
   }, 
@@ -45,6 +46,7 @@ const styles = StyleSheet.create({
   createGroupButton: {
     textAlign: 'center',
     fontFamily: 'nunito-bold',
+    color: gen.primaryText,
     fontSize: 16,
   }
 })

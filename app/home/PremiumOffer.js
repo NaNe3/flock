@@ -1,4 +1,5 @@
 import { StyleSheet, View, Text } from "react-native"
+import { gen } from "../utils/styling/colors"
 
 export default function PremiumOffer({ navigation }) {
   return (
@@ -14,6 +15,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: gen.primaryBackground,
   }
 })

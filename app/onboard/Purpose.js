@@ -159,6 +159,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   textHighlight: {
-    color: gen.orange,
+    color: gen.primaryColor,
   },
 });

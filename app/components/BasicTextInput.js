@@ -31,7 +31,7 @@ const BasicTextInput = forwardRef(({
           style,
           (isFocused && focus) && styles.textInputFocused
         ]}
-        placeholderTextColor={(isFocused && focus) ? gen.orange : gen.darkGray}
+        placeholderTextColor={(isFocused && focus) ? gen.primaryColor : gen.actionText}
         onFocus={() => {
           setIsFocused(true)
           onFocus()
@@ -59,13 +59,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderRadius: 15,
     borderWidth: 3,
-    borderColor: '#D3D3D3',
+    borderColor: gen.primaryBorder,
     fontFamily: 'nunito-bold',
     fontSize: 18,
     maxHeight: 140,
   },
   textInputFocused: {
-    borderColor: gen.orange,
+    borderColor: gen.primaryColor,
   },
 });
 

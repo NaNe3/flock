@@ -143,7 +143,7 @@ function Chapter({ navigation, route }) {
             <Icon 
               name='bars'
               size={20}
-              color='#000'
+              color={gen.primaryText}
               style={{ marginLeft: 30 }}
             />
           </TouchableOpacity>
@@ -216,7 +216,7 @@ export default gestureHandlerRootHOC(Chapter)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     width: '100%',
   },
   chapterHeading: {
@@ -225,6 +225,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     fontFamily: 'nunito-bold',
     alignSelf: 'center',
+    color: gen.primaryText,
   },
   verseContainer: {
     flex: 1,
@@ -241,6 +242,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontFamily: 'nunito-bold',
     textAlign: 'left',
+    color: gen.primaryText,
   },
   likeContainer: {
     position: 'absolute',
@@ -272,7 +274,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   personHighlight: {
-    color: gen.orange,
+    color: gen.primaryColor,
     backgroundColor: '#FFFFE0',
     fontFamily: 'nunito-bold',
   },

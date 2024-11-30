@@ -6,12 +6,15 @@ import LibraryPage from './home/LibraryPage';
 
 import InteractiveHeaderBar from './components/InteractiveHeaderBar';
 import { View } from 'react-native';
+import { StyleSheet } from 'react-native';
+
+import { gen } from './utils/styling/colors';
 
 const Stack = createStackNavigator()
 
 export default function Home() {
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <InteractiveHeaderBar />
       <Stack.Navigator initialRouteName='Home'>
         <Stack.Screen 
@@ -33,3 +36,10 @@ export default function Home() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: gen.primaryBackground,
+  },
+})

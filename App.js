@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Text } from 'react-native'
+import { Text, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
@@ -10,6 +10,8 @@ import { getInitialSystemVariables, setUserInformationInLocalStorage } from './a
 import { StatusBar } from 'expo-status-bar'
 import { getUserInformationFromUUID, initSession } from './app/utils/authenticate'
 import { createStackNavigator } from '@react-navigation/stack'
+import { StyleSheet } from 'react-native'
+import { gen, currentTheme } from './app/utils/styling/colors'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -59,7 +61,7 @@ export default function App() {
   }
 
   return (
-    <>
+    <View style={styles.container}>
       <GestureHandlerRootView>
           {
             isFirstLaunch && !isOnboardComplete
@@ -69,7 +71,14 @@ export default function App() {
                 : <Text>LOG IN FOOL</Text>
           }
       </GestureHandlerRootView>
-      <StatusBar style="dark" />
-    </>
+      <StatusBar style={currentTheme === 'light' ? 'dark' : 'light'} />
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: gen.primaryBackground,
+  },
+})

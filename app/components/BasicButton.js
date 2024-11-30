@@ -21,8 +21,8 @@ export default function BasicButton({ title, onPress, style: customStyling, disa
       style={[
         styles.buttonContainer,
         customStyling,
-        { backgroundColor: disabled ? gen.orangeDisabled : gen.orange },
-        { shadowColor: disabled ? '#b7a774' : gen.shadowOrange },
+        { backgroundColor: disabled ? gen.primaryColorDisabled : gen.primaryColor },
+        { shadowColor: disabled ? gen.primaryColorDisabledShadow : gen.primaryColorShadow },
         isPressed && styles.pressed,
       ]}
       disabled={disabled}
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    shadowColor: gen.shadowOrange,
+    shadowColor: gen.primaryColorShadow,
     shadowOffset: { width: 0, height: 4 }, // Position the shadow directly at the bottom
     shadowOpacity: 1, // Make the shadow fully opaque
     shadowRadius: 0, // Remove the blur effect

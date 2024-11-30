@@ -3,6 +3,7 @@ import { Text, TouchableOpacity, View, StyleSheet, ScrollView } from 'react-nati
 
 import SimpleHeader from '../components/SimpleHeader'
 import { getChaptersFromBook } from '../utils/read'
+import { gen } from '../utils/styling/colors'
 
 export default function Chapters({ navigation, route}) {
   const { work, book } = route.params
@@ -59,6 +60,7 @@ export default function Chapters({ navigation, route}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: gen.secondaryBackground,
   },
   contentContainer: {
     flex: 1,
@@ -76,6 +78,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 22,
     fontFamily: 'nunito-bold',
-    color: '#222',
+    color: gen.primaryText,
   }
 })

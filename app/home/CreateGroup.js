@@ -108,8 +108,8 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
             />
           )}
           <View>
-            <Text style={{ fontFamily: 'nunito-bold', fontSize: 18, color: gen.heckaGray, marginLeft: 15 }}>{userName}</Text>
-            <Text style={{ fontFamily: 'nunito-bold', fontSize: 14, color: gen.darkishGray, marginLeft: 15 }}>leader</Text>
+            <Text style={{ fontFamily: 'nunito-bold', fontSize: 18, color: gen.primaryText, marginLeft: 15 }}>{userName}</Text>
+            <Text style={{ fontFamily: 'nunito-bold', fontSize: 14, color: gen.secondaryText, marginLeft: 15 }}>leader</Text>
           </View>
         </View>
 
@@ -122,7 +122,7 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
                 <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: 'center' }}>
                   <View style={{ flex: 1, marginRight: 20 }}>
                     <Text 
-                      style={{ fontFamily: 'nunito-bold', fontSize: 18, color: '#333', marginLeft: 15, overflow: 'hidden' }}
+                      style={{ fontFamily: 'nunito-bold', fontSize: 18, color: gen.primaryText, marginLeft: 15, overflow: 'hidden' }}
                       numberOfLines={1}
                       ellipsizeMode='tail'
                     >{friend.fname} {friend.lname}</Text>
@@ -149,8 +149,8 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
             setScreenVisible('addPeople')
           }}
         >
-          <Text style={[styles.bookText, { color: gen.darkGray, textAlign: 'center', width: '100%' }]}>
-            <Icon name='plus' size={16} color={gen.darkGray} /> Add People
+          <Text style={[styles.bookText, { color: gen.actionText, textAlign: 'center', width: '100%' }]}>
+            <Icon name='plus' size={16} color={gen.actionText} /> Add People
           </Text>
         </TouchableOpacity>
       </View>
@@ -214,7 +214,7 @@ export default function CreateGroup({ navigation }) {
 
                 const {data, error} = await createGroup(groupName, image, leader, friendsAdded, plan)
 
-                if (!error) {
+                if (!error || error === null) {
                   navigation.dispatch(
                     CommonActions.reset({
                       index: 0,
@@ -225,6 +225,7 @@ export default function CreateGroup({ navigation }) {
                   console.error('Error creating group:', error)
                   setDisabled(true)
                   setButtonText('Error creating group')
+                  // TODO - redesign group error message... Find the best way to handle this
                 }
               }}
               disabled={disabled}
@@ -248,7 +249,7 @@ export default function CreateGroup({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
   },
   contentContainer: {
     flex: 1,
@@ -258,26 +259,26 @@ const styles = StyleSheet.create({
   groupPhoto: {
     width: 150,
     height: 200,
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 5,
     borderWidth: 5,
     borderRadius: 20,
-    borderColor: gen.lightGray,
+    borderColor: gen.primaryBorder,
   },
   sectionHeader: {
     fontFamily: 'nunito-bold',
     fontSize: 20,
-    color: gen.darkGray,
+    color: gen.actionText,
     marginVertical: 15,
   },
   sectionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 5,
-    borderColor: gen.lightGray,
+    borderColor: gen.primaryBorder,
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
@@ -302,6 +303,7 @@ const styles = StyleSheet.create({
   bookText: {
     fontSize: 18,
     fontFamily: 'nunito-bold',
+    color: gen.primaryText
   },
   planDetails: {
     flex: 1,
@@ -311,7 +313,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 15,
     borderWidth: 5,
-    borderColor: gen.lightGray,
+    borderColor: gen.primaryBorder,
   },
   personRow: {
     height: 80,
@@ -320,7 +322,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 3,
-    borderColor: gen.lightGray,
+    borderColor: gen.primaryBorder,
   },
   modal: {
     flex: 1,

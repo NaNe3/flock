@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import { hapticSelect } from '../utils/haptics'
+import { gen } from '../utils/styling/colors'
 
 const SimpleHeader = ({
   navigation, 
@@ -40,16 +41,16 @@ const SimpleHeader = ({
           <Icon 
             name='chevron-left'
             size={20}
-            color='#000'
+            color={gen.primaryText}
           />
           { title && (
-            <Text style={{ fontFamily: 'nunito-bold', fontSize: 23, marginLeft: 10 }}>{title}</Text>
+            <Text style={styles.headerTitle}>{title}</Text>
           )}
           { component !== null && component }
         </TouchableOpacity>
         { showChapterTitle && middleTitle !== null &&
           <Animated.Text
-            style={{ fontFamily: 'nunito-bold', fontSize: 23, opacity: fadeAnim, flex: 1, textAlign: 'center' }}
+            style={[styles.middleTitle, { opacity: fadeAnim }]}
             numberOfLines={1}
             ellipsizeMode={'tail'}
           >
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
   header: {
     width: '100%',
     height: 110,
-    backgroundColor: '#fff'
+    backgroundColor: gen.primaryBackground
   },
   headerContent: {
     marginTop: 50,
@@ -82,6 +83,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
   },
+  headerTitle: {
+    fontFamily: 'nunito-bold',
+    fontSize: 23,
+    marginLeft: 10,
+    color: gen.primaryText
+  },
+  middleTitle: {
+    fontFamily: 'nunito-bold', 
+    fontSize: 23, 
+    flex: 1, 
+    textAlign: 'center',
+    color: gen.primaryText,
+  }
 })
 
 export default SimpleHeader

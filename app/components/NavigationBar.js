@@ -20,21 +20,21 @@ export default function NavigationBar({ currentRoute, setCurrentRoute }) {
         style={styles.iconContainer}
         onPress={() => changePage('Home')}
       >
-        <Icon name="house" size={23} color={currentRoute === 'Home' ? gen.orange : gen.darkGray }/>
+        <Icon name="house" size={23} color={currentRoute === 'Home' ? gen.primaryColor : gen.actionText }/>
         <Text style={[styles.iconText, currentRoute === 'Home' && styles.iconTextSelected]}>HOME</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.iconContainer} 
         onPress={() => changePage('GroupPage')}
       >
-        <Icon name="people-pulling" size={23} color={currentRoute === 'GroupPage' ? gen.orange : gen.darkGray} />
+        <Icon name="people-pulling" size={23} color={currentRoute === 'GroupPage' ? gen.primaryColor : gen.actionText } />
         <Text style={[styles.iconText, currentRoute === 'GroupPage' && styles.iconTextSelected]}>GROUPS</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.iconContainer} 
         onPress={() => changePage('LibraryPage')}
       >
-        <Icon name="book" size={23} color={currentRoute === 'LibraryPage' || currentRoute === "Chapter" ? gen.orange : gen.darkGray} />
+        <Icon name="book" size={23} color={currentRoute === 'LibraryPage' || currentRoute === "Chapter" ? gen.primaryColor : gen.actionText } />
         <Text style={[styles.iconText, currentRoute === 'LibraryPage' && styles.iconTextSelected]}>LIBRARY</Text>
       </TouchableOpacity>
     </View>
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 90,
     maxHeight: 90,
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     paddingTop: 10,
     display: "flex",
     flexDirection: 'row',
@@ -58,11 +58,11 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   iconText: {
-    color: gen.darkGray,
+    color: gen.actionText,
     fontSize: 12,
     fontFamily: 'nunito-bold',
   },
   iconTextSelected: {
-    color: gen.orange,
+    color: gen.primaryColor,
   }
 })

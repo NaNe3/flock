@@ -41,7 +41,7 @@ const WorkShelf = ({ navigation }) => {
               </View>
               <View style={{ flex: 1 }}>
                 <Text 
-                  style={{ fontFamily: 'nunito-bold', fontSize: 22, marginLeft: 20 }}
+                  style={styles.bookHeader}
                   numberOfLines={1}
                   ellipsizeMode='tail'
                 >{book}</Text>
@@ -60,7 +60,7 @@ const WorkShelf = ({ navigation }) => {
         activeOpacity={0.7}
       >
         <Text style={styles.addButtonText}>
-          <Icon name='plus' size={18} color={gen.darkGray} /> ADD
+          <Icon name='plus' size={18} color={gen.actionText} /> ADD
         </Text>
       </TouchableOpacity>
     </View>
@@ -85,21 +85,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: gen.primaryBackground,
     alignItems: 'center',
-  },
-  sectionHeaderContainer: {
-    width: '100%',
-    height: 110,
-    backgroundColor: '#fff',
-  },
-  sectionHeader: {
-    fontSize: 24,
-    fontFamily: 'nunito-bold',
-    textAlign: 'center',
-    justifyContent: 'center',
-    marginTop: 65,
-    color: '#000',
   },
   libraryContent: {
     paddingTop: 30,
@@ -125,21 +112,27 @@ const styles = StyleSheet.create({
   bookName: {
     fontSize: 8,
     fontFamily: 'nunito-bold',
-    color: gen.orange,
+    color: gen.primaryColor,
   },
   addBookButton: {
     width: '100%',
     marginTop: 20,
     borderRadius: 20,
-    borderColor: gen.lightGray,
+    borderColor: gen.primaryBorder,
     borderWidth: 5,
   },
   addButtonText: {
     fontFamily: 'nunito-bold', 
     fontSize: 18, 
-    color: gen.darkGray,
+    color: gen.actionText,
     textAlign: 'center',
     alignItems: 'center',
     paddingVertical: 20 
+  },
+  bookHeader: {
+    color: gen.primaryText,
+    fontFamily: 'nunito-bold', 
+    fontSize: 22, 
+    marginLeft: 20 
   },
 })

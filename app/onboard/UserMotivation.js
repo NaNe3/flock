@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   boxSelected: {
-    borderColor: gen.orange,
-    color: gen.orange,
+    borderColor: gen.primaryColor,
+    color: gen.primaryColor,
   },
   medium: {
     fontSize: 18,

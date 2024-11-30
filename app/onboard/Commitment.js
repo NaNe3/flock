@@ -17,11 +17,11 @@ export default function Commitment({
 }) {
   const [loading, setLoading] = useState(false)
   const bookColors = {
-    'Come Follow Me': [gen.maroon, gen.orange],
-    'Book of Mormon': [gen.navy, gen.orange],
-    'Doctrine and Covenants': ['#000', gen.orange],
-    'New Testament': ['#000', gen.orange],
-    'Old Testament': ['#000', gen.orange],
+    'Come Follow Me': [gen.maroon, gen.primaryColor],
+    'Book of Mormon': [gen.navy, gen.primaryColor],
+    'Doctrine and Covenants': ['#000', gen.primaryColor],
+    'New Testament': ['#000', gen.primaryColor],
+    'Old Testament': ['#000', gen.primaryColor],
   }
 
   const DayBox = ({ day, chapters }) => {
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   innerBookText: {
-    color: gen.orange,
+    color: gen.primaryColor,
     fontFamily: 'nunito-bold',
     fontSize: 20,
   },
