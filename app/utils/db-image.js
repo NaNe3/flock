@@ -1,4 +1,4 @@
-import { downloadAvatarWithPath } from "./db-download";
+import { downloadFileWithPath } from "./db-download";
 import supabase from "./supabase"
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
@@ -159,7 +159,7 @@ const createGroupMemberRelationships = async (group_id, leader, members) => {
 export const createGroup = async (name, image, leader = 9, members, plan) => {
   try {
     const { data, error } = await uploadGroupImage(image)
-    const { error: avatarDownloadError } = await downloadAvatarWithPath('public/group/', data.path.split("/").pop())
+    const { error: avatarDownloadError } = await downloadFileWithPath('avatars', 'public/group/', data.path.split("/").pop())
 
     if (data && !error && !avatarDownloadError) {
       const { groupData } = await createGroupRow(name, data.path, plan)

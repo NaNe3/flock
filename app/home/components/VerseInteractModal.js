@@ -28,7 +28,7 @@ export default function VerseInteractModal({
 }) {
   const bottomSheetRef = useRef(null)
   const commentInputRef = useRef(null)
-  const snapPoints = useMemo(() => ['65%', '95%'], []);
+  const snapPoints = useMemo(() => [280], []);
   const [userInformation, setUserInformation] = useState({})
   const [commentInput, setCommentInput] = useState('')
   const [displayInputBar, setDisplayInputBar] = useState(true)
@@ -173,9 +173,10 @@ export default function VerseInteractModal({
           <Text style={styles.modalHeader}>{`${book} ${chapter}:${verse}`}</Text>
           <ExperienceSlider 
             navigation={navigation} 
+            canAddExperience={true}
             location={{ work, book, chapter, verse }}
           />
-          <View style={styles.commentsList}>
+          {/* <View style={styles.commentsList}>
             {
               numberOfComments > 0 ? (
                 <FlashList
@@ -189,7 +190,7 @@ export default function VerseInteractModal({
                 <Text style={{ fontFamily: 'nunito-bold', fontSize: 24, marginTop: 100, textAlign: "center", color: gen.lightGray}}>No comments</Text>
               )
             }
-          </View>
+          </View> */}
         </BottomSheetView>
       </BottomSheet>
       <Animated.View style={[
@@ -284,7 +285,8 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     width: '100%',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
+    // justifyContent: 'flex-end',
     alignItems: 'center',
     backgroundColor: gen.primaryBackground
   },
@@ -324,7 +326,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     transition: 'bottom 0.5s',
     paddingHorizontal: 20,
-    paddingBottom: 20
+    paddingBottom: 20,
+
+    display: 'none'
   },
   sendButton: {
     padding: 15,

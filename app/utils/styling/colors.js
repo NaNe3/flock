@@ -10,21 +10,24 @@ const lightTheme = {
 
   primaryBorder: '#D3D3D3',
 
+  navigationSelected: '#444',
+  navigationUnselected: '#BBB',
+
   // ORANGE THEME
-  primaryColor: '#FFBF00',
-  primaryColorLight: '#fff2cc',
-  primaryColorShadow: '#ba7700',
-  primaryColorDisabledShadow: '#b7a774',
-  primaryColorDisabled: '#ffecb2',
-  secondaryColor: '#05D5FA',
+  // primaryColor: '#FFBF00',
+  // primaryColorLight: '#fff2cc',
+  // primaryColorShadow: '#ba7700',
+  // primaryColorDisabledShadow: '#b7a774',
+  // primaryColorDisabled: '#ffecb2',
+  // secondaryColor: '#05D5FA',
   
   // BLUE THEME
-  // primaryColor: '#0ba3ff',
-  // primaryColorLight: '#c9ebff',
-  // primaryColorShadow: '#005591',
-  // primaryColorDisabledShadow: '#70878f',
-  // primaryColorDisabled: '#c9ebff',
-  // secondaryColor: '#FFBF00',
+  primaryColor: '#0ba3ff',
+  primaryColorLight: '#c9ebff',
+  primaryColorShadow: '#005591',
+  primaryColorDisabledShadow: '#70878f',
+  primaryColorDisabled: '#c9ebff',
+  secondaryColor: '#FFBF00',
 }
 
 const darkTheme = {
@@ -39,6 +42,9 @@ const darkTheme = {
 
   primaryBorder: '#555',
 
+  navigationSelected: '#fff',
+  navigationUnselected: '#999',
+
   primaryColor: '#0ba3ff',
   primaryColorLight: '#c9ebff',
   primaryColorShadow: '#005591',
@@ -47,7 +53,7 @@ const darkTheme = {
   secondaryColor: '#FFBF00',
 }
 
-export const currentTheme = 'light'
+export const currentTheme = 'dark'
 
 const theme = {
   'light': lightTheme,
@@ -91,6 +97,9 @@ export const gen = {
   secondaryText: theme[currentTheme].secondaryText,
   tertiaryText: theme[currentTheme].tertiaryText,
   actionText: theme[currentTheme].actionText,
+
+  navigationSelected: theme[currentTheme].navigationSelected,
+  navigationUnselected: theme[currentTheme].navigationUnselected,
 
   primaryBorder: theme[currentTheme].primaryBorder,
 }

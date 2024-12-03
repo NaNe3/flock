@@ -43,6 +43,10 @@ export default function Chapters({ navigation, route}) {
                     work: work,
                     book: book,
                     chapter: chapter,
+                    plan: {
+                      verses: null,
+                      next: null
+                    }
                   })
                 }}
               >

@@ -1,67 +1,58 @@
 import { StyleSheet, Text, View } from "react-native"
 import { gen } from "../../utils/styling/colors"
 import { useEffect, useState } from "react"
+import { getLocallyStoredVariable } from "../../utils/localStorage";
+import { getDatesOfCurrentWeek } from "../../utils/plan";
+
+const Day = ({ day, date, isToday, background, text }) => {
+  return (
+    <View style={styles.weekDay}>
+      <Text style={styles.weekDayText}>{day}</Text>
+      <View style={isToday && [shades.roundedRight, shades.gray]}>
+        <View style={[styles.dayContainer, background]}>
+          <Text style={[styles.dayNumberText, text]}>{date}</Text>
+        </View>
+      </View>
+    </View>
+  )
+}
 
 export default function WeekActivityTracker() {
-  const [weekDays, setWeekDays] = useState([])
+  const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+  const [dates, setDates] = useState([14, 15, 16, 17, 18, 19, 20])
+  const [currentDay, setCurrentDay] = useState(0)
+  const [readingForToday, setReadingForToday] = useState(null)
 
   useEffect(() => {
-
+    const { currentDay: today, dates } = getDatesOfCurrentWeek()
+    setCurrentDay(today)
+    setDates(dates)
   }, [])
 
   return (
     <View style={styles.weekRow}>
-      <View style={styles.weekDay}> 
-        <Text style={styles.weekDayText}>SU</Text>
-        <Text style={[styles.dayContainer, { backgroundColor: gen.tertiaryBackground, borderBottomLeftRadius: 10, borderTopLeftRadius: 10 }]}>
-          <Text style={styles.dayNumberText}>14</Text>
-        </Text>
-
-      </View>
-      <View style={styles.weekDay}>
-        <Text style={styles.weekDayText}>M</Text>
-        <Text style={[styles.dayContainer, { backgroundColor: gen.tertiaryBackground }]}>
-          <Text style={styles.dayNumberText}>15</Text>
-        </Text>
-
-      </View>
-      <View style={styles.weekDay}>
-        <Text style={styles.weekDayText}>T</Text>
-        <View style={[styles.dayContainer, { backgroundColor: gen.tertiaryBackground, borderTopRightRadius: 10, borderBottomRightRadius: 10, paddingVertical: 0 }]}>
-          <View style={{ flex: 1, backgroundColor: gen.primaryColorLight, paddingVertical: 5, borderRadius: 10 }}>
-            <Text style={[styles.dayNumberText, { color: gen.primaryColor }]}>16</Text>
-          </View>
-        </View>
-
-      </View>
-      <View style={styles.weekDay}> 
-        <Text style={styles.weekDayText}>W</Text>
-        <View style={styles.dayContainer}>
-          <Text style={styles.dayNumberText}>16</Text>
-        </View>
-
-      </View>
-      <View style={styles.weekDay}> 
-        <Text style={styles.weekDayText}>TH</Text>
-        <View style={styles.dayContainer}>
-          <Text style={styles.dayNumberText}>17</Text>
-        </View>
-
-      </View>
-      <View style={styles.weekDay}> 
-        <Text style={styles.weekDayText}>F</Text>
-        <View style={styles.dayContainer}>
-          <Text style={styles.dayNumberText}>18</Text>
-        </View>
-
-      </View>
-      <View style={styles.weekDay}> 
-        <Text style={styles.weekDayText}>S</Text>
-        <View style={styles.dayContainer}>
-          <Text style={styles.dayNumberText}>19</Text>
-        </View>
-
-      </View>
+      {
+        days.map((day, index) => {
+          return (
+            <Day 
+              key={`${day}-${index}`}
+              day={day}
+              date={dates[index]}
+              isToday={currentDay === index}
+              background={[
+                index < currentDay && shades.gray, 
+                index === 0 && currentDay !== 0 && shades.roundedLeft, 
+                index === 6 && shades.roundedRight, 
+                index === currentDay && shades.current
+              ]}
+              text={[
+                styles.dayNumberText,
+                index === currentDay && shades.currentText
+              ]}
+            />
+          )
+        })
+      }
     </View>
   )
 }
@@ -93,5 +84,22 @@ const styles = StyleSheet.create({
     fontFamily: 'nunito-bold',
     textAlign: 'center',
     color: gen.actionText,
+  }
+})
+
+const shades = StyleSheet.create({
+  gray: { backgroundColor: gen.tertiaryBackground, },
+  current: { 
+    backgroundColor: gen.primaryColorLight, 
+    borderRadius: 10,
+  },
+  currentText: { color: gen.primaryColor },
+  roundedLeft: {
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+  },
+  roundedRight: {
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
   }
 })

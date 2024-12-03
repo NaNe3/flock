@@ -5,10 +5,10 @@ import * as FileSystem from 'expo-file-system'
 // 1. PUT ALL FILE ALLOCATION FUNCTIONS IN THIS FILE
 // 2. MOVE ALL STORAGE FUCNTIONS TO ANOTHER FILE
 
-export const downloadAvatarWithPath = async (path, name) => {
+export const downloadFileWithPath = async (bucket, path, name) => {
   const { data, error } = await supabase
     .storage
-    .from('avatars')
+    .from(bucket)
     .download(`${path}/${name}`)
 
   if (error) {
@@ -16,7 +16,7 @@ export const downloadAvatarWithPath = async (path, name) => {
     return { error }
   }
 
-  const fileUri = FileSystem.documentDirectory + name;
+  const fileUri = FileSystem.documentDirectory + name
   try {
     const reader = new FileReader()
     reader.readAsDataURL(data)
@@ -32,14 +32,14 @@ export const downloadAvatarWithPath = async (path, name) => {
   }
 }
 
-export const getLocalUriForImage = (path) => {
+export const getLocalUriForFile = (path) => {
   const pathSections = path.split('/')
   const fileUri = FileSystem.documentDirectory + pathSections[pathSections.length - 1]
   return fileUri
 }
 
-export const deleteLocalImage = async (path) => {
-  const fileUri = getLocalUriForImage(path)
+export const deleteLocalFile = async (path) => {
+  const fileUri = getLocalUriForFile(path)
 
   try {
     await FileSystem.deleteAsync(fileUri);
@@ -49,8 +49,8 @@ export const deleteLocalImage = async (path) => {
   }
 }
 
-export const checkIfImageExistsWithPath = async (path) => {
-  const fileUri = await getLocalUriForImage(path)
+export const checkIfFileExistsWithPath = async (path) => {
+  const fileUri = await getLocalUriForFile(path)
   // deleteLocalImage(path)
 
   try {

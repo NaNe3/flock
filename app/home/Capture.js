@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/FontAwesome6'
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Audio } from 'expo-av'
 
-import VideoPreview from './components/VideoPreview'
+import VideoPreview from '../components/VideoPreview'
 
 import { hapticImpactSoft } from '../utils/haptics'
 import { gen } from '../utils/styling/colors'

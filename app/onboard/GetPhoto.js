@@ -6,7 +6,7 @@ import { uploadAvatar } from '../utils/db-image'
 import BasicButton from '../components/BasicButton'
 import { hapticSelect } from '../utils/haptics';
 import { setAttributeForObjectInLocalStorage } from '../utils/localStorage';
-import { downloadAvatarWithPath } from '../utils/db-download';
+import { downloadFileWithPath } from '../utils/db-download';
 import SelectPhoto from '../components/SelectPhoto';
 
 export default function GetPhoto({ setCurrentScreen, onboardingData, setOnboardingData }) {
@@ -35,7 +35,7 @@ export default function GetPhoto({ setCurrentScreen, onboardingData, setOnboardi
     const { data, error } = await uploadAvatar(image, onboardingData.id)
     
     if (data && !error) {
-      const { uri } = await downloadAvatarWithPath('public/profile/', data.path.split('/').pop())
+      const { uri } = await downloadFileWithPath('avatars', 'public/profile/', data.path.split('/').pop())
       await setAttributeForObjectInLocalStorage('userInformation', 'avatar_path', uri)
 
       setCurrentScreen(prev => prev + 1)

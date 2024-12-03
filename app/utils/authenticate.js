@@ -8,7 +8,7 @@ export const initSession = async () => {
 export const getUserInformationFromUUID = async (uuid) => {
   const { data, error } = await supabase
     .from('user')
-    .select('id, uui, created_at, email, fname, lname, goal, phone_number, plan, avatar_path, last_active')
+    .select('id, uui, created_at, email, fname, lname, goal, phone_number, plan_id, avatar_path, last_active')
     .eq('uui', uuid)
 
   if (error) {
@@ -233,4 +233,96 @@ export const getCommentsFromChapter = async (book, chapter) => {
   }
 
   return data
+}
+
+export const getMediaFromVerse = async (work, book, chapter, verse) => {
+  const { data, error } = await supabase
+    .from('activity')
+    .select(`
+      verse,
+      user(id, fname, lname, avatar_path),
+      media(created_at, media_id, media_type, media_path)
+    `)
+    .eq('work', work)
+    .eq('book', book)
+    .eq('chapter', chapter)
+    .eq('verse', verse)
+    .not('media_id', 'is', null)
+
+  if (error) {
+    console.error(error)
+    return { error: error }
+  }
+
+  return data
+}
+
+export const getVersesWithActivity = async (work, book, chapter, userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('activity')
+      .select(`verse`)
+      .eq('work', work)
+      .eq('book', book)
+      .eq('chapter', chapter)
+      .not('media_id', 'is', null)
+      // .neq('user_id', userId)
+      // TODO - activity of others, not user
+
+    if (error) {
+      console.error(error)
+      return { error: error }
+    }
+    return data
+  } catch (error) {
+    console.error(error)
+    return error
+  }
+}
+
+export const getMediaFromChapter = async (work, book, chapter) => {
+  try {
+    const { data, error } = await supabase
+      .from('activity')
+      .select(`
+        verse,
+        user(id, fname, lname, avatar_path),
+        media(created_at, media_id, media_type, media_path)
+      `)
+      .eq('work', work)
+      .eq('book', book)
+      .eq('chapter', chapter)
+      .not('media_id', 'is', null)
+
+    if (error) {
+      console.error(error)
+      return { error: error }
+    }
+
+    return data
+  } catch (error) {
+    console.error(error)
+    return error
+  }
+}
+
+export const getPlanByUserId = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('user')
+      .select(`
+        plan (plan_name, plan_info)
+      `)
+      .eq('id', userId)
+
+    if (error) {
+      console.error(error)
+      return { error: error }
+    }
+
+    return data[0]
+  } catch (error) {
+    console.error(error)
+    return { error: error }
+  }
 }

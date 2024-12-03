@@ -1,7 +1,7 @@
 import { View, StyleSheet, Text, ScrollView, Image, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome'
 
-import { getLocalUriForImage } from '../utils/db-download'
+import { getLocalUriForFile } from '../utils/db-download'
 import SimpleHeader from '../components/SimpleHeader'
 import BasicButton from '../components/BasicButton'
 import { hapticSelect } from '../utils/haptics'
@@ -9,7 +9,7 @@ import { gen } from '../utils/styling/colors'
 
 export default function Group({ navigation, route }) {
   const { group_id, group_name, group_image, group_plan, members } = route.params
-  const group_avatar = getLocalUriForImage(group_image)
+  const group_avatar = getLocalUriForFile(group_image)
 
   return (
     <View style={styles.container}>
@@ -30,7 +30,7 @@ export default function Group({ navigation, route }) {
       >
         {
           members.map((member, index) => {
-            const member_avatar = getLocalUriForImage(member.avatar_path)
+            const member_avatar = getLocalUriForFile(member.avatar_path)
             return (
               <TouchableOpacity
                 style={styles.memberPhoto}

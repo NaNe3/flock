@@ -11,7 +11,7 @@ import BasicButton from '../components/BasicButton';
 import AddPeopleToGroup from './AddPeopleToGroup';
 import SelectPhoto from '../components/SelectPhoto';
 
-import { getLocalUriForImage } from '../utils/db-download';
+import { getLocalUriForFile } from '../utils/db-download';
 import { createGroup } from '../utils/db-image';
 import { hapticSelect } from '../utils/haptics';
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from '../utils/localStorage';
@@ -115,7 +115,7 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
 
         {
           friendsAdded.map((friend, index) => {
-            const avatar = getLocalUriForImage(friend.avatar_path)
+            const avatar = getLocalUriForFile(friend.avatar_path)
             return (
               <View key={index} style={styles.personRow}>
                 <Image source={{ uri: avatar }} style={{ width: 40, height: 50, borderRadius: 5 }} />

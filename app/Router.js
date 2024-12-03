@@ -4,17 +4,18 @@ import { NavigationContainer } from '@react-navigation/native'
 
 import Home from "./home";
 import Book from './home/Book';
-import Chapters from './home/Chapters';
-import Chapter from './home/Chapter';
-import Notifications from './home/Notifications';
-import CreatePlan from './home/CreatePlan';
-import CreateGroup from './home/CreateGroup';
 import Group from './home/Group';
-import AddFriends from './home/AddFriends';
-import PremiumOffer from './home/PremiumOffer';
-import AddPeopleToGroup from './home/AddPeopleToGroup';
 import Capture from "./home/Capture";
 import Profile from "./home/Profile";
+import Chapter from './home/Chapter';
+import Chapters from './home/Chapters';
+import AddFriends from './home/AddFriends';
+import CreatePlan from './home/CreatePlan';
+import CreateGroup from './home/CreateGroup';
+import PremiumOffer from './home/PremiumOffer';
+import Notifications from './home/Notifications';
+import AddPeopleToGroup from './home/AddPeopleToGroup';
+import DailyReadingSummary from "./home/DailyReadingSummary";
 
 import NavigationBar from "./components/NavigationBar";
 
@@ -22,7 +23,7 @@ import { getUserIdFromLocalStorage, setLocallyStoredVariable } from "./utils/loc
 import { getGroupsForUser } from "./utils/db-relationship";
 import { StyleSheet, View } from "react-native";
 import { gen } from "./utils/styling/colors";
-import DailyReadingSummary from "./home/DailyReadingSummary";
+import { getPlanByUserId } from "./utils/authenticate";
 
 const Stack = createStackNavigator()
 
@@ -41,13 +42,21 @@ export default function Router() {
   }
 
   useEffect(() => {
-    const getUserInformation = async () => {
-      // GET USER GROUPS
-      const userId = await getUserIdFromLocalStorage()
+    const getUserGroups = async (userId) => {
       const { data } = await getGroupsForUser(userId)
-
-      // SET GROUPS IN LOCAL STORAGE
       await setLocallyStoredVariable('user_groups', JSON.stringify(data))
+    }
+    const getUserPlan = async (userId) => {
+      // TODO - get user activity to see which days the user has studied!
+      const { plan } = await getPlanByUserId(userId)
+      await setLocallyStoredVariable(plan.plan_name, JSON.stringify(plan))
+    }
+
+    const getUserInformation = async () => {
+      const userId = await getUserIdFromLocalStorage()
+      getUserGroups(userId)
+      getUserPlan(userId)
+      // aditional locally stored information
     }
 
     getUserInformation()
@@ -56,77 +65,83 @@ export default function Router() {
   return (
     <View style={styles.container}>
       <NavigationContainer onStateChange={handleStateChange}>
-        <Stack.Navigator initialRouteName='Landing'>
+        <Stack.Navigator 
+          initialRouteName='Landing'
+          screenOptions={{
+            cardStyle: { backgroundColor: gen.primaryBackground },
+            headerShown: false,
+          }}
+        >
           <Stack.Screen
             name='Landing'
             component={Home}
-            options={{ headerShown: false, animationEnabled: false }}
+            options={{ animationEnabled: false }}
           />
 
           <Stack.Screen
             name='Book'
             component={Book}
-            options={{ headerShown: false, animationEnabled: true }}
+            options={{ animationEnabled: true }}
           />
           <Stack.Screen
             name='Chapters'
             component={Chapters}
-            options={{ headerShown: false, animationEnabled: true }}
+            options={{ animationEnabled: true }}
           />
           <Stack.Screen
             name='Chapter'
             component={Chapter}
-            options={{ headerShown: false, animationEnabled: true, gestureEnabled: false }}
+            options={{ animationEnabled: true, gestureEnabled: false }}
           />
           <Stack.Screen
             name='Notifications'
             component={Notifications}
-            options={{ headerShown: false, animationEnabled: true }}
+            options={{ animationEnabled: true }}
           />
           <Stack.Screen 
             name='Profile'
             component={Profile}
-            options={{ headerShown: false, animationEnabled: true }}
+            options={{ animationEnabled: true }}
           />
           <Stack.Screen
             name='CreatePlan'
             component={CreatePlan}
-            options={{ headerShown: false, animationEnabled: true }}
+            options={{ animationEnabled: true }}
           />
           <Stack.Screen
             name='CreateGroup'
             component={CreateGroup}
-            options={{ headerShown: false, animationEnabled: true }}
+            options={{ animationEnabled: true }}
           />
           <Stack.Screen
             name='AddPeopleToGroup'
             component={AddPeopleToGroup}
-            options={{ headerShown: false, animationEnabled: true }}
+            options={{ animationEnabled: true }}
           />
           <Stack.Screen 
             name='Group'
             component={Group}
-            options={{ headerShown: false, animationEnabled: true }}
+            options={{ animationEnabled: true }}
           />
           <Stack.Screen
             name='AddFriends'
             component={AddFriends}
-            options={{ headerShown: false, animationEnabled: true }}
+            options={{ animationEnabled: true }}
           />
           <Stack.Screen 
             name='PremiumOffer'
             component={PremiumOffer}
-            options={{ headerShown: false, animationEnabled: false }}
+            options={{ animationEnabled: false }}
           />
           <Stack.Screen 
             name='Capture'
             component={Capture}
-            options={{ headerShown: false, animationEnabled: false }}
+            options={{ animationEnabled: false }}
           />
           <Stack.Screen 
             name='DailyReadingSummary'
             component={DailyReadingSummary}
-            options={{ headerShown: false, animationEnabled: false }}
+            options={{ animationEnabled: true }}
           />
         </Stack.Navigator>
         {!withoutBar.includes(currentRoute) && (

@@ -1,0 +1,85 @@
+{
+  "plan_name": "Come Follow Me",
+  "weeks": {
+    "48": {
+      "dates": "Dec*2-Dec*8",
+      "content": {
+        "0": {
+          "time": 8,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "12",
+            "verses": null
+          }
+        },
+        "1": {
+          "time": 3,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "13",
+            "verses": "1-13"
+          }
+        },
+        "2": {
+          "time": 3,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "13",
+            "verses": "14-31"
+          }
+        },
+        "3": {
+          "time": 3,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "14",
+            "verses": "1-15"
+          }
+        },
+        "4": {
+          "time": 3,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "14",
+            "verses": "16-31"
+          }
+        },
+        "5": {
+          "time": 4,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "15",
+            "verses": "1-19"
+          }
+        },
+        "6": {
+          "time": 2,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "15",
+            "verses": "20-34"
+          }
+        }
+      }
+    },
+    "49": {
+      "dates": "Dec*9-Nov*15",
+      "content": [ ]
+    },
+    "50": {
+      "dates": "Dec*16-Dec*22",
+      "content": [ ]
+    },
+    "51": {
+      "dates": "Dec*23-Dec*29",
+      "content": [ ]
+    }
+  }
+}

@@ -37,8 +37,8 @@ export default function App() {
       setSession(result)
 
       // REFRESH USER INFORMATION
-      const { id, uui, created_at, email, fname, lname, goal, phone_number, plan, avatar_path, last_active } = await getUserInformationFromUUID(result.user.id)
-      await setUserInformationInLocalStorage({id, uui, created_at, email, fname, lname, goal, phone_number, plan, avatar_path, last_active})
+      const { id, uui, created_at, email, fname, lname, goal, phone_number, plan_id, avatar_path, last_active } = await getUserInformationFromUUID(result.user.id)
+      await setUserInformationInLocalStorage({id, uui, created_at, email, fname, lname, goal, phone_number, plan_id, avatar_path, last_active})
     }
     getSession()
   }, [])

@@ -3,9 +3,14 @@ import { StyleSheet, TouchableOpacity, View } from "react-native"
 import { useVideoPlayer, VideoView } from 'expo-video'
 import { useEffect } from "react"
 
-export default function VideoPreview({ source }) {
+export default function VideoPreview({ 
+  source,
+  muted = false,
+  style = {},
+ }) {
   const player = useVideoPlayer(source, player => {
     player.loop = true;
+    player.muted = muted;
     player.play();
   }, error => {
     console.error('Error loading video:', error)
@@ -41,7 +46,7 @@ export default function VideoPreview({ source }) {
       activeOpacity={1}
     >
       <VideoView 
-        style={styles.video} 
+        style={[styles.video, style]} 
         player={player} 
         allowsPictureInPicture 
         contentFit="cover"

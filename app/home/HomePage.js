@@ -1,78 +1,59 @@
 import { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome5";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import BasicButton from "../components/BasicButton";
-import WeakContentBox from "../components/WeakContentBox";
 import StrongContentBox from "../components/StrongContentBox"
-import InteractiveHeaderBar from "../components/InteractiveHeaderBar";
-
-import { getAttributeFromObjectInLocalStorage } from "../utils/localStorage";
-import { hapticSelect } from "../utils/haptics";
-import { gen } from "../utils/styling/colors";
 import WeekActivityTracker from "./components/WeekActivityTracker";
 
+import { getAttributeFromObjectInLocalStorage, getLocallyStoredVariable } from "../utils/localStorage";
+import { hapticSelect } from "../utils/haptics";
+import { gen } from "../utils/styling/colors";
+import { getCurrentWeekNumber } from "../utils/plan";
+
 const LandingDisplay = ({ navigation, goal, plan }) => {
+  const [userPlan, setUserPlan] = useState(null)
+  const [chapter, setChapter] = useState('')  
+  const [location, setLocation] = useState({})
+  const [time, setTime] = useState('')
   const [planButtonState, setPlanButtonState] = useState({
-    disabled: true
+    disabled: false
   })
 
   useEffect(() => {
-    if (goal) {
-      setPlanButtonState({
-        text: `${goal} min`,
-        icon: 'clock-o',
-        disabled: false,
-      })
-    } else {
-      setPlanButtonState({
-        text: "Create plan",
-        icon: 'calendar',
-        disabled: false,
-      })
+    const init = async () => {
+      const week = getCurrentWeekNumber()
+      const currentDay = new Date().getDay()
+      const plan = JSON.parse(await getLocallyStoredVariable('Come Follow Me'))
+      const weekPlan = plan.plan_info.weeks[week]
+      const today = weekPlan.content[currentDay]
+
+      setUserPlan(weekPlan)
+      setLocation(today.location)
+      setChapter(`${today.location.book.toUpperCase()} ${today.location.chapter}`)
+      setTime(today.time)
     }
-  }, [goal])
+
+    init()
+  }, [])
 
   return (
     <View style={styles.landingContainer}>
-      {/* <Text style={[styles.streakText, { marginBottom: 20, marginTop: 30 }]}>PERSONAL STUDY</Text>
-      <Image source={require('../../assets/duo-half.png')} style={{ width: 200, height: 120, marginBottom: -30 }} />
-
-      <BasicButton
-        title={planButtonState.text}
-        icon={planButtonState.icon}
-        onPress={() => {
-          hapticSelect()
-          navigation.navigate('CreatePlan')
-        }}
-        disabled={planButtonState.disabled}
-        style={{ marginTop: 20 }}
-      /> */}
       <WeekActivityTracker />
-      <Text style={styles.subHeader}>TODAY'S READING</Text>
-      <Text style={styles.header}>MORMON 8</Text>
+      <Text style={styles.subHeader}>START READING</Text>
+      <Text style={styles.header}>{chapter}</Text>
 
       <View style={styles.actionContainer}>
-        <View style={styles.actionPlanBox}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={[styles.book, { backgroundColor: gen.navy }]}>
-              <Text style={styles.bookName}>Book</Text>
-              <Text style={styles.bookName}>of</Text>
-              <Text style={styles.bookName}>Mormon</Text>
-            </View>
-            <View>
-              <Text style={{ fontSize: 16, fontFamily: 'nunito-bold', marginLeft: 10, color: gen.primaryText }}>COME FOLLOW ME</Text>
-              <Text style={{ fontSize: 12, fontFamily: 'nunito-bold', marginLeft: 10, color: gen.gray }}>Book of Mormon</Text>
-            </View>
-          </View>
-          <Icon name="chevron-down" size={20} color={gen.gray} />
-        </View>
         <BasicButton
-          title="7 minutes"
+          title={`${time} minutes`}
           icon={'clock-o'}
           onPress={() => {
             hapticSelect()
-            navigation.navigate('DailyReadingSummary')
+            navigation.navigate('DailyReadingSummary', {
+              plan: userPlan,
+              chapter: chapter,
+              location: location,
+              time: time,
+            })
           }}
           disabled={planButtonState.disabled}
           style={{ width: '100%' }}
@@ -119,9 +100,11 @@ export default function HomePage({ navigation }) {
             icon="user-plus"
           >
             <View style={styles.friendBox}>
-              <View>
-                <Text style={styles.friendName}>Luke Michaelis</Text>
-                <Text style={styles.friendActivity}>active 3w</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View>
+                  <Text style={styles.friendName}>Luke Michaelis</Text>
+                  <Text style={styles.friendActivity}>active 3w</Text>
+                </View>
               </View>
               <View style={styles.scriptureBox}>
                 <Text style={styles.scripture}>3 NEPHI 27</Text>
@@ -225,6 +208,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     paddingHorizontal: 20,
+    marginTop: 50
   },
   actionPlanBox: {
     width: '100%', 

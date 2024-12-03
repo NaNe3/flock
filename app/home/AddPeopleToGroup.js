@@ -5,7 +5,6 @@ import Icon from 'react-native-vector-icons/FontAwesome'
 import BasicTextInput from "../components/BasicTextInput"
 import { gen } from "../utils/styling/colors"
 import { getRelationships } from "../utils/db-relationship"
-import { checkIfImageExistsWithPath, downloadAvatarWithPath } from "../utils/db-download"
 import SimpleHeader from "../components/SimpleHeader"
 import { getUserIdFromLocalStorage } from "../utils/localStorage"
 import Avatar from "../components/Avatar"
@@ -14,11 +13,6 @@ export default function AddPeopleToGroup({ friendsAdded, setFriendsAdded, setScr
   const [searchInput, setSearchInput] = useState('')
   const [friends, setFriends] = useState([])
   const [peopleVisible, setPeopleVisible] = useState([])
-
-  // store state of people as their images are downloading
-  const [peopleWithDownloadedImages, setPeopleWithDownloadedImages] = useState([])
-  const [peopleWaitingOnImage, setPeopleWaitingOnImage] = useState([])
-  const [downloadedImages, setDownloadedImages] = useState([])
 
   useEffect(() => {
     const getFriends = async () => {
@@ -29,7 +23,6 @@ export default function AddPeopleToGroup({ friendsAdded, setFriendsAdded, setScr
         setFriends(data)
         setPeopleVisible(data)
 
-        // downloadUndownloadedAvatars(data)
       } else {
         console.error("Error getting friends:", error)
       }
