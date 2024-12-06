@@ -32,6 +32,13 @@ export default function NavigationBar({ currentRoute, setCurrentRoute }) {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.iconContainer} 
+        onPress={() => changePage('InvitePage')}
+      >
+        <Icon name="people-pulling" size={23} color={currentRoute === 'InvitePage' ? gen.navigationSelected : gen.navigationUnselected } />
+        <Text style={[styles.iconText, currentRoute === 'InvitePage' && styles.iconTextSelected]}>INVITE</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.iconContainer} 
         onPress={() => changePage('LibraryPage')}
       >
         <Icon name="book" size={23} color={currentRoute === 'LibraryPage' || currentRoute === "Chapter" ? gen.navigationSelected : gen.navigationUnselected } />

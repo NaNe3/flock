@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
     fontFamily: 'nunito-bold',
     fontSize: 18,
     maxHeight: 140,
+    color: gen.actionText,
   },
   textInputFocused: {
     borderColor: gen.primaryColor,

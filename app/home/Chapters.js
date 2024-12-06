@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Text, TouchableOpacity, View, StyleSheet, ScrollView } from 'react-native'
 
 import SimpleHeader from '../components/SimpleHeader'
+import FadeInView from '../components/FadeInView'
+
 import { getChaptersFromBook } from '../utils/read'
 import { gen } from '../utils/styling/colors'
 
@@ -28,7 +30,10 @@ export default function Chapters({ navigation, route}) {
         navigation={navigation}
       />
       <ScrollView style={styles.contentContainer}>
-        <View style={styles.chaptersContainer}>
+        <FadeInView 
+          style={styles.chaptersContainer}
+          time={500}
+        >
           {chapters.map((chapter, index) => {
             return (
               <TouchableOpacity
@@ -54,7 +59,7 @@ export default function Chapters({ navigation, route}) {
               </TouchableOpacity>
             )
           })}
-        </View>
+        </FadeInView>
 
       </ScrollView>
     </View>

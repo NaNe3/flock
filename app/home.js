@@ -1,14 +1,15 @@
 import { createStackNavigator } from '@react-navigation/stack';
 
-import HomePage from './home/HomePage';
-import GroupPage from './home/GroupPage';
-import LibraryPage from './home/LibraryPage';
+import HomePage from './home/HomePage'
+import GroupPage from './home/GroupPage'
+import InvitePage from './home/InvitePage'
+import LibraryPage from './home/LibraryPage'
 
-import InteractiveHeaderBar from './components/InteractiveHeaderBar';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native';
+import InteractiveHeaderBar from './components/InteractiveHeaderBar'
+import { View } from 'react-native'
+import { StyleSheet } from 'react-native'
 
-import { gen } from './utils/styling/colors';
+import { gen } from './utils/styling/colors'
 
 const Stack = createStackNavigator()
 
@@ -25,6 +26,11 @@ export default function Home() {
         <Stack.Screen 
           name="GroupPage" 
           component={GroupPage} 
+          options={{ headerShown: false, animationEnabled: false }}
+        />
+        <Stack.Screen
+          name="InvitePage"
+          component={InvitePage}
           options={{ headerShown: false, animationEnabled: false }}
         />
         <Stack.Screen 

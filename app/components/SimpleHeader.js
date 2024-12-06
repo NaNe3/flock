@@ -12,6 +12,7 @@ const SimpleHeader = ({
   showChapterTitle,
   component = null,
   rightIcon = null,
+  verticalPadding = 0
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current
 
@@ -24,8 +25,8 @@ const SimpleHeader = ({
   }, [showChapterTitle])
 
   return (
-    <View style={styles.header}>
-      <View style={styles.headerContent}>
+    <View style={[styles.header, { height: 100 + verticalPadding }]}>
+      <View style={[styles.headerContent, { paddingVertical: verticalPadding, height: 60 + verticalPadding }]}>
         <TouchableOpacity 
           onPress={() => { 
             hapticSelect()
@@ -35,7 +36,7 @@ const SimpleHeader = ({
               navigation.goBack() 
             }
           }} 
-          style={[{ flexDirection: 'row', alignItems: 'center' }, !title && { width: 50, height: 50}]}
+          style={[{ flexDirection: 'row', alignItems: 'center' }, !title && { width: 40, height: 50}]}
           activeOpacity={0.7}
         >
           <Icon 
@@ -46,8 +47,8 @@ const SimpleHeader = ({
           { title && (
             <Text style={styles.headerTitle}>{title}</Text>
           )}
-          { component !== null && component }
         </TouchableOpacity>
+        { component !== null && component }
         { showChapterTitle && middleTitle !== null &&
           <Animated.Text
             style={[styles.middleTitle, { opacity: fadeAnim }]}
@@ -72,11 +73,11 @@ const SimpleHeader = ({
 const styles = StyleSheet.create({
   header: {
     width: '100%',
-    height: 110,
+    height: 100,
     backgroundColor: gen.primaryBackground
   },
   headerContent: {
-    marginTop: 50,
+    marginTop: 40,
     height: 60,
     flexDirection: 'row',
     alignItems: 'center',

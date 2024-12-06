@@ -25,12 +25,11 @@ export const getLocallyStoredVariable = async (key) => {
 
 export const setLocallyStoredVariable = async (key, value) => {
   try {
-    await AsyncStorage.setItem(key, value)
+    await AsyncStorage.setItem(key, value);
   } catch (error) {
-    console.log(`Error getting ${key} from local storage: ${error}`)
-    return { error: null }
+    console.error(`Error setting ${key} in local storage: ${error}`);
   }
-}
+};
 
 export const setUserInformationInLocalStorage = async ({ id, uui, created_at, email, fname, lname, goal, phone_number, plan, avatar_path, last_active }) => {
   const userDataTemplate = {

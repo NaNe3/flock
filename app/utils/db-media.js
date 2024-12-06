@@ -1,3 +1,4 @@
+import { moveLocalFileToNewPath } from "./db-download";
 import { getUserIdFromLocalStorage } from "./localStorage";
 import supabase from "./supabase";
 
@@ -65,6 +66,7 @@ export const uploadMedia = async (location, media, media_type) => {
       .upload(`public/${media_type}/${fileName}`, new Uint8Array(arrayBuffer), {
         contentType: media_type === 'picture' ? 'image/jpeg' : 'video/quicktime',
       })
+    await moveLocalFileToNewPath({ oldPath: media, newPath: fileName })
 
     if (error) {
       console.error('Error uploading image:', error)

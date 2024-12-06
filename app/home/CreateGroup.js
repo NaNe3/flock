@@ -14,9 +14,10 @@ import SelectPhoto from '../components/SelectPhoto';
 import { getLocalUriForFile } from '../utils/db-download';
 import { createGroup } from '../utils/db-image';
 import { hapticSelect } from '../utils/haptics';
-import { getLocallyStoredVariable, getUserIdFromLocalStorage } from '../utils/localStorage';
+import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from '../utils/localStorage';
 import { gen } from '../utils/styling/colors';
 import Avatar from '../components/Avatar';
+import { getGroupsForUser } from '../utils/db-relationship';
 
 const GroupDetails = ({
   image,
@@ -181,8 +182,31 @@ export default function CreateGroup({ navigation }) {
   useEffect(() => {
     if (image && groupName && friendsAdded.length > 0 && plan) {
       setDisabled(false)
+    } else if (!disabled) {
+      setDisabled(true)
     }
   }, [groupName, image, friendsAdded])
+
+  const handleCreateButtonPressed = async (groupName, image, leader, friendsAdded, plan) => {
+    hapticSelect()
+    setDisabled(true)
+    setButtonText('Creating...')
+
+    const {status, error} = await createGroup(groupName, image, leader, friendsAdded, plan)
+
+    if (status === 'ok') {
+      // ADD NEW GROUP TO LOCAL STORAGE
+      const { data } = await getGroupsForUser(leader)
+      await setLocallyStoredVariable('user_groups', JSON.stringify(data))
+
+      navigation.goBack()
+    } else {
+      console.error('Error creating group:', error)
+      setDisabled(true)
+      setButtonText('Error creating group')
+      // TODO - redesign group error message... Find the best way to handle this
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -207,27 +231,7 @@ export default function CreateGroup({ navigation }) {
 
             <BasicButton
               title={buttonText}
-              onPress={async () => {
-                hapticSelect()
-                setDisabled(true)
-                setButtonText('Creating...')
-
-                const {data, error} = await createGroup(groupName, image, leader, friendsAdded, plan)
-
-                if (!error || error === null) {
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{ name: 'GroupPage' }],
-                    })
-                  )
-                } else {
-                  console.error('Error creating group:', error)
-                  setDisabled(true)
-                  setButtonText('Error creating group')
-                  // TODO - redesign group error message... Find the best way to handle this
-                }
-              }}
+              onPress={() => handleCreateButtonPressed(groupName, image, leader, friendsAdded, plan)}
               disabled={disabled}
               style={{ marginTop: 50, alignSelf: 'center', width: '100%' }}
             />

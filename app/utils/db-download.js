@@ -33,9 +33,11 @@ export const downloadFileWithPath = async (bucket, path, name) => {
 }
 
 export const getLocalUriForFile = (path) => {
-  const pathSections = path.split('/')
-  const fileUri = FileSystem.documentDirectory + pathSections[pathSections.length - 1]
-  return fileUri
+  if (path) {
+    const pathSections = path.split('/')
+    const fileUri = FileSystem.documentDirectory + pathSections[pathSections.length - 1]
+    return fileUri
+  }
 }
 
 export const deleteLocalFile = async (path) => {
@@ -59,5 +61,28 @@ export const checkIfFileExistsWithPath = async (path) => {
   } catch (error) {
     console.log("Error checking if image exists", error)
     return { exists: false, uri: null }
+  }
+}
+
+export const deleteLocalFileWithPath = async (path) => {
+  const fileUri = await getLocalUriForFile(path)
+
+  try {
+    const result = await FileSystem.deleteAsync(fileUri)
+    return { data: result }
+  } catch (error) {
+    return { error: error }
+  }
+}
+
+export const moveLocalFileToNewPath = async ({ oldPath, newPath }) => {
+  const newUri = await getLocalUriForFile(`/${newPath}`)
+
+  try {
+    const result = await FileSystem.moveAsync({ from: oldPath, to: newUri })
+    return { data: result }
+  } catch (error) {
+    console.log("Error moving file to new path in local file system", error)
+    return { error: error }
   }
 }

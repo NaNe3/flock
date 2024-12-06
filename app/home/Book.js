@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react"
 import { StyleSheet, View, TouchableOpacity, Text, ScrollView } from "react-native"
-import { getBooksFromWork, getChaptersFromBook } from "../utils/read"
+
 import SimpleHeader from "../components/SimpleHeader"
+import FadeInView from "../components/FadeInView"
+
+import { getBooksFromWork, getChaptersFromBook } from "../utils/read"
 import { hapticSelect } from "../utils/haptics"
 import { gen } from "../utils/styling/colors"
 
@@ -20,7 +23,7 @@ export default function Book({ navigation, route }) {
         navigation={navigation}
       />
       <ScrollView style={styles.contentContainer}>
-        <View style={{ flex: 1, paddingHorizontal: 45 }}>
+        <FadeInView style={{ flex: 1, paddingHorizontal: 45 }}>
           {
             booksInWork.map((book, index) => {
               return (
@@ -41,7 +44,7 @@ export default function Book({ navigation, route }) {
               )
             })
           }
-        </View>
+        </FadeInView>
       </ScrollView>
     </View>
   )

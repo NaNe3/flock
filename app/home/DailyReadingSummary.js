@@ -74,11 +74,6 @@ export default function DailyReadingSummary({ navigation, route }) {
       <BasicButton
         title="continue"
         onPress={() => {
-          console.log("NAVIGATING TO")
-          console.log("work: ", location.work)
-          console.log("book: ", location.book)
-          console.log("chapter: ", location.chapter)
-          console.log("plan: ", versesInStudy)
           navigation.navigate('Chapter', {
             work: location.work,
             book: location.book,

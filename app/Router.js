@@ -4,18 +4,18 @@ import { NavigationContainer } from '@react-navigation/native'
 
 import Home from "./home";
 import Book from './home/Book';
-import Group from './home/Group';
 import Capture from "./home/Capture";
 import Profile from "./home/Profile";
 import Chapter from './home/Chapter';
+import Group from './home/group/Group';
 import Chapters from './home/Chapters';
-import AddFriends from './home/AddFriends';
 import CreatePlan from './home/CreatePlan';
 import CreateGroup from './home/CreateGroup';
 import PremiumOffer from './home/PremiumOffer';
 import Notifications from './home/Notifications';
 import AddPeopleToGroup from './home/AddPeopleToGroup';
 import DailyReadingSummary from "./home/DailyReadingSummary";
+import GroupDetailsRouter from './home/group/GroupDetailsRouter';
 
 import NavigationBar from "./components/NavigationBar";
 
@@ -29,7 +29,7 @@ const Stack = createStackNavigator()
 
 export default function Router() {
   const [currentRoute, setCurrentRoute] = useState('Home')
-  const withoutBar = ['PremiumOffer', 'Group', 'CreateGroup', 'Chapter', 'Capture', 'DailyReadingSummary']
+  const withoutBar = ['PremiumOffer', 'Group', 'CreateGroup', 'Chapter', 'Capture', 'DailyReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers']
 
   const handleStateChange = (state) => {
     const routeName = state.routes[state.index].name
@@ -123,9 +123,9 @@ export default function Router() {
             component={Group}
             options={{ animationEnabled: true }}
           />
-          <Stack.Screen
-            name='AddFriends'
-            component={AddFriends}
+          <Stack.Screen 
+            name='GroupDetailsRouter'
+            component={GroupDetailsRouter}
             options={{ animationEnabled: true }}
           />
           <Stack.Screen 

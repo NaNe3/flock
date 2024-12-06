@@ -2,7 +2,13 @@ import { View, Text, StyleSheet, Touchable, TouchableOpacity } from 'react-nativ
 import Icon from 'react-native-vector-icons/FontAwesome'
 import { gen } from '../utils/styling/colors'
 
-export default function StrongContentBox({ navigation, title, icon, children }) {
+export default function StrongContentBox({ 
+  navigation, 
+  title, 
+  icon, 
+  onPress = null,
+  children
+}) {
   return (
     <View style={styles.container}>
       <View style={{ 
@@ -13,14 +19,16 @@ export default function StrongContentBox({ navigation, title, icon, children }) 
       </View>
       <View style={styles.groupRowContainer}>
         {children}
-        <TouchableOpacity 
-          onPress={() => navigation.navigate("AddFriends")}
-          style={{
-            padding: 15,
-          }}
-        >
-          <Text style={styles.createGroupButton}><Icon name="plus" size={18} color={gen.actionText} /> ADD FRIENDS</Text>
-        </TouchableOpacity>
+        {
+          onPress !== null && <TouchableOpacity 
+            onPress={onPress}
+            style={{
+              padding: 15,
+            }}
+          >
+            <Text style={styles.createGroupButton}><Icon name="plus" size={18} color={gen.actionText} /> ADD FRIENDS</Text>
+          </TouchableOpacity>
+        }
       </View>
     </View>
   )

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { Animated, View } from "react-native"
+import { Animated, Easing, View } from "react-native"
 
 export default function FadeInView({ children, style, time = 300 }) {
   const fadeAnim = useRef(new Animated.Value(0)).current

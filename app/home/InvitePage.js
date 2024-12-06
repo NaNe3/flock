@@ -24,25 +24,7 @@ export default function AddFriend({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <SimpleHeader navigation={navigation} title="Add Friends" />
-      <View style={styles.contentContainer}>
-
-        <Button 
-          title="Add a friend fool" 
-          onPress={() => {
-            createRelationship(userId, 36)
-            createRelationship(userId, 57)
-          }}
-        />
-
-        <Button
-          title="GET ALL YO FRIENDS"
-          onPress={() => {
-            console.log("GETTING ALL YO FRIENDS")
-            getRelationships(userId)
-          }}
-        />
-      </View>
+      <Text>HEEELLOOO</Text>
     </View>
   )
 }
@@ -54,13 +36,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  contentContainer: {
-    width: '100%',
-    backgroundColor: '#eee',
-    flex: 1,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 20,
   },
 })

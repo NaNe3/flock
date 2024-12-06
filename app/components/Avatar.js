@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 import { Animated, Image, StyleSheet, View } from "react-native"
 
+import FadeInView from "./FadeInView"
+
 import { gen } from "../utils/styling/colors"
 import { checkIfFileExistsWithPath, downloadFileWithPath, getLocalUriForFile } from "../utils/db-download"
 
@@ -11,6 +13,7 @@ export default function Avatar({
 }) {
   const [avatarPath, setAvatarPath] = useState(getLocalUriForFile(imagePath))
   const [avatarDownloaded, setAvatarDownloaded] = useState(null)
+  const [downloadRequired, setDownloadRequired] = useState(false)
   const [loadingAnimation] = useState(new Animated.Value(0))
 
   useEffect(() => {
@@ -23,6 +26,7 @@ export default function Avatar({
           setAvatarPath({ uri: fileUri })
           setAvatarDownloaded(true)
         } else if (avatar.exists === false) {
+          setDownloadRequired(true)
           const { uri, error } = await downloadFileWithPath('avatars', `public/${type}/`, fileUri.split("/").pop())
           if (!error) {
             // image is downloaded correctly.
@@ -52,9 +56,11 @@ export default function Avatar({
       }
     }
 
-    setAvatarDownloaded(false)
-    avatarAllocation()
-  }, [])
+    if (imagePath) {
+      setAvatarDownloaded(false)
+      avatarAllocation()
+    }
+  }, [imagePath])
 
   useEffect(() => {
     Animated.loop(
@@ -81,10 +87,15 @@ export default function Avatar({
   return (
     <Animated.View style={[styles.avatarBox, style, { backgroundColor }]}>
       {avatarDownloaded && (
-        <Image 
-          source={avatarPath}
-          style={[styles.avatar, style]}
-        />
+        <FadeInView
+          style={{ flex: 1 }}
+          time={downloadRequired ? 500 : 0}
+        >
+          <Image 
+            source={avatarPath}
+            style={[styles.avatar, style]}
+          />
+        </FadeInView>
       )}
     </Animated.View>
   )
@@ -92,7 +103,7 @@ export default function Avatar({
 
 const styles = StyleSheet.create({
   avatarBox: {
-    backgroundColor: gen.lightGray,
+    backgroundColor: gen.tertiaryBackground,
     overflow: 'hidden',
   },
   avatar: {

@@ -47,13 +47,13 @@ const darkTheme = {
 
   primaryColor: '#0ba3ff',
   primaryColorLight: '#c9ebff',
-  primaryColorShadow: '#005591',
+  primaryColorShadow: '#0b4eff',
   primaryColorDisabledShadow: '#70878f',
   primaryColorDisabled: '#c9ebff',
   secondaryColor: '#FFBF00',
 }
 
-export const currentTheme = 'dark'
+export const currentTheme = 'light'
 
 const theme = {
   'light': lightTheme,

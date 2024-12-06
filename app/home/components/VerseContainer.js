@@ -4,6 +4,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-g
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import UserDisplayInteraction from "../../components/UserDisplayInteraction"
+import FadeInView from "../../components/FadeInView"
 
 import { gen } from "../../utils/styling/colors"
 import { getAllVersesWithLikesInChapter, getVersesWithActivity } from "../../utils/authenticate"
@@ -102,42 +103,49 @@ export default function VerseContainer({
   return (
     <GestureHandlerRootView style={styles.verseContainer}>
       {
-        Object.entries(verses).map(([key, verse], index) => {
-          const tapGesture = Gesture.Tap().numberOfTaps(2).onEnd(() => handleVerseLike(index+1)).runOnJS(true).shouldCancelWhenOutside(true)
-          const longPressGesture = Gesture.LongPress().onStart(() => handleVersePress(index+1)).runOnJS(true).shouldCancelWhenOutside(true)
+        verses && <FadeInView
+          style={{ flex: 1, width: '100%' }}
+          time={700}
+        >
+          {
+            Object.entries(verses).map(([key, verse], index) => {
+              const tapGesture = Gesture.Tap().numberOfTaps(2).onEnd(() => handleVerseLike(index+1)).runOnJS(true).shouldCancelWhenOutside(true)
+              const longPressGesture = Gesture.LongPress().onStart(() => handleVersePress(index+1)).runOnJS(true).shouldCancelWhenOutside(true)
 
-          return (
-            <GestureDetector
-              key={`verse-${index}`}
-              gesture={
-                Gesture.Simultaneous(tapGesture, longPressGesture)
-              }
-            >
-              <View style={styles.verseBox}>
-                {uniqueVersesWithMedia[index+1] !== undefined && (
-                  <View style={styles.activityIndicator} />
-                )}
-                <Text 
-                  style={styles.verse}
+              return (
+                <GestureDetector
+                  key={`verse-${index}`}
+                  gesture={
+                    Gesture.Simultaneous(tapGesture, longPressGesture)
+                  }
                 >
-                  {key} {verse}
-                </Text>
-                {
-                  uniqueVersesWithUserLikes.includes(index+1) 
-                  && likes.filter(like => like.verse === index+1).map((person, index) =>
-                    // FIND AVATAR PATHS FROM PEOPLE WHO HAVE LIKED VERSE!
-                    <UserDisplayInteraction
-                      key={`like-${index}`}
-                      path={person.user.avatar_path}
-                      mediaType="like"
-                      top={index*35}
-                    />
-                  )
-                }
-              </View>
-            </GestureDetector>
-          )
-        })
+                  <View style={styles.verseBox}>
+                    {uniqueVersesWithMedia[index+1] !== undefined && (
+                      <View style={styles.activityIndicator} />
+                    )}
+                    <Text 
+                      style={styles.verse}
+                    >
+                      {key} {verse}
+                    </Text>
+                    {
+                      uniqueVersesWithUserLikes.includes(index+1) 
+                      && likes.filter(like => like.verse === index+1).map((person, index) =>
+                        // FIND AVATAR PATHS FROM PEOPLE WHO HAVE LIKED VERSE!
+                        <UserDisplayInteraction
+                          key={`like-${index}`}
+                          path={person.user.avatar_path}
+                          mediaType="like"
+                          top={index*35}
+                        />
+                      )
+                    }
+                  </View>
+                </GestureDetector>
+              )
+            })
+          }
+        </FadeInView>
       }
     </GestureHandlerRootView>
   )

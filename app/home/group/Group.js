@@ -1,26 +1,89 @@
+import { useCallback, useState } from 'react'
 import { View, StyleSheet, Text, ScrollView, Image, TouchableOpacity } from 'react-native'
+import { useFocusEffect } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/FontAwesome'
 
-import { getLocalUriForFile } from '../utils/db-download'
-import SimpleHeader from '../components/SimpleHeader'
-import BasicButton from '../components/BasicButton'
-import { hapticSelect } from '../utils/haptics'
-import { gen } from '../utils/styling/colors'
+import SimpleHeader from '../../components/SimpleHeader'
+import BasicButton from '../../components/BasicButton'
+import Avatar from '../../components/Avatar'
+
+import { getLocalUriForFile } from '../../utils/db-download'
+import { hapticSelect } from '../../utils/haptics'
+import { gen } from '../../utils/styling/colors'
+import { getLocallyStoredVariable } from '../../utils/localStorage'
 
 export default function Group({ navigation, route }) {
   const { group_id, group_name, group_image, group_plan, members } = route.params
   const group_avatar = getLocalUriForFile(group_image)
 
+  const [groupName, setGroupName] = useState(group_name)
+  const [groupAvatar, setGroupAvatar] = useState(group_avatar)
+  const [groupPlan, setGroupPlan] = useState(group_plan)
+  const [groupMembers, setGroupMembers] = useState(members)
+
+  useFocusEffect(
+    useCallback(() => {
+      const getUserGroupsFromLocalStorage = async () => {
+        const result = JSON.parse(await getLocallyStoredVariable('user_groups')).find(group => group.group_id === group_id)
+
+        setGroupName(result.group_name)
+        setGroupAvatar(result.group_image)
+        setGroupPlan(result.group_plan)
+        setGroupMembers(result.members)
+      }
+
+      getUserGroupsFromLocalStorage()
+    }, [])
+  )
+
   return (
     <View style={styles.container}>
-      <SimpleHeader navigation={navigation} 
-        // title={group_name}
+      <SimpleHeader 
+        navigation={navigation}
         rightIcon={
           <TouchableOpacity activeOpacity={0.7} >
             <Icon name="ellipsis-h" size={20} color={gen.primaryText} />
           </TouchableOpacity>
         }
+        component={
+          <TouchableOpacity 
+            style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}
+            activeOpacity={0.7}
+            onPress={() => {
+              hapticSelect()
+              navigation.navigate('GroupDetailsRouter', {
+                  group_name: groupName,
+                  group_avatar: groupAvatar,
+                  group_plan: groupPlan,
+                  members: groupMembers,
+                  ...route.params,
+                }
+              )
+            }}
+          >
+            {/* <Image source={{ uri: group_avatar }} style={styles.groupPhoto} /> */}
+            <Avatar 
+              imagePath={groupAvatar}
+              type="group"
+              style={styles.groupPhoto}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.groupName} numberOfLines={1} ellipsizeMode='tail' >{groupName}</Text>
+              <Text style={{ color: gen.gray, fontFamily: 'nunito-bold' }}>
+                <Icon name="users" color={gen.gray }/> {groupMembers.length} MEMBERS
+              </Text>
+            </View>
+          </TouchableOpacity>
+        }
+        verticalPadding={20}
       />
+      <View style={styles.landingContainer}>
+
+
+        <View style={styles.planLayoutContainer}>
+          <Text></Text>
+        </View>
+      </View>
 
       {/* ACTIVITY BARRRRRRR */}
       {/* <ScrollView 
@@ -45,47 +108,9 @@ export default function Group({ navigation, route }) {
       </ScrollView> */}
 
       <ScrollView style={styles.contentContainer}>
-        <View style={styles.landingContainer}>
-          <View style={styles.landingContainerContent}>
-
-            <View style={{ flexDirection: 'row' }}>
-              <Image source={{ uri: group_avatar }} style={styles.groupPhoto} />
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row' }}>
-                  <View style={styles.planLabel}>
-                    <Text style={{ fontFamily: 'nunito-bold', fontSize: 12, color: gen.gray, }}>COME FOLLOW ME</Text>
-                  </View>
-                </View>
-                <Text 
-                  style={styles.groupName}
-                  numberOfLines={1}
-                  ellipsizeMode='tail'
-                >{group_name}</Text>
-                <Text style={{ color: gen.gray, fontFamily: 'nunito-bold' }}>
-                  <Icon name="users" color={gen.gray }/> 3 MEMBERS
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.planLayoutContainer}>
-            <Text style={{ fontFamily: 'nunito-bold', fontSize: 16, textAlign: 'center', color: gen.gray }}>YOU'RE THE FIRST TO STUDY!</Text>
-            
-            <BasicButton
-              title='12 min'
-              icon='clock-o'
-              onPress={() => {
-                hapticSelect()
-              }}
-              style={{ marginTop: 20, alignSelf: 'center' }}
-            />
-          </View>
-        </View>
-
         <View style={styles.announcementContainer}>
           
         </View>
-
         <Text style={{ fontFamily: 'nunito-bold', fontSize: 24, color: gen.heckaGray2, textAlign: 'center', marginTop: 100, alignItems: 'center' }}>no activity</Text>
 
       </ScrollView>
@@ -111,23 +136,19 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     alignItems: 'center',
-    paddingTop: 600,
-    marginTop: -600,
-  },
-  landingContainerContent: { 
-    width: '100%',
-    paddingHorizontal: 10,
-    paddingTop: 20,
+    // paddingTop: 600,
+    // marginTop: -600,
+    display: 'none'
   },
   groupPhoto: {
-    width: 80,
-    height: 100,
+    width: 35,
+    height: 42,
     backgroundColor: gen.lightestGray,
-    marginHorizontal: 20,
     borderRadius: 5,
+    marginRight: 10
   },
   groupName: {
-    fontSize: 32,
+    fontSize: 18,
     fontFamily: 'nunito-bold',
     color: gen.primaryText,
   },
@@ -157,9 +178,6 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 40,
     paddingHorizontal: 20,
-    marginTop: 20,
-    borderTopWidth: 5,
-    borderTopColor: gen.secondaryText,
   },
   announcementContainer: {
 

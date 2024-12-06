@@ -14,6 +14,7 @@ export default function SelectPhoto({
 }) {
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
+
   useEffect(() => {
     Animated.loop(
       Animated.sequence([

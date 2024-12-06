@@ -1,3 +1,4 @@
+import { setLocallyStoredVariable } from "./localStorage";
 import supabase from "./supabase";
 
 export const createRelationship = async (user_id, friend_id) => {
@@ -37,16 +38,20 @@ export const getRelationships = async (user_id) => {
   }
 }
 
-const organizeGroupData = (data) => {
+const organizeGroupData = (user_id, data) => {
   const groupedData = data.reduce((acc, item) => {
     const groupId = item.group_id
     if (!acc[groupId]) {
       acc[groupId] = {
         members: [],
         ...item.group
-      };
+      }
     }
-    acc[groupId].members.push(item.user)
+    acc[groupId].members.push({
+      ...item.user, 
+      is_leader: item.is_leader, 
+      status: item.status
+    })
     return acc
   }, {})
 
@@ -62,6 +67,7 @@ export const getGroupsForUser = async (user_id) => {
       .from('group_member')
       .select('group_id')
       .eq('user_id', user_id)
+      .neq('status', 'rejected')
 
     if (userGroupsError) {
       console.error("Error getting groups for user:", error);
@@ -75,15 +81,60 @@ export const getGroupsForUser = async (user_id) => {
       .select(`
         group_id,
         user_id,
+        is_leader,
+        status,
         group (group_name, group_image, plan_id),
-        user (fname, lname, avatar_path)
+        user (id, fname, lname, avatar_path)
       `)
       .in('group_id', groupIds)
 
-    const groupedData = organizeGroupData(data)
+    const groupedData = organizeGroupData(user_id, data)
     return { data: groupedData, error: null }
   } catch (error) {
     console.log(`Error getting ${keys} from local storage: ${error}`)
     return { error: error }
   }
+}
+
+export const acceptGroupInvitation = async (user_id, group_id) => {
+  const { error } = await supabase
+    .from('group_member')
+    .update({ status: 'accepted' })
+    .eq('user_id', user_id)
+    .eq('group_id', group_id)
+
+  if (error) {
+    console.error("Error accepting group invitation:", error);
+    return { error: error };
+  } else {
+    const { data: groupsData, error: groupsError } = await getGroupsForUser(user_id);
+
+    if (groupsError) {
+      console.error("Error getting groups for user:", groupsError);
+      return { error: groupsError };
+    }
+    try {
+      await setLocallyStoredVariable('user_groups', JSON.stringify(groupsData));
+    } catch (e) {
+      console.error("Error setting user groups in local storage:", e);
+      return { error: e };
+    }
+  }
+
+  return { data }
+}
+
+export const rejectGroupInvitation = async (user_id, group_id) => {
+  const { data, error } = await supabase
+    .from('group_member')
+    .update({ status: 'rejected' })
+    .eq('user_id', user_id)
+    .eq('group_id', group_id)
+
+  if (error) {
+    console.error("Error rejecting group invitation:", error);
+    return { error: error };
+  }
+
+  return { data }
 }
