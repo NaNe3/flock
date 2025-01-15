@@ -11,15 +11,17 @@ import { getLocalUriForFile } from '../../utils/db-download'
 import { hapticSelect } from '../../utils/haptics'
 import { gen } from '../../utils/styling/colors'
 import { getLocallyStoredVariable } from '../../utils/localStorage'
+import InviteRow from '../components/InviteRow'
 
 export default function Group({ navigation, route }) {
-  const { group_id, group_name, group_image, group_plan, members } = route.params
+  const { groups, group_id, group_name, group_image, group_plan, members, status, userId } = route.params
   const group_avatar = getLocalUriForFile(group_image)
 
   const [groupName, setGroupName] = useState(group_name)
   const [groupAvatar, setGroupAvatar] = useState(group_avatar)
   const [groupPlan, setGroupPlan] = useState(group_plan)
   const [groupMembers, setGroupMembers] = useState(members)
+  const [groupStatus, setGroupStatus] = useState(status)
 
   useFocusEffect(
     useCallback(() => {
@@ -38,13 +40,8 @@ export default function Group({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <SimpleHeader 
+      <SimpleHeader
         navigation={navigation}
-        rightIcon={
-          <TouchableOpacity activeOpacity={0.7} >
-            <Icon name="ellipsis-h" size={20} color={gen.primaryText} />
-          </TouchableOpacity>
-        }
         component={
           <TouchableOpacity 
             style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}
@@ -61,7 +58,6 @@ export default function Group({ navigation, route }) {
               )
             }}
           >
-            {/* <Image source={{ uri: group_avatar }} style={styles.groupPhoto} /> */}
             <Avatar 
               imagePath={groupAvatar}
               type="group"
@@ -77,13 +73,21 @@ export default function Group({ navigation, route }) {
         }
         verticalPadding={20}
       />
-      <View style={styles.landingContainer}>
-
-
-        <View style={styles.planLayoutContainer}>
-          <Text></Text>
-        </View>
-      </View>
+      {
+        groupStatus === 'pending' && (
+          <View style={styles.landingContainer}>
+            <View style={styles.planLayoutContainer}>
+              <InviteRow 
+                navigation={navigation}
+                groups={groups}
+                setGroupStatus={setGroupStatus} 
+                userId={userId} 
+                groupId={group_id} 
+              />
+            </View>
+          </View>
+        )
+      }
 
       {/* ACTIVITY BARRRRRRR */}
       {/* <ScrollView 
@@ -111,7 +115,9 @@ export default function Group({ navigation, route }) {
         <View style={styles.announcementContainer}>
           
         </View>
-        <Text style={{ fontFamily: 'nunito-bold', fontSize: 24, color: gen.heckaGray2, textAlign: 'center', marginTop: 100, alignItems: 'center' }}>no activity</Text>
+        <Text style={styles.disclaimerText}>
+          { groupStatus === 'pending' ? 'join group to see activity' : 'no activity' }
+        </Text>
 
       </ScrollView>
     </View>
@@ -138,7 +144,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // paddingTop: 600,
     // marginTop: -600,
-    display: 'none'
+    // display: 'none'
   },
   groupPhoto: {
     width: 35,
@@ -175,11 +181,18 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   planLayoutContainer: {
-    width: '100%',
-    paddingVertical: 40,
-    paddingHorizontal: 20,
+    paddingHorizontal: 40,
+    marginBottom: 20,
   },
   announcementContainer: {
 
+  },
+  disclaimerText: {
+    fontFamily: 'nunito-bold', 
+    fontSize: 24, 
+    color: gen.heckaGray2, 
+    textAlign: 'center', 
+    marginTop: 100, 
+    alignItems: 'center'
   }
 })

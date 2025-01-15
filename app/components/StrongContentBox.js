@@ -3,9 +3,9 @@ import Icon from 'react-native-vector-icons/FontAwesome'
 import { gen } from '../utils/styling/colors'
 
 export default function StrongContentBox({ 
-  navigation, 
-  title, 
-  icon, 
+  navigation,
+  title,
+  icon,
   onPress = null,
   children
 }) {

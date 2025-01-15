@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated, Image } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { View, Text, StyleSheet, ScrollView, Animated, Image, TouchableOpacity } from 'react-native';
+
 import BasicButton from '../components/BasicButton';
 import { hapticError, hapticSelect } from '../utils/haptics';
 import { gen } from '../utils/styling/colors';
@@ -24,12 +24,12 @@ const TextBlock = ({ children }) => {
   );
 };
 
-const highlightText = (text) => {
+const highlightText = (text, onboardingData) => {
   const parts = text.split('"')
   return (
     <Text>
       {parts[0]}
-      <Text style={styles.textHighlight}>"{parts[1]}"</Text>
+      <Text style={[styles.textHighlight, { color: onboardingData.color.color_hex }]}>{parts[1]}</Text>
       {parts[2]}
     </Text>
   )
@@ -37,15 +37,14 @@ const highlightText = (text) => {
 
 const EmptySpace = ({ size }) => <View style={{ height: size }} />
 
-export default function Purpose({ setCurrentScreen }) {
+export default function Purpose({ setDisabled, onboardingData }) {
   const messages = [
-    'HEY! Nice to meet you! My name is Rue',
-    'Well.. My name is actually "רוּחַ ru\'ahh" \n\nbuuuuuuuut you can call me Rue for short!!!',
-    'I am here to help YOU improve your scripture study and connect with your friends! \n\nThink of me as your guardian angel',
-    'I will help you set goals, track your progress, and keep you accountable',
-    'LETS GET STARTED!!! 🎉',
+    'Welcome to "flock" 🐑: \n\nthe scripture study app that allows you to share your testimony and impressions with friends',
+    'Sharing your testimony is the greatest way to strengthen it 💪',
+    'In fact, President "Boyd K Packer" once said: \n\nA testimony is to be found in the bearing of it!',
+    'When you share with others, you are doing as the Savior did 2,000 years ago!',
+    'We hope you enjoy "flock" and find it a useful medium to deepen your conversion to Christ 👑',
   ]
-  const [disabled, setDisabled] = useState(true)
   const [messagesRendered, setMessagesRendered] = useState([messages[0]])
   const scrollViewRef = useRef(null)
 
@@ -57,7 +56,14 @@ export default function Purpose({ setCurrentScreen }) {
     setMessagesRendered(prev => {
       return [...prev, messages[prev.length]]
     })
+    setTimeout(() => {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }, 20)
   }
+
+  useEffect(() => {
+    setDisabled(true)
+  }, [])
 
   useEffect(() => {
     const messageInterval = setInterval(() => {
@@ -74,55 +80,43 @@ export default function Purpose({ setCurrentScreen }) {
   }, [messagesRendered])
 
   useEffect(() => {
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollToEnd({ animated: true });
-    }
   }, [messagesRendered]);
 
   return (
-    <View style={styles.container}>
-      <GestureDetector 
-        gesture={
-          Gesture.Tap().onEnd(() => {
+    <View style={styles.scrollContainer}>
+      <Image 
+        source={require('../../assets/profile.jpg')} 
+        style={styles.rueIcon} 
+      />
+      <ScrollView 
+        ref={scrollViewRef}
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1, paddingTop: 20 }}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => {
             if (messagesRendered.length < messages.length) {
               hapticSelect()
               handleAnimationComplete()
-            } else if (disabled) {
+            } else {
               setDisabled(false)
             }
-          })
-        }
-      >
-        <View style={styles.scrollContainer}>
-          <Image 
-            source={require('../../assets/duo.png')} 
-            style={styles.rueIcon} 
-          />
-          <ScrollView 
-            ref={scrollViewRef}
-            showsVerticalScrollIndicator={false}
-          >
-            <EmptySpace size={80} />
-            {
-              messagesRendered.map((message, index) => (
-                <TextBlock key={index}>
-                  <Text style={styles.convoText}>
-                    {message && message.includes('"') ? highlightText(message) : message}
-                  </Text>
-                </TextBlock>
-              ))
-            }
-            <EmptySpace size={230} />
-          </ScrollView>
-        </View>
-      </GestureDetector>
-
-      <BasicButton
-        title="NEXT"
-        onPress={() => setCurrentScreen(prev => prev + 1)}
-        style={{ position: 'absolute', bottom: 60 }}
-        disabled={disabled}
-      />
+          }}
+          style={styles.scrollContent}
+        >
+          {
+            messagesRendered.map((message, index) => (
+              <TextBlock key={index}>
+                <Text style={styles.convoText}>
+                  {message && message.includes('"') ? highlightText(message, onboardingData) : message}
+                </Text>
+              </TextBlock>
+            ))
+          }
+          <EmptySpace size={230} />
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -137,14 +131,18 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 30,
+  },
+  scrollContent: {
+    flex: 1,
+    minHeight: '100%',
   },
   rueIcon: {
-    // THIS IS THE SAME AS THE FIRST EMPTYSPACE SIZE
-    marginTop: 85,
+    marginTop: 20,
     marginRight: 20,
     width: 40,
     height: 40,
+    borderRadius: 20,
   },
   textBlock: {
     marginBottom: 20,

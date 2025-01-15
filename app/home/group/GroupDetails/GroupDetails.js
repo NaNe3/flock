@@ -10,21 +10,30 @@ import StrongContentBox from "../../../components/StrongContentBox"
 import { gen } from "../../../utils/styling/colors"
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from "../../../utils/localStorage"
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry"
+import BasicBottomSheet from "../../components/BasicBottomSheet"
+import { hapticError, hapticSelect } from "../../../utils/haptics"
+import PersonBottomSheet from "../../../components/PersonBottomSheet"
+import { timeAgoGeneral } from "../../../utils/timeDiff"
 
 export default function GroupDetails({ navigation, route }) {
   const { group_id, group_name, group_avatar, group_plan, members } = route.params
   const [groupName, setGroupName] = useState(group_name)
+  const [userId, setUserId] = useState('')
   const [groupAvatar, setGroupAvatar] = useState(group_avatar)
   const [groupPlan, setGroupPlan] = useState(group_plan)
   const [groupMembers, setGroupMembers] = useState(members)
 
   const [userIsLeader, setUserIsLeader] = useState(false)
+  const [isMember, setIsMember] = useState(false)
+
+  const [userModalVisibility, setUserModalVisibility] = useState(false)
+  const [personSelected, setPersonSelected] = useState({})
 
   const groupOptions = [{
     name: 'CHAT INFO',
     rows: [
       { name: 'Change name or image', location: 'EditGroupInfo' },
-      { name: 'Leave group', location: 'GroupLeave', danger: true },
+      { name: 'Leave group', location: 'GroupLeave', danger: true, condition: groupMembers.length > 1 },
       { name: 'Delete group', actionIcon: 'trash', location: 'GroupDelete', danger: true, leader: true },
     ]
   }]
@@ -32,23 +41,25 @@ export default function GroupDetails({ navigation, route }) {
   useEffect(() => {
     const getNecessaryData = async () => {
       const userId = await getUserIdFromLocalStorage()
-      const isLeader = groupMembers.find(member => member.id === userId).is_leader
-      setUserIsLeader(isLeader)
+      setUserId(userId)
+      const user = groupMembers.find(member => member.id === userId)
+      setUserIsLeader(user.is_leader)
+      setIsMember(user.status === 'accepted')
     }
     getNecessaryData()
   }, [groupMembers])
 
+  const getUserGroupsFromLocalStorage = async () => {
+    const result = JSON.parse(await getLocallyStoredVariable('user_groups')).find(group => group.group_id === group_id)
+
+    setGroupName(result.group_name)
+    setGroupPlan(result.group_plan)
+    setGroupMembers(result.members)
+    setGroupAvatar(result.group_image)
+  }
+
   useFocusEffect(
     useCallback(() => {
-      const getUserGroupsFromLocalStorage = async () => {
-        const result = JSON.parse(await getLocallyStoredVariable('user_groups')).find(group => group.group_id === group_id)
-
-        setGroupName(result.group_name)
-        setGroupPlan(result.group_plan)
-        setGroupMembers(result.members)
-        setGroupAvatar(result.group_image)
-      }
-
       getUserGroupsFromLocalStorage()
     }, [])
   );
@@ -62,6 +73,7 @@ export default function GroupDetails({ navigation, route }) {
       <ScrollView 
         style={styles.contentContainer}
         contentContainerStyle={styles.contentContainerFormatting}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.landingContainer}>
           <View style={styles.landingContainerContent}>
@@ -96,7 +108,7 @@ export default function GroupDetails({ navigation, route }) {
                         // console.log('navigate to', member)
                       }}
                     >
-                      <View style={styles.avatarImageContainer}>
+                      <View style={[styles.avatarImageContainer, { borderColor: member.color }]}>
                         <Avatar
                           imagePath={member.avatar_path}
                           type="user"
@@ -105,31 +117,61 @@ export default function GroupDetails({ navigation, route }) {
                       </View>
                       <View style={styles.userNameLeft}>
                         <Text style={styles.optionRowText}>{member.fname} {member.lname}</Text>
-                        <Text style={styles.optionRowTextSecondary}>active today</Text>
+                        <Text style={styles.optionRowTextSecondary}>studied {timeAgoGeneral(member.last_studied)}</Text>
                       </View>
                     </TouchableOpacity>
-                    {/* <TouchableOpacity activeOpacity={0.7}>
-                      <Icon name="ellipsis" size={16} color={gen.secondaryText} />
-                    </TouchableOpacity> */}
+                    {
+                      member.id !== userId && (
+                        <TouchableOpacity 
+                          activeOpacity={0.7}
+                          onPress={() => {
+                            hapticSelect()
+                            setPersonSelected(member)
+                            setUserModalVisibility(true)
+                          }}
+                        >
+                          <Icon name="ellipsis-h" size={16} color={member.color} />
+                        </TouchableOpacity>
+                      )
+                    }
                   </View>
                 )
               })
             }
             <TouchableOpacity 
+              key="add-group-members"
+              style={[styles.optionRow, { borderTopWidth: 2, borderColor: gen.primaryBorder }]}
+              activeOpacity={0.7}
+              onPress={() => {
+                navigation.navigate("AddGroupMembers", { 
+                  members: groupMembers, 
+                  group_id: group_id,
+                  isGroupLeader: userIsLeader,
+                })
+              }}
+            >
+              <Text style={styles.optionRowText}>invite friends</Text>
+              <Icon name="chevron-right" size={16} color={gen.secondaryText} />
+            </TouchableOpacity>
+            <TouchableOpacity 
               key="see-full-list"
               style={[styles.optionRow, { borderTopWidth: 2, borderColor: gen.primaryBorder }]}
               activeOpacity={0.7}
               onPress={() => {
-                navigation.navigate("AllGroupMembers", { members: groupMembers })
+                navigation.navigate("AllGroupMembers", { 
+                  members: groupMembers, 
+                  group_id: group_id,
+                  isGroupLeader: userIsLeader,
+                })
               }}
             >
-              <Text style={styles.optionRowText}>See all members</Text>
+              <Text style={styles.optionRowText}>see all members</Text>
               <Icon name="chevron-right" size={16} color={gen.secondaryText} />
             </TouchableOpacity>
           </StrongContentBox>
 
           {
-            groupOptions.map((option, index) => {
+            isMember && groupOptions.map((option, index) => {
               return (
                 <StrongContentBox
                   key={index}
@@ -138,9 +180,8 @@ export default function GroupDetails({ navigation, route }) {
                 >
                   {
                     option.rows.map((row, index) => {
-                      if (row.leader && !userIsLeader) {
-                        return null
-                      }
+                      if (row.leader && !userIsLeader) return null
+                      if (row.condition !== undefined && !row.condition) return null
                       return (
                         <TouchableOpacity 
                           key={index}
@@ -183,6 +224,15 @@ export default function GroupDetails({ navigation, route }) {
           </StrongContentBox> */}
         </View>
       </ScrollView>
+      {userModalVisibility && (
+        <PersonBottomSheet 
+          person={personSelected}
+          setVisibility={setUserModalVisibility}
+          isGroupLeader={userIsLeader}
+          groupId={group_id}
+          onMemberKicked={getUserGroupsFromLocalStorage}
+        />
+      )}
     </View>
   )
 }
@@ -278,5 +328,5 @@ const styles = StyleSheet.create({
   },
   userNameLeft: {
     marginLeft: 10,
-  }
+  },
 })

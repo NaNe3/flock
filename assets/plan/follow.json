@@ -1,8 +1,8 @@
 {
   "plan_name": "Come Follow Me",
   "weeks": {
-    "48": {
-      "dates": "Dec*2-Dec*8",
+    "0": {
+      "dates": "Dec*29-Jan*4",
       "content": {
         "0": {
           "time": 8,
@@ -69,17 +69,132 @@
         }
       }
     },
-    "49": {
-      "dates": "Dec*9-Nov*15",
-      "content": [ ]
+    "1": {
+      "dates": "Dec*29-Jan*4",
+      "content": {
+        "0": {
+          "time": 8,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "12",
+            "verses": "2-5"
+          }
+        },
+        "1": {
+          "time": 3,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "13",
+            "verses": "1-13"
+          }
+        },
+        "2": {
+          "time": 3,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "13",
+            "verses": "14-31"
+          }
+        },
+        "3": {
+          "time": 3,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "14",
+            "verses": "1-15"
+          }
+        },
+        "4": {
+          "time": 3,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "14",
+            "verses": "16-31"
+          }
+        },
+        "5": {
+          "time": 4,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "15",
+            "verses": "1-19"
+          }
+        },
+        "6": {
+          "time": 2,
+          "location": {
+            "work": "Book Of Mormon",
+            "book": "Ether",
+            "chapter": "15",
+            "verses": "20-34"
+          }
+        }
+      }
     },
-    "50": {
-      "dates": "Dec*16-Dec*22",
-      "content": [ ]
-    },
-    "51": {
-      "dates": "Dec*23-Dec*29",
-      "content": [ ]
+    "2": {
+      "dates": "Dec*29-Jan*4",
+      "content": {
+        "1": {
+          "time": 2,
+          "location": {
+            "work": "Pearl Of Great Price",
+            "book": "Joseph Smith History",
+            "chapter": "1",
+            "verses": "1-5"
+          }
+        },
+        "2": {
+          "time": 3,
+          "location": {
+            "work": "Pearl Of Great Price",
+            "book": "Joseph Smith History",
+            "chapter": "1",
+            "verses": "6-11"
+          }
+        },
+        "3": {
+          "time": 3,
+          "location": {
+            "work": "Pearl Of Great Price",
+            "book": "Joseph Smith History",
+            "chapter": "1",
+            "verses": "12-15"
+          }
+        },
+        "4": {
+          "time": 3,
+          "location": {
+            "work": "Pearl Of Great Price",
+            "book": "Joseph Smith History",
+            "chapter": "1",
+            "verses": "16-19"
+          }
+        },
+        "5": {
+          "time": 1,
+          "location": {
+            "work": "Pearl Of Great Price",
+            "book": "Joseph Smith History",
+            "chapter": "1",
+            "verses": "20-23"
+          }
+        },
+        "6": {
+          "time": 1,
+          "location": {
+            "work": "Pearl Of Great Price",
+            "book": "Joseph Smith History",
+            "chapter": "1",
+            "verses": "24-26"
+          }
+        }
+      }
     }
   }
 }

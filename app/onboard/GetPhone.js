@@ -83,7 +83,7 @@ export default function GetPhone({ setCurrentScreen, onboardingData, setOnboardi
           </View>
         </View>
         <BasicButton
-          title="NEXT"
+          title="next"
           onPress={() => {
             setCurrentScreen((prev) => prev + 1)
           }}

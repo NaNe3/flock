@@ -2,7 +2,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import HomePage from './home/HomePage'
 import GroupPage from './home/GroupPage'
-import InvitePage from './home/InvitePage'
+// import FriendsPage from './home/FriendsPage';
 import LibraryPage from './home/LibraryPage'
 
 import InteractiveHeaderBar from './components/InteractiveHeaderBar'
@@ -17,26 +17,29 @@ export default function Home() {
   return (
     <View style={styles.container}>
       <InteractiveHeaderBar />
-      <Stack.Navigator initialRouteName='Home'>
-        <Stack.Screen 
+      <Stack.Navigator 
+        initialRouteName='Home'
+        screenOptions={{
+          cardStyle: { backgroundColor: gen.primaryBackground },
+          headerShown: false,
+          animationEnabled: false,
+        }}
+      >
+        <Stack.Screen
           name="Home"
           component={HomePage}
-          options={{ headerShown: false, animationEnabled: false}}
-        />
-        <Stack.Screen 
-          name="GroupPage" 
-          component={GroupPage} 
-          options={{ headerShown: false, animationEnabled: false }}
         />
         <Stack.Screen
-          name="InvitePage"
-          component={InvitePage}
-          options={{ headerShown: false, animationEnabled: false }}
+          name="GroupPage"
+          component={GroupPage}
         />
-        <Stack.Screen 
+        {/* <Stack.Screen
+          name="FriendsPage"
+          component={FriendsPage}
+        /> */}
+        <Stack.Screen
           name="LibraryPage" 
           component={LibraryPage} 
-          options={{ headerShown: false, animationEnabled: false }}
         />
       </Stack.Navigator>
     </View>

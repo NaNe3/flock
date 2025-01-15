@@ -3,13 +3,13 @@ import { Text, View, StyleSheet, ScrollView } from 'react-native'
 import SimpleHeader from '../components/SimpleHeader';
 import { gen } from '../utils/styling/colors';
 
-export default function Notifications({ navigation }) {
+export default function NotificationsPage({ navigation }) {
 
   return (
     <View style={styles.container}>
       <SimpleHeader navigation={navigation} title="Notifications" />
       <ScrollView style={styles.notificationContainer}>
-
+        
       </ScrollView>
     </View>
   )

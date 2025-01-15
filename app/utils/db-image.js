@@ -299,3 +299,125 @@ export const deleteGroupByGroupId = async (groupId, groupAvatar) => {
     return { error: error }
   }
 }
+
+export const leaveGroupByGroupId = async (groupId, userId, newLeader) => {
+  try {
+    // 1 - delete group_member relationship
+    const { error } = await supabase
+      .from('group_member')
+      .delete()
+      .eq('group_id', groupId)
+      .eq('user_id', userId)
+
+    // 2 - if newLeader is not null, create new leader
+    if (!error) {
+      if (newLeader !== null) {
+        const { error: newLeaderError } = await supabase
+          .from('group_member')
+          .update({ is_leader: true })
+          .eq('group_id', groupId)
+          .eq('user_id', newLeader)
+
+        if (newLeaderError) {
+          console.error('Error updating new leader:', newLeaderError)
+          return { error: newLeaderError }
+        }
+
+        return { error: null }
+      } else {
+        return { error: null }
+      }
+    } else {
+      console.log('Error leaving group (supa):', error)
+      return { error: error }
+    }
+  } catch (error) {
+    console.error('Error leaving group:', error)
+    return { error: error }
+  }
+}
+
+export const removeGroupMember = async (groupId, userId) => {
+  try {
+    const { error } = await supabase
+      .from('group_member')
+      .delete()
+      .eq('group_id', groupId)
+      .eq('user_id', userId)
+
+    if (error) {
+      console.error('Error removing group member:', error)
+      return { error: error }
+    }
+
+    return { error: null }
+  } catch (error) {
+    console.error('Error removing group member:', error)
+    return { error: error }
+  }
+}
+
+export const addGroupMembers = async (groupId, members) => {
+  try {
+    const rowsToAdd = members.map((member) => {
+      return {
+        group_id: groupId,
+        user_id: member.id,
+        is_leader: false,
+        status: 'pending',
+      }
+    })
+
+    const { data, error } = await supabase
+      .from('group_member')
+      .insert(rowsToAdd)
+      .select(`
+        group_id,
+        user_id,
+        is_leader,
+        status,
+        group (group_name, group_image, plan_id),
+        user (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex))
+      `)
+
+    if (error) {
+      console.error('Error adding group members:', error)
+      return { error: error }
+    }
+
+    return { data: data.map(member => {
+      const { color_id, ...groupMember } = member.user
+
+      return {
+        ...groupMember,
+        is_leader: member.is_leader, 
+        status: member.status,
+        last_studied: member.user.last_studied ? member.user.last_studied.created_at : null,
+        color: color_id.color_hex
+      }
+    }), error: null }
+  } catch (error) {
+    console.error('Error adding group members:', error)
+    return { error: error }
+  }
+}
+
+export const removeGroupMembers = async (groupId, members) => {
+  try {
+    const { error } = await supabase
+      .from('group_member')
+      .delete()
+      .eq('group_id', groupId)
+      .in('user_id', members.map(member => member.id))
+
+    if (error) {
+      console.error('Error removing group members:', error)
+      return { error: error }
+    }
+
+    return { error: null }
+  } catch (error) {
+    console.error('Error removing group members:', error)
+    return { error: error }
+  }
+}

@@ -9,20 +9,21 @@ import { gen } from "../../utils/styling/colors"
 
 import { hapticSelect } from "../../utils/haptics"
 import { addComment, getComments, getTimeSincePosted } from "../../utils/db-comment"
-import { getAttributeFromObjectInLocalStorage } from "../../utils/localStorage"
+import { getAttributeFromObjectInLocalStorage, getUserIdFromLocalStorage } from "../../utils/localStorage"
 
 import EmptySpace from "../../components/EmptySpace"
 import BasicTextInput from "../../components/BasicTextInput"
 import Avatar from "../../components/Avatar"
 import ExperienceSlider from "./ExperienceSlider";
+import { getVersesWithActivity } from "../../utils/authenticate";
 
 export default function VerseInteractModal({ 
   navigation,
-  modalVisible, 
-  setModalVisible, 
-  work, 
-  book, 
-  chapter, 
+  modalVisible,
+  setModalVisible,
+  work,
+  book,
+  chapter,
   verseSelected: verse,
   userId
 }) {
@@ -35,6 +36,7 @@ export default function VerseInteractModal({
 
   const [comments, setComments] = useState([])
   const [numberOfComments, setNumberOfComments] = useState(0)
+  const [numberOfMedia, setNumberOfMedia] = useState(0)
   const [replyingTo, setReplyingTo] = useState(null)
 
   const opacity = useRef(new Animated.Value(0)).current
@@ -46,20 +48,24 @@ export default function VerseInteractModal({
 
   useEffect(() => {
     const getNecessaryData = async () => {
-      const { comments, error } = await getComments(work, book, chapter, verse)
-      if (!error) {
-        setComments(comments)
-        setNumberOfComments(comments.length)
-      } else console.error(error)
+      const userId = await getUserIdFromLocalStorage()
+      const allMedia = await getVersesWithActivity(work, book, chapter, userId)
+      const mediaInThisVerse = allMedia.filter(media => media.verse === verse).length
+      setNumberOfMedia(mediaInThisVerse)
+      // const { comments, error } = await getComments(work, book, chapter, verse)
+      // if (!error) {
+      //   setComments(comments)
+      //   setNumberOfComments(comments.length)
+      // } else console.error(error)
 
-      const userAvatarPath = await getAttributeFromObjectInLocalStorage("userInformation", "avatar_path")
-      const fname = await getAttributeFromObjectInLocalStorage("userInformation", "fname")
-      const lname = await getAttributeFromObjectInLocalStorage("userInformation", "lname")
-      setUserInformation({
-        avatar_path: userAvatarPath,
-        fname: fname,
-        lname: lname
-      })
+      // const userAvatarPath = await getAttributeFromObjectInLocalStorage("userInformation", "avatar_path")
+      // const fname = await getAttributeFromObjectInLocalStorage("userInformation", "fname")
+      // const lname = await getAttributeFromObjectInLocalStorage("userInformation", "lname")
+      // setUserInformation({
+      //   avatar_path: userAvatarPath,
+      //   fname: fname,
+      //   lname: lname
+      // })
     }
     getNecessaryData()
 
@@ -155,7 +161,7 @@ export default function VerseInteractModal({
         ref={bottomSheetRef}
         index={1}
         snapPoints={snapPoints}
-        onClose={() => { 
+        onClose={() => {
           bottomSheetRef.current.close()
           setDisplayInputBar(false)
           Animated.timing(opacity, {
@@ -170,12 +176,27 @@ export default function VerseInteractModal({
         backgroundStyle={{ backgroundColor: gen.primaryBackground }}
       >
         <BottomSheetView style={styles.contentContainer}>
-          <Text style={styles.modalHeader}>{`${book} ${chapter}:${verse}`}</Text>
-          <ExperienceSlider 
+          <View style={styles.modalContent}>
+            <Text style={styles.modalHeader}>{`${book} ${chapter}:${verse}`}</Text>
+
+          </View>
+          <TouchableOpacity 
+            activeOpacity={0.7}
+            style={styles.accessMediaContainer}
+            onPress={() => {
+              hapticSelect()
+            }}
+          >
+            <Text style={styles.contributionsText}>
+              See impressions ({numberOfMedia}) <Icon name="chevron-down" size={18} color={gen.primaryText} />
+            </Text>
+            <View style={styles.accessMediaCard} />
+          </TouchableOpacity>
+          {/* <ExperienceSlider 
             navigation={navigation} 
             canAddExperience={true}
             location={{ work, book, chapter, verse }}
-          />
+          /> */}
           {/* <View style={styles.commentsList}>
             {
               numberOfComments > 0 ? (
@@ -223,9 +244,7 @@ export default function VerseInteractModal({
             value={commentInput}
             onChangeText={(text) => setCommentInput(text)} 
             style={styles.commentTextInput}
-            containerStyle={{
-              flex: 1
-            }}
+            containerStyle={{ flex: 1 }}
             focus={false}
             multiline={true}
           />
@@ -249,11 +268,11 @@ const Comment = memo(({ co, startReply }) => {
     <View style={styles.commentRow}>
       <View style={{ marginRight: 10 }}>
         <View style={{ borderWidth: 3, borderColor: gen.gray, borderRadius: 100, padding: 2 }}>
-          {/* <Avatar 
+          <Avatar 
             imagePath={co.user.avatar_path }
             type="profile"
             style={styles.commentAvatar}
-          /> */}
+          />
         </View>
       </View>
       <View style={{ flex: 1 }}>
@@ -280,7 +299,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(70,70,70,0.5)",
+    backgroundColor: gen.modalBackdrop,
   },
   contentContainer: {
     flex: 1,
@@ -299,6 +318,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     marginBottom: 20,
     fontFamily: 'nunito-bold',
+    textAlign: 'center',
     color: gen.primaryText
   },
   replyingInfo: {
@@ -363,5 +383,28 @@ const styles = StyleSheet.create({
     backgroundColor: gen.tertiaryBackground,
     borderRadius: 20,
     marginTop: 0,
-  }
+  },
+  accessMediaContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  accessMediaCard: {
+    width: '85%',
+    height: 200,
+    marginBottom: -150,
+    backgroundColor: gen.tertiaryBackground,
+    borderRadius: 20,
+  },
+  modalContent: {
+    width: '100%',
+    flex: 1,
+    alignItems: 'center',
+  },
+  contributionsText: { 
+    color: gen.primaryText,
+    textAlign: 'center',
+    fontFamily: 'nunito-bold',
+    fontSize: 18,
+    marginBottom: 5,
+  },
 })

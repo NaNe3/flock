@@ -1,36 +1,85 @@
-import React, { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
+// import Icon from 'react-native-vector-icons/FontAwesome';
 
+import FA6Icon from '../components/FA6Icon';
 import { gen } from '../utils/styling/colors';
-import { hapticSuccess } from '../utils/haptics';
+import { hapticImpactSoft } from '../utils/haptics';
+import getColorVariety, { getColorVarietyAsync } from "../utils/getColorVariety";
+import { useFocusEffect } from "@react-navigation/native";
+import FAIcon from "./FAIcon";
 
-export default function BasicButton({ title, onPress, style: customStyling, disabled = false, icon }) {
-  const [isPressed, setIsPressed] = useState(false);
+export default function BasicButton({ 
+  title,
+  onPress, 
+  style: customStyling, 
+  disabled = false,
+  icon,
+  iconType="FA",
+  color = gen.primaryColor,
+}) {
+  const [isPressed, setIsPressed] = useState(false)
+  const [primaryColor, setPrimaryColor] = useState(gen.primaryColor)
+  const [primaryColorShadow, setPrimaryColorShadow] = useState(gen.primaryColorShadow)
+  const [primaryColorDisabled, setPrimaryColorDisabled] = useState(gen.primaryColorDisabled)
+  const [primaryColorShadowDisabled, setPrimaryColorShadowDisabled] = useState(gen.primaryColorShadowDisabled)
+  
+  const init = async () => {
+    const colors = await getColorVarietyAsync() 
+    setColors(colors)
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      init()
+    }, [])
+  )
+
+  useEffect(() => {
+    const colors = getColorVariety(color)
+    setColors(colors)
+  }, [color])
+
+  const setColors = ({primaryColor, primaryColorDisabled, primaryColorShadow, primaryColorShadowDisabled}) => {
+    setPrimaryColor(primaryColor)
+    setPrimaryColorDisabled(primaryColorDisabled)
+    setPrimaryColorShadow(primaryColorShadow)
+    setPrimaryColorShadowDisabled(primaryColorShadowDisabled)
+  }
 
   return (
     <TouchableOpacity
       onPress={() => {
         if (!disabled) {
-          hapticSuccess();
+          hapticImpactSoft();
           onPress();
         }
       }}
-      onPressIn={() => setIsPressed(true)}
-      onPressOut={() => setIsPressed(false)}
+      onPressIn={() => {
+        setIsPressed(true)
+      }}
+      onPressOut={() => {
+        setIsPressed(false)
+      }}
       style={[
         styles.buttonContainer,
         customStyling,
-        { backgroundColor: disabled ? gen.primaryColorDisabled : gen.primaryColor },
-        { shadowColor: disabled ? gen.primaryColorDisabledShadow : gen.primaryColorShadow },
-        isPressed && styles.pressed,
+        { backgroundColor: disabled ? primaryColorDisabled : primaryColor },
+        { shadowColor: disabled ? primaryColorShadowDisabled : primaryColorShadow },
+        isPressed ? styles.pressed : styles.notPressed,
       ]}
       disabled={disabled}
       activeOpacity={1}
     >
-      <Text style={styles.buttonText}>
-        {icon && (
-          <Icon name={icon} size={26} color="#fff" style={{ marginRight: 10 }} />
+      <Text 
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        style={styles.buttonText}
+      >
+        {icon && iconType === "FA" ? (
+          <FAIcon name={icon} size={26} color="#fff" style={{ marginRight: 10 }} />
+        ) : (
+          <FA6Icon name={icon} size={26} color="#fff" style={{ marginRight: 10 }} />
         )}
         { icon && ' ' }
         {title}
@@ -43,20 +92,20 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: '80%',
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    shadowColor: gen.primaryColorShadow,
-    shadowOffset: { width: 0, height: 4 }, // Position the shadow directly at the bottom
-    shadowOpacity: 1, // Make the shadow fully opaque
+    shadowOpacity: 1, // Keep the shadow fully opaque
     shadowRadius: 0, // Remove the blur effect
+  },
+  notPressed: {
+    shadowOffset: { width: 0, height: 5 }, // Position the shadow directly at the bottom
   },
   pressed: {
     shadowOffset: { width: 0, height: 0 }, // Adjust the shadow position when pressed
-    shadowOpacity: 1, // Keep the shadow fully opaque
-    shadowRadius: 0, // Remove the blur effect
-    transform: [{ translateY: 3 }]
+    marginTop: 5,
+    marginBottom: -5,
   },
   buttonText: {
     color: '#fff',

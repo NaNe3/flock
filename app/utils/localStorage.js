@@ -1,17 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const getInitialSystemVariables = async () => {
-  // CHECK IF ALREADY LAUNCHED, RETURN VALUE
-  const alreadyLaunched = await AsyncStorage.getItem('alreadyLaunched')
-  let firstLaunch = true
-  if (alreadyLaunched !== null && alreadyLaunched !== undefined && alreadyLaunched !== false) {
-    firstLaunch = false
-  }
-
-  return { firstLaunch }
+  const complete = await AsyncStorage.getItem('onboarding_complete')
+  return { onboarded: complete === 'true' }
 }
 
-export const finishOnboarding = async () => { await AsyncStorage.setItem('alreadyLaunched', 'true') }
+export const finishOnboarding = async () => { await AsyncStorage.setItem('onboarding_complete', 'true') }
 
 export const getLocallyStoredVariable = async (key) => {
   try {
@@ -25,29 +19,15 @@ export const getLocallyStoredVariable = async (key) => {
 
 export const setLocallyStoredVariable = async (key, value) => {
   try {
-    await AsyncStorage.setItem(key, value);
+    await AsyncStorage.setItem(key, value)
   } catch (error) {
     console.error(`Error setting ${key} in local storage: ${error}`);
   }
 };
 
-export const setUserInformationInLocalStorage = async ({ id, uui, created_at, email, fname, lname, goal, phone_number, plan, avatar_path, last_active }) => {
-  const userDataTemplate = {
-    id,
-    uui,
-    created_at,
-    phone_number,
-    email,
-    avatar_path,
-    last_active,
-    fname,
-    lname,
-    goal,
-    plan,
-  }
-
+export const setUserInformationInLocalStorage = async (userInformation) => {
   try {
-    await AsyncStorage.setItem('userInformation', JSON.stringify(userDataTemplate))
+    await AsyncStorage.setItem('user_information', JSON.stringify(userInformation))
   } catch (e) {
     console.error(`Error setting user information in local storage: ${e}`)
     return { error: e }
@@ -86,5 +66,30 @@ export const getAttributeFromObjectInLocalStorage = async (object, keys) => {
 }
 
 export const getUserIdFromLocalStorage = async () => {
-  return await getAttributeFromObjectInLocalStorage("userInformation", "id")
+  return await getAttributeFromObjectInLocalStorage("user_information", "id")
+}
+
+const getFormattedDate = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export const checkIfUserHasStudiedPlanToday = async () => {
+  try {
+    const logs = JSON.parse(await AsyncStorage.getItem(`user_logs`))
+    const day = getFormattedDate()
+
+    const alreadyStudied = logs.some(log => log.created_at.includes(day))
+    if (!alreadyStudied) {
+      return false
+    } else {
+      return true
+    }
+  } catch (error) {
+    console.log(`Error getting reading log from local storage: ${error}`);
+    return false
+  }
 }

@@ -8,7 +8,7 @@ import { gen } from "../../utils/styling/colors"
 import Avatar from "../../components/Avatar"
 import Media from "../../components/Media"
 import { LinearGradient } from 'expo-linear-gradient';
-import timeAgo from "../../utils/timeDiff"
+import { timeAgo } from "../../utils/timeDiff"
 
 const Slider = ({ 
   navigation, 

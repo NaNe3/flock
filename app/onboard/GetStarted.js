@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome5'
 import * as AppleAuthentication from 'expo-apple-authentication';
 
 import { createUserThroughAppleAuthentication } from '../utils/authenticate';
@@ -18,7 +19,7 @@ const setUserData = async (props) => {
   await setUserInformationInLocalStorage({ ...props })
 }
 
-export default function GetStarted({ setCurrentScreen, setSession, onboardingData, setOnboardingData }) {
+export default function GetStarted({ setCurrentScreen, setSession, onboardingData, setOnboardingData, setIsFirstLaunch }) {
   const [name, setName] = useState('')
 
   const authenticateUserThroughApple = async () => {
@@ -44,12 +45,12 @@ export default function GetStarted({ setCurrentScreen, setSession, onboardingDat
           lname,
           goal,
           phone_number,
-          plan
+          plan_id
         } = await createUserThroughAppleAuthentication(credential, phone)
 
         setOnboardingData(prev => ({ ...prev, phone: phone_number, id, fname, lname }))
 
-        await setUserData({ id, uui, created_at, email, fname, lname, goal, phone_number, plan })
+        await setUserData({ id, uui, created_at, email, fname, lname, goal, phone_number, plan_id })
         setCurrentScreen(prev => prev + 1)
       } else { throw new Error('No identityToken.') }
     } catch (e) {
@@ -63,6 +64,10 @@ export default function GetStarted({ setCurrentScreen, setSession, onboardingDat
     }
   }
 
+  const alreadyHaveAccount = () => {
+    setIsFirstLaunch(false)
+  }
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
@@ -72,25 +77,38 @@ export default function GetStarted({ setCurrentScreen, setSession, onboardingDat
         </View>
 
         <View style={styles.authContainer}>
-          <AppleAuthentication.AppleAuthenticationButton 
+          {/* <AppleAuthentication.AppleAuthenticationButton 
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
             buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
             cornerRadius={10} 
             style={styles.authButton}
             onPress={() => authenticateUserThroughApple()}
-          />
-          <TouchableOpacity 
+          /> */}
+          <TouchableOpacity
             style={[styles.authButton, styles.accessButton]}
-            onPress={() => setCurrentScreen(prev => prev + 1)}
-            activeOpacity={0.8}
+            onPress={() => authenticateUserThroughApple()}
+            activeOpacity={0.7}
           >
-            <Text style={{ fontFamily: 'nunito-bold', color: gen.darkGray }}>SIGN IN VIA GOOGLE</Text>
+            <Text style={styles.authText}>
+              <Icon name='apple' size={20} color={gen.darkGray} /> Continue with Apple
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.authButton, styles.accessButton]}
-            activeOpacity={0.8}
+            onPress={() => console.log("SIGNING INTO GOOGLE")}
+            activeOpacity={0.7}
           >
-            <Text style={{ fontFamily: 'nunito-bold', color: gen.darkGray }}>SIGN IN VIA FACEBOOK</Text>
+            <Text style={styles.authText}>
+              <Icon name='google' size={16} color={gen.darkGray} /> Continue with Google
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={alreadyHaveAccount}
+          >
+            <Text style={styles.otherText}>
+              already have an account <Icon name='arrow-right' size={12} color={gen.darkGray} />
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -127,16 +145,28 @@ const styles = StyleSheet.create({
   },
   authButton: {
     width: '100%',
-    height: 50,
+    height: 60,
   },
   accessButton: {
     marginTop: 12, 
-    backgroundColor: '#FFF', 
-    borderRadius: 10, 
+    backgroundColor: '#FFF',
+    borderRadius: 20,
     color: '#fff',
     borderWidth: 3,
     borderColor: gen.lightGray,
-    justifyContent: 'center', 
-    alignItems: 'center', 
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  authText: {
+    fontSize: 16,
+    fontFamily: 'nunito-bold',
+    color: gen.darkGray,
+  },
+  otherText: {
+    fontSize: 16,
+    fontFamily: 'nunito-bold',
+    color: gen.darkGray,
+    textAlign: 'center',
+    marginTop: 20,
   }
 })

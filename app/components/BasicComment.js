@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native'
 import { useState } from 'react';
-import timeAgo from '../utils/timeDiff';
+import { timeAgo } from '../utils/timeDiff';
 
 
 

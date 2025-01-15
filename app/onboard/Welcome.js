@@ -7,7 +7,7 @@ export default function Welcome({ setCurrentScreen }) {
       <Text style={styles.rue}>RUE</Text>
       <Image source={require('../../assets/duo.png')} style={{ width: 300, height: 300 }} />
       <BasicButton
-        title="NEXT"
+        title="thanks!"
         onPress={() => setCurrentScreen(prev => prev + 1)}
         style={{ position: 'absolute', bottom: 60 }}
       />

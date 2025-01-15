@@ -9,7 +9,14 @@ export const getCurrentWeekNumber = () => {
   const currentDate = new Date();
   const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
   const pastDaysOfYear = (currentDate - startOfYear) / 86400000; // 86400000 ms in a day
-  return Math.floor((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+  return Math.floor((pastDaysOfYear + startOfYear.getDay()) / 7);
+}
+
+export const getWeekFromTimestamp = (timestamp) => {
+  const date = new Date(timestamp)
+  const startOfYear = new Date(date.getFullYear(), 0, 1);
+  const pastDaysOfYear = (date - startOfYear) / 86400000; // 86400000 ms in a day
+  return Math.floor((pastDaysOfYear + startOfYear.getDay()) / 7);
 }
 
 export const getDatesOfCurrentWeek = () => {

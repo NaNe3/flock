@@ -10,11 +10,11 @@ const prepareMediaForUpload = async (media, media_type) => {
   return { fileName, arrayBuffer }
 }
 
-const createMediaRow = async (media_type, media_path) => {
+const createMediaRow = async (media_type, media_path, duration) => {
   const { data, error } = await supabase
     .from('media')
     .insert(
-      { media_type: media_type, media_path: media_path }
+      { media_type: media_type, media_path: media_path, duration: duration }
     )
     .select('media_id')
 
@@ -26,16 +26,17 @@ const createMediaRow = async (media_type, media_path) => {
   return { media_id: data[0].media_id }
 }
 
-const createActivityRow = async (location, media_id, user_id) => {
+const createActivityRow = async (location, media_id, user_id, recipient_id) => {
   const { error } = await supabase
     .from('activity')
-    .insert({ 
+    .insert({
       work: location.work, 
       book: location.book,
-      chapter: location.chapter, 
-      verse: location.verse, 
-      media_id: media_id, 
-      user_id: user_id 
+      chapter: location.chapter,
+      verse: location.verse,
+      media_id: media_id,
+      user_id: user_id,
+      group_id: parseInt(recipient_id),
     })
 
   if (error) {
@@ -56,16 +57,22 @@ const createActivityRow = async (location, media_id, user_id) => {
 //   }
 // }
 
-export const uploadMedia = async (location, media, media_type) => {
+export const uploadMedia = async ({ location, media, media_type, duration, recipient_id }) => {
   if (!media) return null
 
   try {
     const { fileName, arrayBuffer } = await prepareMediaForUpload(media, media_type)
+    console.log("uploading media ", fileName)
+
+    const config = {
+      headers: {
+          'Content-Type': media_type === 'picture' ? 'image/jpeg' : 'video/quicktime',
+      },
+    };
+
     const { data, error } = await supabase.storage
       .from('media')
-      .upload(`public/${media_type}/${fileName}`, new Uint8Array(arrayBuffer), {
-        contentType: media_type === 'picture' ? 'image/jpeg' : 'video/quicktime',
-      })
+      .upload(`public/${media_type}/${fileName}`, new Uint8Array(arrayBuffer), config)
     await moveLocalFileToNewPath({ oldPath: media, newPath: fileName })
 
     if (error) {
@@ -73,12 +80,12 @@ export const uploadMedia = async (location, media, media_type) => {
       return { error: error }
     } else {
       // CREATE MEDIA ROW
-      const { media_id, error: createMediaError } = await createMediaRow(media_type, data.path)
+      const { media_id, error: createMediaError } = await createMediaRow(media_type, data.path, duration)
 
       // CREATE ACTIVITY ROW
       if (!createMediaError) {
         const user_id = await getUserIdFromLocalStorage()
-        const { error: createActivityError } = await createActivityRow(location, media_id, user_id)
+        const { error: createActivityError } = await createActivityRow(location, media_id, user_id, recipient_id)
 
         if (!createActivityError) {
           return { status: 200 }
@@ -119,3 +126,48 @@ export const uploadMedia = async (location, media, media_type) => {
 //     return { error: error }
 //   }
 // }
+
+
+// media_id, sender_id, recipient_id, emoji
+export const reactToMedia = async ({ emoji, media_id, sender_id, recipient_id }) => {
+  const { data, error } = await supabase
+    .from('reaction')
+    .insert([
+      { 
+        emoji: emoji, 
+        media_id: media_id, 
+        sender_user_id: sender_id, 
+        recipient_user_id: recipient_id 
+      }
+    ])
+
+  if (error) {
+    console.error('Error reacting to media:', error)
+    return { error: error }
+  }
+
+  return { error: null } 
+}
+
+export const getReactionInformation = async (reaction_id) => {
+  const { data, error } = await supabase
+    .from('reaction')
+    .select(`
+      sender_user_id ( id, full_name, avatar_path, color_id(color_hex))
+    `)
+    .eq('reaction_id', reaction_id)
+
+  if (error) {
+    console.error('Error getting reaction information:', error)
+    return { error: error }
+  }
+
+  const { id, full_name, avatar_path, color_id } = data[0].sender_user_id
+
+  return {
+    id: id,
+    full_name: full_name,
+    avatar_path: avatar_path,
+    color: color_id.color_hex
+  }
+}

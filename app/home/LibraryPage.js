@@ -7,6 +7,7 @@ import { hapticSelect } from '../utils/haptics'
 import { gen } from '../utils/styling/colors';
 
 import InteractiveHeaderBar from '../components/InteractiveHeaderBar';
+import SearchBar from './components/SearchBar';
 
 const WorkShelf = ({ navigation }) => {
   return (
@@ -55,26 +56,35 @@ const WorkShelf = ({ navigation }) => {
           )
         })
       }
-      <TouchableOpacity 
+      {/* <TouchableOpacity 
         style={styles.addBookButton}
         activeOpacity={0.7}
       >
         <Text style={styles.addButtonText}>
           <Icon name='plus' size={18} color={gen.actionText} /> ADD
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   )
 }
 
 export default function LibraryPage({ navigation }) {
+  const [query, setQuery] = useState('')
+
   return (
     <View style={styles.container}>
       <ScrollView 
         showsVerticalScrollIndicator={false}
-        style={{ width: '100%', paddingTop: 0 }}
+        style={styles.contentContainer}
         contentContainerStyle={{ alignItems: 'center' }}
       >
+        {/* <View style={styles.searchBarContainer}>
+          <SearchBar 
+            placeholder="Ain't the gospel cool?"
+            query={query}
+            setQuery={setQuery}
+          />
+        </View> */}
         <WorkShelf navigation={navigation} />
       </ScrollView>
     </View>
@@ -88,9 +98,19 @@ const styles = StyleSheet.create({
     backgroundColor: gen.primaryBackground,
     alignItems: 'center',
   },
-  libraryContent: {
-    paddingTop: 30,
+  contentContainer: {
+    width: '100%', 
+    paddingTop: 5,
     paddingHorizontal: 20,
+  },
+  searchBarContainer: {
+    width: '100%',
+    height: 50, 
+    flexDirection: 'row',
+    marginBottom: 10 
+  },
+  libraryContent: {
+    paddingTop: 10,
     flex: 1,
     width: '100%',
     flexDirection: 'column',

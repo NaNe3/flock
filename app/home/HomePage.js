@@ -1,58 +1,111 @@
-import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Icon from 'react-native-vector-icons/FontAwesome5'
+import { useFocusEffect } from "@react-navigation/native";
 
 import BasicButton from "../components/BasicButton";
-import StrongContentBox from "../components/StrongContentBox"
+import FA6Icon from "../components/FA6Icon"
+import NotificationIndicator from "../components/NotificationIndicator";
 import WeekActivityTracker from "./components/WeekActivityTracker";
 
 import { getAttributeFromObjectInLocalStorage, getLocallyStoredVariable } from "../utils/localStorage";
 import { hapticSelect } from "../utils/haptics";
 import { gen } from "../utils/styling/colors";
-import { getCurrentWeekNumber } from "../utils/plan";
+import { getCurrentWeekNumber, getWeekFromTimestamp } from "../utils/plan";
+import { useRealtime } from "../hooks/RealtimeProvider";
+import { getColorLight, getPrimaryColor } from "../utils/getColorVariety";
 
 const LandingDisplay = ({ navigation, goal, plan }) => {
-  const [userPlan, setUserPlan] = useState(null)
-  const [chapter, setChapter] = useState('')  
+  // const [userPlan, setUserPlan] = useState(null)
+  const [versesInStudy, setVersesInStudy] = useState(0)
+  const [chapter, setChapter] = useState('')
   const [location, setLocation] = useState({})
+  const [primaryColor, setPrimaryColor] = useState('')
+  const [primaryColorLight, setPrimaryColorLight] = useState('')
   const [time, setTime] = useState('')
   const [planButtonState, setPlanButtonState] = useState({
     disabled: false
   })
+  const [hasStudied, setHasStudied] = useState(false)
 
-  useEffect(() => {
-    const init = async () => {
-      const week = getCurrentWeekNumber()
-      const currentDay = new Date().getDay()
-      const plan = JSON.parse(await getLocallyStoredVariable('Come Follow Me'))
-      const weekPlan = plan.plan_info.weeks[week]
-      const today = weekPlan.content[currentDay]
+  const init = async () => {
+    const primaryColor = await getPrimaryColor()
+    setPrimaryColor(primaryColor)
+    setPrimaryColorLight(getColorLight(primaryColor))
 
-      setUserPlan(weekPlan)
-      setLocation(today.location)
-      setChapter(`${today.location.book.toUpperCase()} ${today.location.chapter}`)
-      setTime(today.time)
-    }
+    const week = getCurrentWeekNumber()
+    const currentDay = new Date().getDay()
+    // TODO - change plan async storage to be more specific
+    const plan = JSON.parse(await getLocallyStoredVariable('Come Follow Me'))
+    const weekPlan = plan.plan_info.weeks[week]
+    const today = weekPlan.content[currentDay]
+    const versesStringForToday = today.location.verses
+    const versesForToday = versesStringForToday.split('-').map(verse => parseInt(verse))
+    setVersesInStudy(versesForToday)
 
-    init()
-  }, [])
+    // setUserPlan(weekPlan)
+    setLocation(today.location)
+    const chapter = `${today.location.book.replace("Joseph Smith", "JS").replace("Doctrine And Covenants", "D&C").toUpperCase()} ${today.location.chapter}`
+    setChapter(chapter)
+    setTime(today.time)
+
+    await getStudyCompletion(week, currentDay)
+  }
+
+  const getStudyCompletion = async (week, currentDay) => {
+    const logs = JSON.parse(await getLocallyStoredVariable('user_logs'))
+
+    const year = new Date().getFullYear()
+    const hasStudiedToday = logs.some(log => {
+      const time = log.created_at
+
+      const date = new Date(time)
+      const yearOfLog = date.getFullYear()
+      const weekOfLog = getWeekFromTimestamp(time)
+      const dayOfLog = date.getDay()
+
+      return yearOfLog === year && weekOfLog === week && dayOfLog === currentDay
+    })
+    setHasStudied(hasStudiedToday)
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      init()
+    }, [])
+  )
 
   return (
     <View style={styles.landingContainer}>
       <WeekActivityTracker />
-      <Text style={styles.subHeader}>START READING</Text>
-      <Text style={styles.header}>{chapter}</Text>
-
+      <View style={{ marginTop: 40, flex: 1, alignItems: 'center' }}>
+        {
+          hasStudied ? (
+            <View style={[styles.subHeaderContainer, { backgroundColor: primaryColorLight }]}>
+              <Text style={[styles.subHeader, { color: primaryColor }]}>
+                study complete <FA6Icon name="check" size={13} color={primaryColor} />
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.subHeader}>START READING</Text>
+          )
+        }
+        <Text style={[styles.header, chapter.length < 10 && { fontSize: 60}]}>{chapter}</Text>
+      </View>
       <View style={styles.actionContainer}>
         <BasicButton
-          title={`${time} minutes`}
-          icon={'clock-o'}
+          title={hasStudied ? `go to chapter` : `${time} minutes`}
+          icon={!hasStudied && 'clock-o'}
           onPress={() => {
             hapticSelect()
-            navigation.navigate('DailyReadingSummary', {
-              plan: userPlan,
-              chapter: chapter,
-              location: location,
-              time: time,
+            navigation.navigate('Chapter', {
+              work: location.work,
+              book: location.book,
+              chapter: location.chapter,
+              plan: {
+                verses: versesInStudy,
+                next: null
+              }
             })
           }}
           disabled={planButtonState.disabled}
@@ -65,8 +118,13 @@ const LandingDisplay = ({ navigation, goal, plan }) => {
 }
 
 export default function HomePage({ navigation }) {
+  const { incoming } = useRealtime()
   const [goal, setGoal] = useState('')
   const [plan, setPlan] = useState('')
+
+  // const [friends, setFriends] = useState([])
+  const [friendCount, setFriendCount] = useState(0)
+  const [requestCount, setRequestCount] = useState(0)
 
   const getGoalText = async () => {
     const [goal, plan] = await getAttributeFromObjectInLocalStorage("userInformation", ["goal", "plan"])
@@ -74,9 +132,27 @@ export default function HomePage({ navigation }) {
     setPlan(plan)
   }
 
+  const init = async () => {
+    //getFriends
+    const friends = JSON.parse(await getLocallyStoredVariable('user_friends')).filter(friend => friend.status === 'accepted')
+    // setFriends(friends)
+    setFriendCount(friends.length)
+
+    const friendRequests = JSON.parse(await getLocallyStoredVariable('user_friend_requests'))
+    setRequestCount(friendRequests.length)
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      init()
+      getGoalText()
+    }, [])
+  )
+
   useEffect(() => {
-    getGoalText()
-  }, [])
+    const trigger = async () => { await init() }
+    if (incoming !== null) { trigger() }
+  }, [incoming])
 
   const props = {
     navigation,
@@ -93,10 +169,22 @@ export default function HomePage({ navigation }) {
       >
         <LandingDisplay {...props} />
         <View style={styles.homeContent}>
-          {/* <WeakContentBox title="TO DO LIST" /> */}
-          <StrongContentBox 
+          <TouchableOpacity 
+            style={styles.addFriendsButton}
+            activeOpacity={0.7}
+            onPress={() => {
+              hapticSelect()
+              navigation.navigate('AddFriend')
+            }}
+          >
+            { requestCount > 0 && <NotificationIndicator count={requestCount} offset={-5} /> }
+            <Text style={styles.buttonText}> 
+              <Icon name="users" size={16} color={gen.actionText} /> {friendCount > 0 ? `${friendCount} friend${friendCount === 1 ? '' : 's'}` : 'find friends'}
+            </Text>
+          </TouchableOpacity>
+          {/* <StrongContentBox 
             navigation={navigation}
-            title="ACTIVITY" 
+            title="ACTIVITY"
             icon="user-plus"
           >
             <View style={styles.friendBox}>
@@ -110,29 +198,7 @@ export default function HomePage({ navigation }) {
                 <Text style={styles.scripture}>3 NEPHI 27</Text>
               </View>
             </View>
-            <View style={styles.friendBox}>
-              <View>
-                <Text style={styles.friendName}>Justin Andrews</Text>
-                <Text style={styles.friendActivity}>Studied Today</Text>
-              </View>
-              <View style={styles.scriptureBox}>
-                <Text style={styles.scripture}>3 NEPHI 27</Text>
-                <Text style={styles.scripture}>MATT 5</Text>
-                <Text style={styles.scripture}>MATT 6</Text>
-              </View>
-            </View>
-            <View style={styles.friendBox}>
-              <View>
-                <Text style={styles.friendName}>Justin Andrews</Text>
-                <Text style={styles.friendActivity}>Studied Today</Text>
-              </View>
-              <View style={styles.scriptureBox}>
-                <Text style={styles.scripture}>3 NEPHI 27</Text>
-                <Text style={styles.scripture}>MATT 5</Text>
-                <Text style={styles.scripture}>MATT 6</Text>
-              </View>
-            </View>
-          </StrongContentBox>
+          </StrongContentBox> */}
         </View>
       </ScrollView>
     </View>
@@ -156,53 +222,10 @@ const styles = StyleSheet.create({
     paddingTop: 600,
     marginTop: -600,
   },
-  streakNumber: {
-    fontSize: 90,
-    color: gen.darkGray,
-    fontFamily: 'nunito-bold',
-    textAlign: 'center',
-  },
-  streakText: {
-    fontSize: 18,
-    color: gen.darkGray,
-    fontFamily: 'nunito-bold',
-    textAlign: 'center',
-  },
   homeContent: {
-    width: '85%',
-    paddingVertical: 40,
-  },
-  friendBox: {
     width: '100%',
-    padding: 20,
-    borderBottomWidth: 2,
-    borderColor: gen.primaryBorder,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  friendName: {
-    fontFamily: 'nunito-bold',
-    fontSize: 18,
-    color: gen.actionText,
-  },
-  friendActivity: {
-    fontFamily: 'nunito-bold',
-    fontSize: 14,
-    color: gen.gray,
-  },
-  scriptureBox: {
-    backgroundColor: gen.primaryColorLight,
-    borderRadius: 10,
-  },
-  scripture: {
-    fontFamily: 'nunito-bold',
-    fontSize: 14,
-    color: gen.primaryColor,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    textAlign: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
   actionContainer: {
     width: '100%',
@@ -210,45 +233,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 50
   },
-  actionPlanBox: {
-    width: '100%', 
-    marginBottom: -10, 
-    marginTop: 40, 
-    paddingTop: 10, 
-    paddingBottom: 15, 
-    paddingHorizontal: 15, 
-    flexDirection: 'row',
-    alignItems: 'center', 
-    justifySelf: 'center', 
-    justifyContent: 'space-between',
-    borderTopLeftRadius: 10, 
-    borderTopRightRadius: 10, 
-    borderWidth: 5, 
-    borderColor: gen.primaryColor, 
-  },
-  book: {
-    width: 40,
-    height: 50,
-    borderRadius: 5,
-    backgroundColor: gen.navy,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bookName: {
-    fontSize: 6,
-    fontFamily: 'nunito-bold',
-    color: gen.orange,
-  },
   header: {
     fontFamily: 'nunito-bold', 
     fontSize: 40, 
-    marginVertical: 0, 
-    color: gen.primaryText
+    marginVertical: 0,
+    color: gen.primaryText,
+    textAlign: 'center'
+  },
+  subHeaderContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
   subHeader: {
     fontFamily: 'nunito-bold', 
     fontSize: 16, 
-    marginTop: 40, 
-    color: gen.darkishGray
+    color: gen.darkishGray,
+  },
+  addFriendsButton: {
+    width: 180,
+    paddingVertical: 10,
+    borderColor: gen.primaryBorder,
+    backgroundColor: gen.primaryBackground,
+    borderRadius: 40,
+    alignSelf: 'center',
+  },
+  buttonText: {
+    fontFamily: 'nunito-bold',
+    fontSize: 18,
+    color: gen.actionText,
+    textAlign: 'center',
   }
 })

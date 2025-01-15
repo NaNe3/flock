@@ -1,29 +1,53 @@
-import { useEffect, useRef, useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button, StyleSheet, Text, TouchableOpacity, View, Image, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Gesture, GestureDetector, gestureHandlerRootHOC, GestureHandlerRootView } from 'react-native-gesture-handler'
 import Icon from 'react-native-vector-icons/FontAwesome6'
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+
+import * as FileSystem from 'expo-file-system';
+import { CameraView, CameraType, useCameraPermissions, Camera } from 'expo-camera'
 import { Audio } from 'expo-av'
 
 import VideoPreview from '../components/VideoPreview'
 
-import { hapticImpactSoft } from '../utils/haptics'
+import { hapticError, hapticImpactSoft, hapticSelect } from '../utils/haptics'
 import { gen } from '../utils/styling/colors'
 import { uploadMedia } from '../utils/db-media';
+import { deleteLocalFileWithPath, getLocalUriForFile } from '../utils/db-download';
+import { getAttributeFromObjectInLocalStorage } from '../utils/localStorage';
+import FadeInView from '../components/FadeInView';
+import BasicBottomSheet from './components/BasicBottomSheet';
+import GroupSelection from './components/GroupSelection';
+import MicrophoneCameraPermissions from '../components/MicrophoneCameraPermissions';
+import { getColorVarietyAsync } from '../utils/getColorVariety';
 
 function Capture({ navigation, route }) {
   const location = route.params
+  const insets = useSafeAreaInsets()
   const [camera, setCamera] = useState({
     'facing': 'front',
     'output': null
-  });
+  })
+  const [isUploading, setIsUploading] = useState(false)
+  const [selectingGroup, setSelectingGroup] = useState(false)
+
+  const [main, setMain] = useState({})
+  const [userAvatar, setUserAvatar] = useState('')
+  const [recipientAvatar, setRecipientAvatar] = useState('')
+  const [selectedRecipient, setSelectedRecipient] = useState({
+    recipient_id: null,
+    recipient: 'all friends',
+  })
+
   const [recording, setRecording] = useState(false)
   const [duration, setDuration] = useState("0:00")
-  const [permission, requestPermission] = useCameraPermissions();
+
+  const [cameraStatus, setCameraStatus] = useState(null)
+  const [microphoneStatus, setMicrophoneStatus] = useState(null)
+
   const [gestures, setGestures] = useState({ takePictureGesture: null, recordGesture: null })
   const cameraRef = useRef(null)
   const intervalRef = useRef(null)
-
 
   useEffect(() => {
     if (recording) {
@@ -43,12 +67,63 @@ function Capture({ navigation, route }) {
     return () => clearInterval(intervalRef.current);
   }, [recording]);
 
+  useEffect(() => {
+    const findMicrophonePermissions = async () => {
+      try {
+        const { status } = await Audio.requestPermissionsAsync();
+        setMicrophoneStatus(status === 'granted')
+      } catch (error) { console.error(error) }
+    }
+
+    const findCameraPermissions = async () => {
+      try {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        setCameraStatus(status === 'granted')
+      } catch (error) { console.error(error) }
+    }
+
+    findMicrophonePermissions()
+    findCameraPermissions()
+
+    // GESTURES CREATION AND CLEANUP
+    const takePictureGesture = Gesture.Tap().onEnd(() => {
+      takePicture();
+    }).runOnJS(true).shouldCancelWhenOutside(false);
+    const recordGesture = Gesture.LongPress().maxDistance(50).onStart(() => {
+      hapticImpactSoft();
+      setRecording(true);
+    }).onEnd(() => {
+      stopRecording();
+    }).runOnJS(true).shouldCancelWhenOutside(false);
+    setGestures({ takePictureGesture, recordGesture });
+
+    // GET PROFILE PICTURE
+    const init = async () => {
+      const colors = await getColorVarietyAsync()
+      setMain(colors)
+
+      const profilePicture = await getAttributeFromObjectInLocalStorage('user_information', 'avatar_path')
+      const profileURI = getLocalUriForFile(profilePicture)
+      setUserAvatar(profileURI)
+      setRecipientAvatar(profileURI)
+    }
+
+    init()
+
+    return () => {
+      setGestures({ takePictureGesture: null, recordGesture: null })
+    };
+  }, [])
 
   const toggleCameraFacing = () => {
-    setCamera({ ...camera, facing: camera.facing === 'front' ? 'back' : 'front' })
+    if (!recording) {
+      hapticSelect()
+      setCamera({ ...camera, facing: camera.facing === 'front' ? 'back' : 'front' })
+    }
   }
 
   const takePicture = () => {
+    hapticImpactSoft()
     cameraRef.current.takePictureAsync({ quality: 0.5, base64: true })
       .then((data) => {
         setCamera({ ...camera, output: data.uri, isVideo: false })
@@ -60,10 +135,15 @@ function Capture({ navigation, route }) {
 
   const startRecording = async () => {
     try {
-      const video = await cameraRef.current.recordAsync({ maxDuration: 45 })
+      const video = await cameraRef.current.recordAsync({
+        maxDuration: 45,
+        quality: '480p'
+      })
       setCamera({ ...camera, output: video.uri, isVideo: true })
       setRecording(false)
-      console.log('output sent to ', video.uri)
+
+      const fileInfo = await FileSystem.getInfoAsync(video.uri)
+      console.log('File size:', fileInfo.size/1000000)
     } catch (error) {
       console.error(error)
     }
@@ -76,19 +156,25 @@ function Capture({ navigation, route }) {
     }
   }
 
-  // const takePictureGesture = Gesture.Tap().onEnd(() => {
-  //   takePicture()
-  // }).runOnJS(true)
+  const getSeconds = (time) => {
+    const timeSplit = time.split(':')
+    const minutes = timeSplit[0]
+    const seconds = timeSplit[1]
 
-  // const recordGesture = Gesture.LongPress().onStart(() => {
-  //   hapticImpactSoft()
-  //   setRecording(true)
-  // }).onEnd(() => {
-  //   stopRecording()
-  // }).runOnJS(true)
+    return parseInt(minutes) * 60 + parseInt(seconds)
+  }
 
   const uploadRecordedMedia = async (location, media, media_type) => {
-    const { data, error } = await uploadMedia(location, media, media_type)
+    hapticImpactSoft()
+    setIsUploading(true)
+
+    const { data, error } = await uploadMedia({
+      location, 
+      media, 
+      media_type, 
+      duration: getSeconds(duration),
+      recipient_id: selectedRecipient.recipient_id
+    })
 
     if (error) {
       // TODO - Create an alert if upload is a failure
@@ -97,52 +183,30 @@ function Capture({ navigation, route }) {
     }
   }
 
-  useEffect(() => {
-    const findMicrophonePermissions = async () => {
-      try {
-        const { status } = await Audio.requestPermissionsAsync();
-      } catch (error) {
-        console.error(error)
-      }
-    }
-    findMicrophonePermissions()
-
-    // GESTURES CREATION AND CLEANUP
-    const takePictureGesture = Gesture.Tap().onEnd(() => {
-      takePicture();
-    }).runOnJS(true).shouldCancelWhenOutside(true);
-    const recordGesture = Gesture.LongPress().onStart(() => {
-      hapticImpactSoft();
-      setRecording(true);
-    }).onEnd(() => {
-      stopRecording();
-    }).runOnJS(true).shouldCancelWhenOutside(true);
-    setGestures({ takePictureGesture, recordGesture });
-
-    return () => {
-      setGestures({ takePictureGesture: null, recordGesture: null })
-    };
-  }, [])
-
-  if (!permission) {
+  if (cameraStatus === null || microphoneStatus === null) {
     // Camera permissions are still loading.
-    return <View />;
+    return <View style={{ flex: 1, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#fff" />
+    </View>
   }
 
-  if (!permission.granted) {
+  if (!cameraStatus || !microphoneStatus) {
     // Camera permissions are not granted yet.
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
-        <Button onPress={requestPermission} title="grant permission" />
-      </View>
+      <MicrophoneCameraPermissions
+        cameraStatus={cameraStatus}
+        setCameraStatus={setCameraStatus}
+        microphoneStatus={microphoneStatus}
+        setMicrophoneStatus={setMicrophoneStatus}
+      />
     )
   }
 
+
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <GestureHandlerRootView style={[styles.container, { paddingTop: insets.top -10 }]}>
       <View style={[styles.cameraContainer, recording && {
-        borderColor: gen.red,
+        borderColor: main.primaryColor,
       }]}>
         {
           camera.output === null ? (
@@ -156,9 +220,12 @@ function Capture({ navigation, route }) {
               <TouchableOpacity
                 style={styles.exitButton}
                 activeOpacity={0.7}
-                onPress={() => navigation.goBack()}
+                onPress={() => {
+                  hapticSelect()
+                  navigation.goBack()
+                }}
               >
-                <Icon name="xmark" size={30} color='#fff' />
+                <Icon name="xmark" size={30} color={recording ? '#bbb' : '#fff'} />
               </TouchableOpacity>
 
               {recording && (
@@ -168,28 +235,33 @@ function Capture({ navigation, route }) {
               )}
 
               <View style={styles.cameraActionBar}>
-                <TouchableOpacity style={styles.flipButton}>
-                  <Icon name="font" size={30} color='#fff' />
+                <TouchableOpacity 
+                  onPress={() => {
+                    navigation.navigate('PremiumOffer')
+                  }}
+                  style={styles.flipButton}
+                >
+                  <Icon name="image" size={30} color='transparent' />
                 </TouchableOpacity>
 
-                <View style={styles.recordButton}>
-                  <GestureDetector
-                    gesture={Gesture.Simultaneous(gestures.takePictureGesture, gestures.recordGesture)}
-                  >
+                <GestureDetector
+                  gesture={Gesture.Simultaneous(gestures.takePictureGesture, gestures.recordGesture)}
+                >
+                  <View style={styles.recordButton}>
                     <TouchableOpacity
-                      style={{ flex: 1, backgroundColor: recording ? gen.red : '#fff', borderRadius: 50 }}
+                      style={{ flex: 1, backgroundColor: recording ? main.primaryColor : '#fff', borderRadius: 50 }}
                       activeOpacity={0.7}
                     >
 
                     </TouchableOpacity>
-                  </GestureDetector>
-                </View>
+                  </View>
+                </GestureDetector>
 
                 <TouchableOpacity 
                   style={styles.flipButton}
                   onPress={toggleCameraFacing}
                 >
-                  <Icon name="camera-rotate" size={30} color='#fff' />
+                  <Icon name="camera-rotate" size={30} color={ recording ? '#bbb' : '#fff'} />
                 </TouchableOpacity>
               </View>
             </CameraView>
@@ -200,6 +272,7 @@ function Capture({ navigation, route }) {
               {camera.output && camera.isVideo && (
                 <VideoPreview
                   source={{ uri: camera.output }}
+                  includeBottomShadow={false}
                 />
               )}
               {camera.output && camera.isVideo && (
@@ -207,44 +280,87 @@ function Capture({ navigation, route }) {
                   <Text style={{ color: gen.lightestGray, fontSize: 20, fontFamily: 'nunito-regular' }}>{duration}</Text>
                 </View>
               )}
+              {isUploading && (
+                <FadeInView style={styles.uploadingBox}>
+                  <Text style={styles.uploadText}>uploading ...</Text>
+                </FadeInView>
+              )}
               <TouchableOpacity
-                style={styles.exitButton}
+                style={[styles.exitButton, isUploading && { opacity: 0.5 }]}
                 activeOpacity={0.7}
                 onPress={() => {
-                  // TODO - DELETE THE CACHED FILE
-                  setCamera({ ...camera, output: null, isVideo: false })
+                  if (!isUploading) {
+                    hapticSelect()
+                    deleteLocalFileWithPath(camera.output)
+                    setCamera({ ...camera, output: null, isVideo: false })
+                  }
                 }}
               >
-                <Icon name="xmark" size={30} color='#fff' />
+                <Icon name="trash" size={25} color='#fff' />
               </TouchableOpacity>
             </View>
           )
         }
       </View>
-      <View style={styles.cameraFooter}>
+      <View style={[styles.cameraFooter, { marginBottom: insets.bottom }]}>
         {
           camera.output && (
             <>
-              <View style={styles.groupContainer}>
-                <View style={styles.groupSelection}>
-
-                </View>
-              </View>
               <TouchableOpacity 
-                style={styles.sendButton}
                 activeOpacity={0.7}
+                style={[styles.recipientContainer, isUploading && { opacity: 0.5 }]}
                 onPress={() => {
-                  uploadRecordedMedia(location, camera.output, camera.isVideo ? 'video' : 'picture')
+                  if (!isUploading) {
+                    if (selectingGroup) {
+                      setSelectingGroup(false)
+                    } else {
+                      hapticSelect()
+                      setSelectingGroup(true)
+                    }
+                  } else {
+                    hapticError()
+                  }
                 }}
               >
-                <Text style={{ color: "#fff", fontSize: 20, fontFamily: 'nunito-bold' }}>
-                  SEND <Icon name="paper-plane" size={20} color='#fff' />
-                </Text>
+                <Image source={{ uri: recipientAvatar }} style={styles.recipientAvatar} />
+                <Text 
+                  style={styles.recipientText}
+                  numberOfLines={1}
+                  ellipsizeMode='tail'
+                >{selectedRecipient.recipient}</Text>
+                <Icon name="chevron-down" size={15} color={gen.lightestGray} style={{ marginRight: 10 }} />
               </TouchableOpacity>
+              <View style={styles.sendButtonContainer}>
+                <TouchableOpacity 
+                  style={[styles.sendButton, { backgroundColor: main.primaryColor }, isUploading && { opacity: 0.5 }]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    if (!isUploading) {
+                      uploadRecordedMedia(location, camera.output, camera.isVideo ? 'video' : 'picture')
+                    }
+                  }}
+                >
+                  <Icon name="feather-pointed" size={25} color='#fff' />
+                </TouchableOpacity>
+              </View>
             </>
           )
         }
       </View>
+      { selectingGroup && 
+        <BasicBottomSheet 
+          title="sending to"
+          setVisibility={setSelectingGroup}
+        >
+          <GroupSelection
+            userAvatar={userAvatar}
+            setRecipientAvatar={setRecipientAvatar}
+            selectedRecipient={selectedRecipient}
+            setSelectedRecipient={setSelectedRecipient}
+            setSelectingGroup={setSelectingGroup}
+          />
+        </BasicBottomSheet>
+      }
     </GestureHandlerRootView>
   )
 }
@@ -253,7 +369,6 @@ export default gestureHandlerRootHOC(Capture)
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 50,
     flex: 1,
     justifyContent: 'center',
     backgroundColor: 'black',
@@ -261,6 +376,7 @@ const styles = StyleSheet.create({
   message: {
     textAlign: 'center',
     paddingBottom: 10,
+    color: '#fff',
   },
   camera: {
     flex: 1,
@@ -276,12 +392,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cameraFooter: {
-    height: 100,
-    backgroundColor: 'black',
+    height: 55,
     paddingHorizontal: 10,
-    marginBottom: 20,
-    paddingBottom: 10,
     flexDirection: 'row',
+    alignItems: 'center',
   },
   exitButton: {
     position: 'absolute',
@@ -334,25 +448,53 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(100,100,100,0.7)',
     borderRadius: 10,
   },
-  groupContainer: {
+
+  recipientContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#fff',
-    borderRadius: 20,
-    padding: 7,
+    flexDirection: 'row',
+    backgroundColor: '#444',
+    padding: 10,
+    borderRadius: 30,
   },
-  groupSelection: {
-    backgroundColor: '#000',
-    width: '100%',
-    height: '100%',
-    borderRadius: 12,
+  recipientAvatar: {
+    width: 35,
+    height: 35,
+    borderRadius: 30,
+  },
+  recipientText: {
+    flex: 1,
+    fontSize: 18,
+    fontFamily: 'nunito-bold',
+    color: gen.lightestGray,
+    marginLeft: 10,
+    textAlignVertical: 'center',
+  },
+  sendButtonContainer: {
+    width: 55,
+    height: 55,
+    marginHorizontal: 10,
+    borderRadius: 50,
   },
   sendButton: {
-    height: 100,
+    flex: 1,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 10,
+  },
+  uploadingBox: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  uploadText: {
+    color: gen.lightestGray,
+    fontSize: 20,
+    fontFamily: 'nunito-regular',
   }
 })

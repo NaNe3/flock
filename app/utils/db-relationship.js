@@ -1,18 +1,59 @@
+import { formatFriendsFromSupabase } from "./format";
 import { setLocallyStoredVariable } from "./localStorage";
 import supabase from "./supabase";
 
 export const createRelationship = async (user_id, friend_id) => {
-  const { data, error } = await supabase
-    .from("relationship")
-    .insert([
-      { user_one: user_id, user_two: friend_id, type: "friend", }, 
-      { user_one: friend_id, user_two: user_id, type: "friend", }
-    ])
-    .select()
+  try {
+    const { data, error } = await supabase
+      .from("relationship")
+      .insert([
+        { 
+          user_one: user_id, 
+          user_two: friend_id, 
+          invited_by: user_id,
+          type: "friend" 
+        }, 
+      ])
+      .select(`
+        user_two (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex))
+      `)
 
-  if (error) {
-    console.error("Error creating relationship:", error);
-    return { error: error };
+    
+    if (error) {
+      console.error("Error creating relationship:", error);
+      return { error: error };
+    } else {
+      const { color_id, ...user } = data[0].user_two
+
+      return { error: null, data: {
+        ...user,
+        invited_by: user_id,
+        last_studied: user.last_studied ? user.last_studied.created_at : null,
+        color: color_id.color_hex
+      }}
+    }
+  } catch (error) {
+    console.log(`Error getting ${keys} from local storage: ${error}`)
+    return { error: error }
+  }
+}
+
+export const removeRelationship = async (user_id, friend_id) => {
+  try {
+    const { data, error } = await supabase
+      .from('relationship')
+      .delete()
+      .or(`and(user_one.eq.${user_id},user_two.eq.${friend_id}),and(user_one.eq.${friend_id},user_two.eq.${user_id})`);
+
+    if (error) {
+      console.error("Error removing relationship:", error);
+      return { error: error };
+    } else {
+      return { error: null }
+    }
+  } catch (error) {
+    console.log(`Error getting ${keys} from local storage: ${error}`)
+    return { error: error }
   }
 }
 
@@ -21,21 +62,72 @@ export const getRelationships = async (user_id) => {
     const { data, error } = await supabase
       .from('relationship')
       .select(`
-        user_two (id, fname, lname, avatar_path)
+        status,
+        invited_by,
+        user_two (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex)),
+        user_one (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex))
       `)
-      .or(`user_one.eq.${user_id}`)
+      .or(`user_one.eq.${user_id},user_two.eq.${user_id}`)
 
     if (error) {
       console.error("Error getting relationships:", error);
-      return { error: error };
+      return { error: error }
     }
 
-    const relationships = data.map(item => item.user_two)
+    const relationships = formatFriendsFromSupabase(data, user_id)
     return { data: relationships, error: null }
   } catch (error) {
     console.log(`Error getting ${keys} from local storage: ${error}`)
     return { error: error }
   }
+}
+
+export const getFriendRequestsByUserId = async (user_id) => {
+  try {
+    const { data, error } = await supabase
+      .from('relationship')
+      .select(`
+        user_one (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex)),
+        created_at
+      `)
+      .eq('user_two', user_id)
+      .eq('status', 'pending')
+
+    if (error) {
+      console.error("Error getting friend requests:", error);
+      return { error: error };
+    }
+
+    const friendRequests = data.map(item => {
+      const { color_id, ...user} = item.user_one
+
+      return {
+        ...user,
+        last_studied: user.last_studied ? user.last_studied.created_at : null,
+        created_at: item.created_at,
+        color: color_id.color_hex
+      }
+    })
+    return { data: friendRequests, error: null }
+  } catch (error) {
+    console.log(`Error getting ${keys} from local storage: ${error}`)
+    return { error: error }
+  }
+}
+
+export const resolveFriendRequest = async (user_id, friend_id, action) => {
+  const { data, error } = await supabase
+    .from('relationship')
+    .update({ status: action })
+    .eq('user_one', friend_id)
+    .eq('user_two', user_id)
+
+  if (error) {
+    console.error("Error accepting friend request:", error);
+    return { error: error };
+  }
+
+  return { data }
 }
 
 const organizeGroupData = (user_id, data) => {
@@ -47,10 +139,14 @@ const organizeGroupData = (user_id, data) => {
         ...item.group
       }
     }
+    
+    const { color_id, ...user } = item.user
     acc[groupId].members.push({
-      ...item.user, 
+      ...user,
       is_leader: item.is_leader, 
-      status: item.status
+      status: item.status,
+      last_studied: item.user.last_studied ? item.user.last_studied.created_at : null,
+      color: color_id.color_hex
     })
     return acc
   }, {})
@@ -84,7 +180,7 @@ export const getGroupsForUser = async (user_id) => {
         is_leader,
         status,
         group (group_name, group_image, plan_id),
-        user (id, fname, lname, avatar_path)
+        user (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex))
       `)
       .in('group_id', groupIds)
 
@@ -137,4 +233,59 @@ export const rejectGroupInvitation = async (user_id, group_id) => {
   }
 
   return { data }
+}
+
+export const getSenderInformation = async (user_id, sender_id) => {
+  try {
+    const { data, error } = await supabase
+      .from('relationship')
+      .select(`
+        user_one (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex)),
+        created_at
+      `)
+      .eq('user_one', sender_id)
+      .eq('user_two', user_id)
+
+    if (error) {
+      console.error("Error getting friend requests:", error);
+      return { error: error };
+    }
+
+
+    const { color_id, ...user} = data[0].user_one
+    const friendRequest = {
+      ...user,
+      last_studied: user.last_studied ? user.last_studied.created_at : null,
+      created_at: data[0].created_at,
+      color: color_id.color_hex
+    }
+    return { data: friendRequest, error: null }
+  } catch (error) {
+    console.log(`Error getting ${keys} from local storage: ${error}`)
+    return { error: error }
+  }
+}
+
+export const getInfoFromGroupMember = async (group_member_id) => {
+  const { data, error } = await supabase
+    .from('group_member')
+    .select(`
+      group (group_name, group_image),
+      user (id, full_name, avatar_path, last_studied(created_at), color_id(color_hex))
+    `)
+    .eq('group_member_id', group_member_id)
+
+  if (error) {
+    console.error("Error getting group member information:", error);
+    return { error: error };
+  }
+
+  const { color_id, ...user } = data[0].user
+  const groupMember = {
+    ...user,
+    last_studied: user.last_studied ? user.last_studied.created_at : null,
+    color: color_id.color_hex,
+    group: data[0].group
+  }
+  return groupMember
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Animated, Image, StyleSheet, View } from "react-native"
+import { Animated, Image, StyleSheet, TouchableOpacity, View } from "react-native"
 import VideoPreview from "./VideoPreview"
 
 import { gen } from "../utils/styling/colors"
@@ -8,54 +8,83 @@ import { checkIfFileExistsWithPath, downloadFileWithPath, getLocalUriForFile } f
 export default function Media({
   path,
   type = "video",
+  onPress,
+  onPressIn,
+  onPressOut,
+  includeBottomShadow = false,
+  soundEnabled=null,
   style
 }) {
   const [mediaPath, setMediaPath] = useState(getLocalUriForFile(path))
+  const [mediaType, setMediaType] = useState(type)
   const [mediaDownloaded, setMediaDownloaded] = useState(null)
   const [loadingAnimation] = useState(new Animated.Value(0))
+  const [muted, setMuted] = useState(!soundEnabled ?? false)
+
+  const [timeToPause, setTimeToPause] = useState(false)
 
   useEffect(() => {
-    const mediaAllocation = async () => {
-      try {
-        const media = await checkIfFileExistsWithPath(mediaPath)
-        const fileUri = getLocalUriForFile(mediaPath)
-
-        if (media.exists === true) {
-          setMediaPath({ uri: fileUri })
-          setMediaDownloaded(true)
-        } else if (media.exists === false) {
-          const { uri, error } = await downloadFileWithPath('media', `public/${type}/`, fileUri.split("/").pop())
-          if (!error) {
-            // image is downloaded correctly.
-            // wait for the image to be recognizable by the system
-            // 10 seconds has been alloted here
-            let iterations = [0, 100]
-            const intervalId = setInterval(async () => {
-              if (iterations[0] <= iterations[1]) {
-                const { exists } = await checkIfFileExistsWithPath(uri);
-                if (exists) {
-                  clearInterval(intervalId);
-                  setMediaPath({ uri: fileUri });
-                  setMediaDownloaded(true);
-                }
-                iterations[0] += 1;
-              } else {
-                clearInterval(intervalId);
-                console.error("Error downloading Media, ITERATED OUT");
-              }
-            }, 100);
-          } else {
-            console.error("Error downloading Media", error);
-          }
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    }
-
     setMediaDownloaded(false)
     mediaAllocation()
-  }, [])
+  }, [path])
+
+  useEffect(() => {
+    setMuted(!soundEnabled)
+  }, [soundEnabled])
+
+  // useEffect(() => {
+  //   if (path) {
+
+  //     const newPath = { uri: getLocalUriForFile(path) }
+  //     setMediaPath(newPath)
+  //     setMediaType(type)
+  //   }
+  // }, [path])
+
+  // useEffect(() => {
+  //   setMediaDownloaded(false)
+  //   mediaAllocation()
+  // }, [])
+
+  const mediaAllocation = async () => {
+    try {
+      const media = await checkIfFileExistsWithPath(path)
+      const fileUri = getLocalUriForFile(path)
+
+      if (media.exists === true) {
+        setMediaPath({ uri: fileUri })
+        setMediaType(type)
+        setMediaDownloaded(true)
+      } else if (media.exists === false) {
+        const { uri, error } = await downloadFileWithPath('media', `public/${type}/`, fileUri.split("/").pop())
+        if (!error) {
+          // image is downloaded correctly.
+          // wait for the image to be recognizable by the system
+          // 10 seconds has been alloted here
+          let iterations = [0, 100]
+          const intervalId = setInterval(async () => {
+            if (iterations[0] <= iterations[1]) {
+              const { exists } = await checkIfFileExistsWithPath(uri);
+              if (exists) {
+                clearInterval(intervalId);
+                setMediaPath({ uri: fileUri });
+                setMediaType(type);
+                setMediaDownloaded(true);
+              }
+              iterations[0] += 1;
+            } else {
+              clearInterval(intervalId);
+              console.error("Error downloading Media, ITERATED OUT");
+            }
+          }, 100);
+        } else {
+          console.error("Error downloading Media", error);
+        }
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   useEffect(() => {
     Animated.loop(
@@ -76,15 +105,56 @@ export default function Media({
 
   const backgroundColor = loadingAnimation.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#d3d3d3', '#BBB'], 
+    outputRange: ['#d3d3d3', '#BBB'],
   })
 
   return (
     <Animated.View style={[styles.mediaBox, style, { backgroundColor }]}>
       {
-        mediaDownloaded && type === "video" 
-          ? <VideoPreview source={mediaPath} muted={true} style={[styles.media, style]} />
-          : <Image source={mediaPath} style={[styles.media, style]} />
+        mediaDownloaded && mediaType === "video"
+          ? (
+            <TouchableOpacity
+              onPressIn={onPressIn}
+              onPressOut={(event) => {
+                event.persist()
+                setTimeToPause(true)
+                setTimeout(() => {
+                  onPressOut(event)
+                  setTimeToPause(false)
+                }, 10)
+              }}
+              onPress={onPress}
+              activeOpacity={1}
+              style={[style, { flex: 1}]}
+            >
+              <VideoPreview
+                source={mediaPath} 
+                muted={muted}
+                includeBottomShadow={includeBottomShadow}
+                style={[styles.media, style]} 
+
+                timeToPause={timeToPause}
+              />
+            </TouchableOpacity>
+          )
+          : (
+            <TouchableOpacity 
+              onPress={onPress} 
+              onPressIn={onPressIn}
+              onPressOut={onPressOut}
+              activeOpacity={1}
+              style={[style, { flex: 1}]}
+            >
+              <Image 
+                source={mediaPath} 
+                onPress={onPress}
+                onLoadStart={() => console.log("loading")}
+                onLoad={() => console.log("loaded")}
+                style={[styles.media, style]} 
+              />
+            </TouchableOpacity>
+
+          )
       }
     </Animated.View>
   )

@@ -8,10 +8,37 @@ import { gen } from '../utils/styling/colors';
 
 // SELECT MULTIPLE OPTIONS!!!
 
-export default function UserMotivation({ setCurrentScreen, onboardingData, setOnboardingData }) {
+export default function UserMotivation({ onboardingData, setOnboardingData, setDisabled }) {
   const [goal, setGoal] = useState(null)
   const [motivation, setMotivation] = useState([])
-  const [disabled, setDisabled] = useState(true)
+  const [selectedColors, setSelectedColors] = useState({ color: '#0ba3ff', borderColor: '#0ba3ff' })
+
+  useEffect(() => {
+    setSelectedColors({
+      color: onboardingData.color.color_hex,
+      borderColor: onboardingData.color.color_hex,
+    })
+
+    if (onboardingData.motifs) {
+      if (onboardingData.motifs.length === 0) {
+        setDisabled(true)
+      } else {
+        setDisabled(false)
+        setMotivation(onboardingData.motifs)
+      }
+    } else {
+      setDisabled(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (motivation.length > 0) {
+      setDisabled(false)
+      setOnboardingData({ ...onboardingData, motifs: motivation })
+    } else {
+      setDisabled(true)
+    }
+  }, [motivation])
 
   const motivations = [
     {
@@ -61,10 +88,10 @@ export default function UserMotivation({ setCurrentScreen, onboardingData, setOn
         activeOpacity={1}
       >
         <View 
-          style={[styles.selectionBox, motivation.includes(option) && styles.boxSelected]}
+          style={[styles.selectionBox, motivation.includes(option) && selectedColors]}
         >
           <Text style={styles.emoji}>{icon}</Text>
-          <Text style={[styles.optionText, motivation.includes(option) && styles.boxSelected]}>{prompt}</Text>
+          <Text style={[styles.optionText, motivation.includes(option) && selectedColors]}>{prompt}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -72,12 +99,12 @@ export default function UserMotivation({ setCurrentScreen, onboardingData, setOn
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>What are you doing here?</Text>
       <ScrollView
         style={{ flex: 1, width: '100%', }}
         contentContainerStyle={{ alignItems: 'center' }}
         showsVerticalScrollIndicator={false} 
       >
+        <Text style={styles.header}>Why do you want to study with us?</Text>
         <View style={styles.questionBox}>
           {
             motivations.map((motivation, index) => (
@@ -92,15 +119,6 @@ export default function UserMotivation({ setCurrentScreen, onboardingData, setOn
         </View>
         <EmptySpace size={100} />
       </ScrollView>
-      <BasicButton
-        title="next"
-        onPress={() => {
-          setOnboardingData({ ...onboardingData, motivation })
-          setCurrentScreen(prev => prev + 1)
-        }}
-        style={{ position: 'absolute', bottom: 60 }}
-        disabled={disabled}
-      />
     </View>
   );
 }
@@ -113,10 +131,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    marginTop: 70,
     fontSize: 20,
     fontFamily: 'nunito-bold',
-    marginBottom: 20,
+    marginHorizontal: 40,
+    textAlign: 'center',
   },
   questionBox: {
     width: '90%',
@@ -134,10 +152,6 @@ const styles = StyleSheet.create({
     marginBottom: 13,
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  boxSelected: {
-    borderColor: gen.primaryColor,
-    color: gen.primaryColor,
   },
   medium: {
     fontSize: 18,

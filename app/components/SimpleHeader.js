@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/FontAwesome5'
+
 import { hapticSelect } from '../utils/haptics'
 import { gen } from '../utils/styling/colors'
 
@@ -14,6 +16,7 @@ const SimpleHeader = ({
   rightIcon = null,
   verticalPadding = 0
 }) => {
+  const insets = useSafeAreaInsets()
   const fadeAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
@@ -25,17 +28,17 @@ const SimpleHeader = ({
   }, [showChapterTitle])
 
   return (
-    <View style={[styles.header, { height: 100 + verticalPadding }]}>
+    <View style={[styles.header, { height: 60 + verticalPadding + insets.top, paddingTop: insets.top }]}>
       <View style={[styles.headerContent, { paddingVertical: verticalPadding, height: 60 + verticalPadding }]}>
-        <TouchableOpacity 
-          onPress={() => { 
+        <TouchableOpacity
+          onPress={() => {
             hapticSelect()
             if (functionalNavigation !== null) {
               functionalNavigation()
             } else {
-              navigation.goBack() 
+              navigation.goBack()
             }
-          }} 
+          }}
           style={[{ flexDirection: 'row', alignItems: 'center' }, !title && { width: 40, height: 50}]}
           activeOpacity={0.7}
         >
@@ -74,10 +77,10 @@ const styles = StyleSheet.create({
   header: {
     width: '100%',
     height: 100,
+    paddingTop: 40,
     backgroundColor: gen.primaryBackground
   },
   headerContent: {
-    marginTop: 40,
     height: 60,
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,19 +1,36 @@
 import { useEffect, useRef, useState } from 'react'
-import { Text, View, StyleSheet, TouchableOpacity, Image, Dimensions, Animated } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Image, Dimensions, Animated } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 
 import { uploadAvatar } from '../utils/db-image'
-import BasicButton from '../components/BasicButton'
-import { hapticSelect } from '../utils/haptics';
-import { setAttributeForObjectInLocalStorage } from '../utils/localStorage';
-import { downloadFileWithPath } from '../utils/db-download';
-import SelectPhoto from '../components/SelectPhoto';
+import OnboardButton from '../components/OnboardButton'
+import { hapticImpactSoft, hapticSelect } from '../utils/haptics'
+import { getUserIdFromLocalStorage, setAttributeForObjectInLocalStorage } from '../utils/localStorage'
+import { downloadFileWithPath } from '../utils/db-download'
+import SelectPhoto from '../components/SelectPhoto'
 
-export default function GetPhoto({ setCurrentScreen, onboardingData, setOnboardingData }) {
-  const [disabled, setDisabled] = useState(true)
+export default function GetPhoto({ 
+  onboardingData, 
+  setOnboardingData, 
+  setCurrentScreen,
+  uploadCleanup,
+  buttonTitle=null,
+  removeHeader=false,
+}) {
+  const insets = useSafeAreaInsets()
   const [image, setImage] = useState(null)
+  const [disabled, setDisabled] = useState(true)
+  const [buttonMessage, setButtonMessage] = useState('next')
   const [width, setWidth] = useState(Dimensions.get('window').width)
-  const [buttonMessage, setButtonMessage] = useState('Aight. We Ball')
+
+  useEffect(() => {
+    if (!image) {
+      setDisabled(true)
+    } else {
+      setDisabled(false)
+    }
+  }, [image])
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -25,60 +42,64 @@ export default function GetPhoto({ setCurrentScreen, onboardingData, setOnboardi
 
     if (!result.canceled && result.assets && result.assets.length > 0 && result.assets[0].uri) {
       setImage(result.assets[0].uri)
+      setOnboardingData(prev => ({ ...prev, avatar: result.assets[0].uri }))
       setDisabled(false)
     }
   }
 
   const initiateUploadProcess = async () => {
     setDisabled(true)
-    setButtonMessage('Uploading...')
-    const { data, error } = await uploadAvatar(image, onboardingData.id)
-    
-    if (data && !error) {
-      const { uri } = await downloadFileWithPath('avatars', 'public/profile/', data.path.split('/').pop())
-      await setAttributeForObjectInLocalStorage('userInformation', 'avatar_path', uri)
+    setButtonMessage('uploading')
 
-      setCurrentScreen(prev => prev + 1)
-    } else {
+    try {
+      const userId = await getUserIdFromLocalStorage()
+      const { data, error } = await uploadAvatar(image, userId)
+      
+      if (data && !error) {
+        const { uri } = await downloadFileWithPath('avatars', 'public/profile/', data.path.split('/').pop())
+        await setAttributeForObjectInLocalStorage('user_information', 'avatar_path', uri)
+
+        if (uploadCleanup === null || uploadCleanup === undefined) {
+          setCurrentScreen(prev => prev + 1)
+        } else {
+          uploadCleanup()
+        }
+      } else {
+        setDisabled(true)
+        setButtonMessage('try a different photo 1')
+      }
+    } catch (error) {
       setDisabled(true)
-      setButtonMessage('Try a different photo')
+      console.log(error)
+      setButtonMessage('try a different photo 2')
     }
   }
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <View style={styles.container}>
-        {/* <TouchableOpacity 
-          onPress={() => {
-            hapticSelect()
-            pickImage()
-          }}
-          activeOpacity={0.7}
-        >
-          <Animated.View style={[
-            styles.avatarContainer,
-            image && { borderColor: borderColor },
-            { width: width-100, height: width-100 }
-          ]}>
-            {
-              !image
-                ? <Text style={styles.instruction}>Upload a photo</Text>
-                : <Image source={{ uri: image }} style={styles.avatarImage} />
-            }
-          </Animated.View>
-        </TouchableOpacity> */}
-        <SelectPhoto
-          image={image}
-          pickImage={pickImage}
-          containerStyle={[styles.avatarContainer, { width: width-100, height: width-100 }]}
-          imageStyle={styles.avatarImage}
-        />
-        <Text style={styles.userNameText}>{onboardingData.fname} {onboardingData.lname}</Text>
-      </View>
-      <BasicButton
-        title={buttonMessage}
-        onPress={initiateUploadProcess}
-        style={{ marginBottom: 60, marginTop: 20}}
+    <View style={styles.container}>
+      {!removeHeader ? (
+        <View style={{ marginVertical: 50 }}>
+          <Text style={styles.instruction}>choose your</Text>
+          <Text style={[styles.instruction, { fontSize: 30 }]}>profile picture</Text>
+        </View>
+      ) : (
+        <View style={{ marginVertical: 30 }} />
+      )}
+      <SelectPhoto
+        image={image}
+        color={onboardingData.color.color_hex}
+        pickImage={pickImage}
+        containerStyle={[styles.avatarContainer, { width: width-100, height: width-100 }]}
+        imageStyle={styles.avatarImage}
+      />
+      <OnboardButton
+        title={buttonTitle !== null && buttonMessage === "next" ? buttonTitle : buttonMessage}
+        color={onboardingData.color.color_hex}
+        onPress={() => {
+          hapticImpactSoft()
+          initiateUploadProcess()
+        }}
+        style={[styles.nextButton, { bottom: insets.bottom + 15 }]}
         disabled={disabled}
       />
     </View>
@@ -90,7 +111,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#fff',
   },
   avatarContainer: {
@@ -113,9 +133,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   instruction: {
-    fontSize: 24,
+    fontSize: 22,
     textAlign: 'center',
     fontFamily: 'nunito-bold',
-    color: '#616161',
-  }
+    color: '#AAA',
+  },
+  nextButton: {
+    position: 'absolute',
+    alignSelf: 'center',
+  },
 })

@@ -6,19 +6,25 @@ import { useFonts } from 'expo-font'
 
 import Onboard from './app/onboard'
 import Router from './app/Router'
-import { getInitialSystemVariables, setUserInformationInLocalStorage } from './app/utils/localStorage'
+import SignIn from './app/SignIn'
+import { finishOnboarding, getInitialSystemVariables, setLocallyStoredVariable } from './app/utils/localStorage'
 import { StatusBar } from 'expo-status-bar'
-import { getUserInformationFromUUID, initSession } from './app/utils/authenticate'
+import { initSession, setUserInformationFromUUID } from './app/utils/authenticate'
 import { createStackNavigator } from '@react-navigation/stack'
 import { StyleSheet } from 'react-native'
 import { gen, currentTheme } from './app/utils/styling/colors'
+import GetStarted from './app/onboard/GetStarted'
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 SplashScreen.preventAutoHideAsync()
 
-export default function App() {
-  const [isFirstLaunch, setIsFirstLaunch] = useState(null)
+function AppContent() {
+  const insets = useSafeAreaInsets()
   const [isOnboardComplete, setIsOnboardComplete] = useState(false)
   const [session, setSession] = useState(null)
+
+  const [hasAlreadyCheckedSession, setHasAlreadyCheckedSession] = useState(false)
+
   const [loaded, error] = useFonts({
     'nunito-light': require('./assets/fonts/nunito-light.ttf'),
     'nunito-light-italic': require('./assets/fonts/nunito-light-italic.ttf'),
@@ -29,30 +35,24 @@ export default function App() {
 
   useEffect(() => {
     const getSession = async () => {
-      const { firstLaunch } = await getInitialSystemVariables()
-      setIsFirstLaunch(firstLaunch)
+      // await setLocallyStoredVariable('onboarding_complete', 'true')
+      const { onboarded } = await getInitialSystemVariables()
+      setIsOnboardComplete(onboarded)
 
       // GET SESSION
       const result = await initSession()
+      if (result !== null) {
+        await setUserInformationFromUUID(result.user.id)
+      }
       setSession(result)
-
-      // REFRESH USER INFORMATION
-      const { id, uui, created_at, email, fname, lname, goal, phone_number, plan_id, avatar_path, last_active } = await getUserInformationFromUUID(result.user.id)
-      await setUserInformationInLocalStorage({id, uui, created_at, email, fname, lname, goal, phone_number, plan_id, avatar_path, last_active})
+      setHasAlreadyCheckedSession(true)
     }
     getSession()
   }, [])
 
   useEffect(() => {
     if (loaded || error) {
-      const loadTimeout = setTimeout(async () => {
-        SplashScreen.hideAsync()
-        clearTimeout(loadTimeout)
-      }, 1000)
-
-      return () => {
-        clearTimeout(loadTimeout)
-      }
+      SplashScreen.hideAsync()
     }
   }, [loaded, error])
 
@@ -63,16 +63,24 @@ export default function App() {
   return (
     <View style={styles.container}>
       <GestureHandlerRootView>
-          {
-            isFirstLaunch && !isOnboardComplete
-              ? <Onboard setIsOnboardComplete={setIsOnboardComplete} setSession={setSession} /> 
-              : session
-                ? <Router />
-                : <Text>LOG IN FOOL</Text>
-          }
+        {!isOnboardComplete ? (
+          <Onboard setSession={setSession} setIsOnboardComplete={setIsOnboardComplete} />
+        ) : session ? (
+          <Router />
+        ) : (
+          hasAlreadyCheckedSession && <SignIn setSession={setSession} />
+        )}
       </GestureHandlerRootView>
       <StatusBar style={currentTheme === 'light' ? 'dark' : 'light'} />
     </View>
+  )
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
   )
 }
 

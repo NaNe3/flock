@@ -1,32 +1,44 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View, TouchableOpacity } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 
 import { hapticSelect } from "../utils/haptics";
 import { gen } from "../utils/styling/colors";
-import { getAttributeFromObjectInLocalStorage } from "../utils/localStorage";
+import { getAttributeFromObjectInLocalStorage, getLocallyStoredVariable } from "../utils/localStorage";
 
 import Avatar from "./Avatar";
+import { getColorLight } from "../utils/getColorVariety";
 
 const InteractiveHeaderBar = () => {
+  const insets = useSafeAreaInsets()
   const navigation = useNavigation()
+  const [color, setColor] = useState(gen.primaryBorder)
+  const [colorLight, setColorLight] = useState(gen.primaryBorder)
   const [userProfilePicture, setUserProfilePicture] = useState(null)
+  const [streak, setStreak] = useState(0)
 
-  useEffect(() => {
-    const getProfilePicture = async () => {
-      const profilePicture = await getAttributeFromObjectInLocalStorage('userInformation', 'avatar_path')
-      setUserProfilePicture(profilePicture)
-    }
+  const init = async () => {
+    const user = JSON.parse(await getLocallyStoredVariable('user_information'))
 
-    getProfilePicture()
-  }, [])
+    setUserProfilePicture(user.avatar_path)
+    setColor(user.color.color_hex)
+    setColorLight(getColorLight(user.color.color_hex))
+    setStreak(user.current_streak)
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      init()
+    }, [])
+  )
 
   return (
-    <View style={styles.headerBar}>
+    <View style={[styles.headerBar, { height: 60 + insets.top, paddingTop: insets.top }]}>
       <View style={styles.headerContent}>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.premiumButton}
           activeOpacity={0.7}
           onPress={() => {
@@ -40,7 +52,7 @@ const InteractiveHeaderBar = () => {
         </TouchableOpacity>
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity 
+          {/* <TouchableOpacity 
             activeOpacity={0.7}
             style={{ width: 30 }}
             onPress={() => {
@@ -50,23 +62,28 @@ const InteractiveHeaderBar = () => {
           >
             <Icon name="bell" size={25} color={gen.actionText} />
             <View style={[styles.newNotificationIndicator, { backgroundColor: 'test' === 'test' ? gen.red : gen.primaryBackground}]} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.profilePictureContainer}
-            onPress={() => {
-              hapticSelect()
-              navigation.navigate('Profile')
-            }}
-          >
-          {userProfilePicture && (
-            <Avatar 
-              imagePath={userProfilePicture}
-              type="profile"
-              style={styles.profilePicture} 
-            />
-          )}
-          </TouchableOpacity>
+          </TouchableOpacity> */}
+          <View style={[styles.profileInfoContainer, { backgroundColor: colorLight }]}>
+            <Text style={[styles.text, styles.streakText, { color: color }]}>
+              <Icon name="burn" size={12} color={color} /> {streak}
+            </Text>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={[styles.profilePictureContainer, { borderColor: color }]}
+              onPress={() => {
+                hapticSelect()
+                navigation.navigate('ProfilePageRouter')
+              }}
+            >
+            {userProfilePicture && (
+              <Avatar 
+                imagePath={userProfilePicture}
+                type="profile"
+                style={styles.profilePicture} 
+              />
+            )}
+            </TouchableOpacity>
+          </View>
         </View>
 
       </View>
@@ -107,11 +124,10 @@ const styles = StyleSheet.create({
     width: 33,
     height: 33,
     borderRadius: 30,
-    marginLeft: 10,
     borderWidth: 2,
-    borderColor: gen.gray2,
     padding: 2,
     overflow: 'hidden',
+    backgroundColor: gen.primaryBackground,
   },
   profilePicture: {
     width: 25,
@@ -128,4 +144,16 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: gen.primaryBackground,
   },
+  profileInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    marginLeft: 10,
+  },
+  streakText: {
+    marginLeft: 10,
+    marginRight: 5,
+    fontSize: 14,
+    color: '#fff',
+  }
 })

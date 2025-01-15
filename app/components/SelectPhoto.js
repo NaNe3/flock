@@ -1,19 +1,29 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Animated, Image, StyleSheet, Text } from "react-native"
 import Icon from 'react-native-vector-icons/FontAwesome5'
 
 import { hapticSelect } from "../utils/haptics"
 import { TouchableOpacity } from "react-native";
+import { getColorVarietyAsync } from "../utils/getColorVariety";
 
 export default function SelectPhoto({
   image,
   pickImage,
   containerStyle,
   imageStyle,
-  contentType="text"
+  contentType="text",
+  color='#0096FF',
 }) {
+  const [primaryColor, setPrimaryColor] = useState(null)
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
+  useEffect(() => {
+    const init = async () => {
+      const colors = await getColorVarietyAsync()
+      setPrimaryColor(colors.primaryColor)
+    }
+    init()
+  }, [])
 
   useEffect(() => {
     Animated.loop(
@@ -34,7 +44,7 @@ export default function SelectPhoto({
 
   const borderColor = pulseAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#ccc', '#777'], // #0096FF
+    outputRange: ['#ccc', primaryColor === null ? color : primaryColor],
   })
 
   return (

@@ -1,14 +1,17 @@
+import { use, useCallback, useEffect, useState } from "react"
 import { StyleSheet, Text, View } from "react-native"
+import { useFocusEffect } from "@react-navigation/native";
+
 import { gen } from "../../utils/styling/colors"
-import { useEffect, useState } from "react"
 import { getLocallyStoredVariable } from "../../utils/localStorage";
 import { getDatesOfCurrentWeek } from "../../utils/plan";
+import { getColorVarietyAsync } from "../../utils/getColorVariety";
 
-const Day = ({ day, date, isToday, background, text }) => {
+const Day = ({ day, date, isToday, currentDay, background, text }) => {
   return (
     <View style={styles.weekDay}>
       <Text style={styles.weekDayText}>{day}</Text>
-      <View style={isToday && [shades.roundedRight, shades.gray]}>
+      <View style={isToday && [shades.roundedRight, currentDay !== 0 && shades.gray]}>
         <View style={[styles.dayContainer, background]}>
           <Text style={[styles.dayNumberText, text]}>{date}</Text>
         </View>
@@ -18,12 +21,26 @@ const Day = ({ day, date, isToday, background, text }) => {
 }
 
 export default function WeekActivityTracker() {
+  const [main, setMain] = useState({})
   const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
   const [dates, setDates] = useState([14, 15, 16, 17, 18, 19, 20])
   const [currentDay, setCurrentDay] = useState(0)
   const [readingForToday, setReadingForToday] = useState(null)
 
+  const init = async () => {
+    const colors = await getColorVarietyAsync()
+    setMain(colors)
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      init()
+    }, [])
+  )
+
   useEffect(() => {
+    init()
+
     const { currentDay: today, dates } = getDatesOfCurrentWeek()
     setCurrentDay(today)
     setDates(dates)
@@ -39,15 +56,17 @@ export default function WeekActivityTracker() {
               day={day}
               date={dates[index]}
               isToday={currentDay === index}
+              currentDay={currentDay}
               background={[
                 index < currentDay && shades.gray, 
-                index === 0 && currentDay !== 0 && shades.roundedLeft, 
+                index === 0 && shades.roundedLeft, 
                 index === 6 && shades.roundedRight, 
-                index === currentDay && shades.current
+                index === currentDay && { backgroundColor: main.primaryColorLight, borderRadius: 10 },
               ]}
               text={[
                 styles.dayNumberText,
-                index === currentDay && shades.currentText
+                index === currentDay && { color: main.primaryColor },
+                index !== currentDay && { color: gen.actionText },
               ]}
             />
           )
@@ -83,7 +102,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'nunito-bold',
     textAlign: 'center',
-    color: gen.actionText,
   }
 })
 

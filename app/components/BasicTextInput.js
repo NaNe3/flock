@@ -1,7 +1,9 @@
+import { forwardRef, useEffect, useState } from 'react'
 import { TextInput, TouchableOpacity, StyleSheet, View } from 'react-native'
+
 import { hapticSelect } from '../utils/haptics'
-import { forwardRef, useState } from 'react'
 import { gen } from '../utils/styling/colors'
+import { getPrimaryColor } from '../utils/getColorVariety'
 
 const BasicTextInput = forwardRef(({
   placeholder, 
@@ -17,6 +19,16 @@ const BasicTextInput = forwardRef(({
   multiline=false,
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false)
+  const [primaryColor, setPrimaryColor] = useState(null)
+
+  useEffect(() => {
+    const init = async () => {
+      const color = await getPrimaryColor()
+      setPrimaryColor(color)
+    }
+
+    init()
+  })
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -29,9 +41,9 @@ const BasicTextInput = forwardRef(({
         style={[
           styles.textInput,
           style,
-          (isFocused && focus) && styles.textInputFocused
+          (isFocused && focus) && { borderColor: primaryColor },
         ]}
-        placeholderTextColor={(isFocused && focus) ? gen.primaryColor : gen.actionText}
+        placeholderTextColor={gen.actionText}
         onFocus={() => {
           setIsFocused(true)
           onFocus()
@@ -64,9 +76,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     maxHeight: 140,
     color: gen.actionText,
-  },
-  textInputFocused: {
-    borderColor: gen.primaryColor,
   },
 });
 

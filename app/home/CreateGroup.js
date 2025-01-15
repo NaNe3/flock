@@ -87,7 +87,7 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
 
   useEffect(() => {
     const getUserInfo = async () => {
-      const { avatar_path, fname, lname } = JSON.parse(await getLocallyStoredVariable('userInformation'))
+      const { avatar_path, fname, lname } = JSON.parse(await getLocallyStoredVariable('user_information'))
       setUserName(`${fname} ${lname}`)
       setUserAvatar(avatar_path)
     }
@@ -105,7 +105,7 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
             <Avatar 
               imagePath={userAvatar}
               type="profile"
-              style={{ width: 40, height: 50, borderRadius: 5 }}
+              style={styles.friendImage}
             />
           )}
           <View>
@@ -119,7 +119,7 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
             const avatar = getLocalUriForFile(friend.avatar_path)
             return (
               <View key={index} style={styles.personRow}>
-                <Image source={{ uri: avatar }} style={{ width: 40, height: 50, borderRadius: 5 }} />
+                <Image source={{ uri: avatar }} style={styles.friendImage} />
                 <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: 'center' }}>
                   <View style={{ flex: 1, marginRight: 20 }}>
                     <Text 
@@ -229,20 +229,22 @@ export default function CreateGroup({ navigation }) {
               setScreenVisible={setScreenVisible}
             />
 
-            <BasicButton
-              title={buttonText}
-              onPress={() => handleCreateButtonPressed(groupName, image, leader, friendsAdded, plan)}
-              disabled={disabled}
-              style={{ marginTop: 50, alignSelf: 'center', width: '100%' }}
-            />
-
+            <View style={{ marginTop: 50, alignSelf: 'center', width: '100%' }}>
+              <BasicButton
+                title={buttonText}
+                onPress={() => handleCreateButtonPressed(groupName, image, leader, friendsAdded, plan)}
+                disabled={disabled}
+                style={{ alignSelf: 'center', width: '100%' }}
+              />
+            </View>
             <EmptySpace size={80} />
           </ScrollView>
         </>
       ) : (
         <AddPeopleToGroup
+          navigation={navigation}
           friendsAdded={friendsAdded}
-          setFriendsAdded={setFriendsAdded} 
+          setFriendsAdded={setFriendsAdded}
           setScreenVisible={setScreenVisible}
         />
       )}
@@ -320,13 +322,18 @@ const styles = StyleSheet.create({
     borderColor: gen.primaryBorder,
   },
   personRow: {
-    height: 80,
     width: '100%',
     paddingHorizontal: 20,
+    paddingVertical: 13,
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 3,
     borderColor: gen.primaryBorder,
+  },
+  friendImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
   },
   modal: {
     flex: 1,

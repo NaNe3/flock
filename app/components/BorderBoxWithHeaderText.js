@@ -2,6 +2,7 @@ import { View, StyleSheet, Text, Touchable, TouchableOpacity } from 'react-nativ
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
 import { gen } from '../utils/styling/colors';
+import { useEffect, useState } from 'react';
 
 export default function BorderBoxWithHeaderText({ 
   children, 
@@ -11,6 +12,16 @@ export default function BorderBoxWithHeaderText({
   backgroundColor=gen.primaryBackground,
   title=null
 }) {
+  const [main, setMain] = useState({})
+
+  useEffect(() => {
+    const init = async () => {
+      const colors = await getColorVarietyAsync()
+      setMain(colors)
+    }
+    init()
+  }, [])
+
   return (
     <TouchableOpacity 
       activeOpacity={onPress !== null ? 0.7 : 1 } 
@@ -21,7 +32,7 @@ export default function BorderBoxWithHeaderText({
           recommended ? (
             <View style={[styles.boxHeader, { backgroundColor: backgroundColor }]}>
               <Text style={[styles.boxHeaderText, styles.recommended]}>
-                <Icon name='star' size={15} color={gen.primaryColor} />
+                <Icon name='star' size={15} color={main.primaryColor} />
                 &nbsp;RECOMMENDED
               </Text>
             </View>

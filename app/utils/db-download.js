@@ -40,16 +40,16 @@ export const getLocalUriForFile = (path) => {
   }
 }
 
-export const deleteLocalFile = async (path) => {
-  const fileUri = getLocalUriForFile(path)
+// export const deleteLocalFile = async (path) => {
+//   const fileUri = getLocalUriForFile(path)
 
-  try {
-    await FileSystem.deleteAsync(fileUri);
-    console.log("Image deleted successfully");
-  } catch (error) {
-    console.log("Error deleting image", error);
-  }
-}
+//   try {
+//     await FileSystem.deleteAsync(fileUri);
+//     console.log("Image deleted successfully");
+//   } catch (error) {
+//     console.log("Error deleting image", error);
+//   }
+// }
 
 export const checkIfFileExistsWithPath = async (path) => {
   const fileUri = await getLocalUriForFile(path)
@@ -69,6 +69,7 @@ export const deleteLocalFileWithPath = async (path) => {
 
   try {
     const result = await FileSystem.deleteAsync(fileUri)
+    console.log("File deleted successfully", result)
     return { data: result }
   } catch (error) {
     return { error: error }

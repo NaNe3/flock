@@ -47,17 +47,21 @@ export default function GroupDelete({ navigation, route }) {
           value={verification}
           style={styles.inputBox}
         />
-        <View style={styles.warningBox}>
-          <Icon name="warning" size={20} color={gen.primaryText} />
-          <Text style={styles.disclaimerText}>This action cannot be undone. Once deleted, this group will not be recoverable</Text>
+        <View style={styles.deleteButtonContainer}>
+          <View style={styles.warningBox}>
+            <Icon name="warning" size={20} color={gen.primaryText} />
+            <Text style={styles.disclaimerText}>
+              This action cannot be undone 😭
+            </Text>
+          </View>
+          <BasicButton 
+            title="delete"
+            icon="trash"
+            disabled={deleteButtonDisabled}
+            onPress={handleDeleteGroup}
+            style={styles.deleteButton}
+          />
         </View>
-        <BasicButton 
-          title="delete"
-          icon="trash"
-          disabled={deleteButtonDisabled}
-          onPress={handleDeleteGroup}
-          style={styles.deleteButton}
-        />
       </View>
     </View>
   ) 
@@ -71,6 +75,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
+    alignItems: 'center',
   },
   inputBox: {
     backgroundColor: gen.primaryBackground,
@@ -91,11 +96,17 @@ const styles = StyleSheet.create({
     color: gen.actionText,
     marginHorizontal: 20,
   },
-  deleteButton: {
+  deleteButtonContainer: {
     width: '100%',
-    alignSelf: 'center',
     position: 'absolute',
     bottom: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButton: {
+    width: '100%',
+    marginTop: 15,
+    alignSelf: 'center',
   },
   warningBox: {
     flexDirection: 'row', 
