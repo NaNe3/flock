@@ -95,7 +95,7 @@ export default function PersonBottomSheet({
     <BasicBottomSheet
       titleColor={gen.primaryText}
       setVisibility={setVisibility}
-      height='auto'
+      height={400}
       backgroundColor={gen.primaryBackground}
     >
       <View style={[styles.personInfoContainer, isGroupLeader && { borderBottomWidth: 2, borderBottomColor: gen.primaryBorder }]}>
@@ -159,13 +159,12 @@ const styles = StyleSheet.create({
   },
   personInfoContainer: {
     width: '100%',
-    flex: 1,
     flexDirection: 'row',
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
   avatarContainer: {
-    width: 100,
+    width: 90,
     height: 125,
     borderRadius: 15,
     overflow: 'hidden',

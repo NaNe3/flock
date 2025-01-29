@@ -20,6 +20,8 @@ import BasicBottomSheet from './components/BasicBottomSheet';
 import GroupSelection from './components/GroupSelection';
 import MicrophoneCameraPermissions from '../components/MicrophoneCameraPermissions';
 import { getColorVarietyAsync } from '../utils/getColorVariety';
+import { ActivityActionWheel } from './components/ActivityActionWheel';
+import { WriteMessage } from './components/WriteMessage';
 
 function Capture({ navigation, route }) {
   const location = route.params
@@ -39,6 +41,9 @@ function Capture({ navigation, route }) {
     recipient: 'all friends',
   })
 
+  const [locked, setLocked] = useState(false)
+  const recordOnTap = useRef(false)
+  const recordingRef = useRef(false)
   const [recording, setRecording] = useState(false)
   const [duration, setDuration] = useState("0:00")
 
@@ -49,7 +54,10 @@ function Capture({ navigation, route }) {
   const cameraRef = useRef(null)
   const intervalRef = useRef(null)
 
+  const [selected, setSelected] = useState(0)
+
   useEffect(() => {
+    recordingRef.current = recording
     if (recording) {
       startRecording()
       setDuration("0:00")
@@ -87,17 +95,26 @@ function Capture({ navigation, route }) {
 
     // GESTURES CREATION AND CLEANUP
     const takePictureGesture = Gesture.Tap().onEnd(() => {
-      takePicture();
-    }).runOnJS(true).shouldCancelWhenOutside(false);
+      if (!recordOnTap.current) {
+        takePicture()
+      } else {
+        if (recordingRef.current) {
+          stopRecording()
+        } else {
+          hapticImpactSoft()
+          setRecording(true)
+        }
+      }
+    }).runOnJS(true).shouldCancelWhenOutside(false)
     const recordGesture = Gesture.LongPress().maxDistance(50).onStart(() => {
-      hapticImpactSoft();
-      setRecording(true);
+      hapticImpactSoft()
+      setRecording(true)
     }).onEnd(() => {
-      stopRecording();
-    }).runOnJS(true).shouldCancelWhenOutside(false);
-    setGestures({ takePictureGesture, recordGesture });
+      stopRecording()
+    }).runOnJS(true).shouldCancelWhenOutside(false)
+    setGestures({ takePictureGesture, recordGesture })
 
-    // GET PROFILE PICTURE
+    // GET PROFILE INFORMATION
     const init = async () => {
       const colors = await getColorVarietyAsync()
       setMain(colors)
@@ -136,14 +153,14 @@ function Capture({ navigation, route }) {
   const startRecording = async () => {
     try {
       const video = await cameraRef.current.recordAsync({
-        maxDuration: 45,
-        quality: '480p'
+        maxDuration: 90,
+        codec: 'avc1',
       })
+
       setCamera({ ...camera, output: video.uri, isVideo: true })
       setRecording(false)
-
-      const fileInfo = await FileSystem.getInfoAsync(video.uri)
-      console.log('File size:', fileInfo.size/1000000)
+      // const fileInfo = await FileSystem.getInfoAsync(video.uri)
+      // console.log('File size:', fileInfo.size/1000000)
     } catch (error) {
       console.error(error)
     }
@@ -209,24 +226,33 @@ function Capture({ navigation, route }) {
         borderColor: main.primaryColor,
       }]}>
         {
-          camera.output === null ? (
+          camera.output === null ? selected === 1 ? (
+            <WriteMessage
+              navigation={navigation} 
+              location={location}
+            />
+          ) : (
             <CameraView
               style={styles.camera}
               facing={camera.facing}
               mode={recording ? 'video' : 'photo'}
               ref={cameraRef}
               mirror={camera.facing === 'front'}
+              videoQuality='480p'
+              videoBitrate={1000000}
             >
-              <TouchableOpacity
-                style={styles.exitButton}
-                activeOpacity={0.7}
-                onPress={() => {
-                  hapticSelect()
-                  navigation.goBack()
-                }}
-              >
-                <Icon name="xmark" size={30} color={recording ? '#bbb' : '#fff'} />
-              </TouchableOpacity>
+              {!recording && (
+                <TouchableOpacity
+                  style={styles.exitButton}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    hapticSelect()
+                    navigation.goBack()
+                  }}
+                >
+                  <Icon name="xmark" size={30} color="#fff" />
+                </TouchableOpacity>
+              )}
 
               {recording && (
                 <View style={styles.timer}>
@@ -235,14 +261,21 @@ function Capture({ navigation, route }) {
               )}
 
               <View style={styles.cameraActionBar}>
-                <TouchableOpacity 
-                  onPress={() => {
-                    navigation.navigate('PremiumOffer')
-                  }}
-                  style={styles.flipButton}
-                >
-                  <Icon name="image" size={30} color='transparent' />
-                </TouchableOpacity>
+                {!recording && (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      if (!recording) {
+                        hapticSelect()
+                        recordOnTap.current = !recordOnTap.current
+                        setLocked(recordOnTap.current)
+                      }
+                    }}
+                    style={styles.flipButton}
+                  >
+                    <Icon name={locked ? "lock" : "unlock"} size={30} color='#fff' />
+                  </TouchableOpacity>
+                )}
 
                 <GestureDetector
                   gesture={Gesture.Simultaneous(gestures.takePictureGesture, gestures.recordGesture)}
@@ -251,18 +284,19 @@ function Capture({ navigation, route }) {
                     <TouchableOpacity
                       style={{ flex: 1, backgroundColor: recording ? main.primaryColor : '#fff', borderRadius: 50 }}
                       activeOpacity={0.7}
-                    >
-
-                    </TouchableOpacity>
+                    />
                   </View>
                 </GestureDetector>
 
-                <TouchableOpacity 
-                  style={styles.flipButton}
-                  onPress={toggleCameraFacing}
-                >
-                  <Icon name="camera-rotate" size={30} color={ recording ? '#bbb' : '#fff'} />
-                </TouchableOpacity>
+                {!recording && (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    style={styles.flipButton}
+                    onPress={toggleCameraFacing}
+                  >
+                    <Icon name="camera-rotate" size={30} color='#fff' />
+                  </TouchableOpacity>
+                )}
               </View>
             </CameraView>
 
@@ -304,7 +338,7 @@ function Capture({ navigation, route }) {
       </View>
       <View style={[styles.cameraFooter, { marginBottom: insets.bottom }]}>
         {
-          camera.output && (
+          camera.output ? (
             <>
               <TouchableOpacity 
                 activeOpacity={0.7}
@@ -344,11 +378,16 @@ function Capture({ navigation, route }) {
                 </TouchableOpacity>
               </View>
             </>
+          ) : (
+            <ActivityActionWheel
+              selected={selected}
+              setSelected={setSelected}
+            />
           )
         }
       </View>
       { selectingGroup && 
-        <BasicBottomSheet 
+        <BasicBottomSheet
           title="sending to"
           setVisibility={setSelectingGroup}
         >

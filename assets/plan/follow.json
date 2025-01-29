@@ -137,9 +137,18 @@
         }
       }
     },
-    "2": {
+    "3": {
       "dates": "Dec*29-Jan*4",
       "content": {
+        "0": {
+          "time": 45,
+          "location": {
+            "work": "New Testament",
+            "book": "Matthew",
+            "chapter": "5",
+            "verses": "1-34"
+          }
+        },
         "1": {
           "time": 2,
           "location": {

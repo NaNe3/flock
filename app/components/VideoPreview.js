@@ -1,8 +1,9 @@
-import { useEvent } from 'expo'
-import { StyleSheet, TouchableOpacity, View } from "react-native"
-import { useVideoPlayer, VideoView, } from 'expo-video'
 import { useCallback, useEffect, useRef, useState } from "react"
+import { Animated, PanResponder, StyleSheet, TouchableOpacity, View } from "react-native"
 import { useFocusEffect } from '@react-navigation/native'
+import Icon from 'react-native-vector-icons/FontAwesome6'
+import { useEvent } from 'expo'
+import { useVideoPlayer, VideoView, } from 'expo-video'
 import { LinearGradient } from 'expo-linear-gradient'
 
 import { gen } from '../utils/styling/colors'
@@ -12,9 +13,9 @@ export default function VideoPreview({
   source,
   muted = false,
   includeBottomShadow = false,
-  onPress,
+  declareLoadingState = () => {},
   style = {},
-  timeToPause
+  playing=null
  }) {
   const [percentage, setPercentage] = useState(0)
   const player = useVideoPlayer(source, player => {
@@ -46,11 +47,22 @@ export default function VideoPreview({
 
   useEffect(() => {
     if (player) {
-      if (timeToPause) {
+      if (playing === true) {
+        player.play()
+      } else if (playing === false) {
         player.pause()
       }
     }
-  }, [timeToPause])
+  }, [playing])
+
+  useEffect(() => {
+    if (status === 'readyToPlay') {
+      declareLoadingState(false)
+      player.play()
+    } else {
+      declareLoadingState(true)
+    }
+  }, [status])
 
   // PAUSE VIDEO WHEN SCREEN IS NOT FOCUSED
   useFocusEffect(
@@ -59,9 +71,7 @@ export default function VideoPreview({
 
       return () => {
         try {
-          if (player) {
-            player.pause()
-          }
+          if (player) player.pause()
         } catch (error) { }
       }
     }, [])
@@ -69,16 +79,9 @@ export default function VideoPreview({
 
   const { status } = useEvent(player, 'statusChange', { status: player.status });
 
-  useEffect(() => {
-    if (status === 'readyToPlay') {
-      player.play()
-    }
-  }, [status])
-
-
   return (
     <View style={styles.video}>
-      <VideoView 
+      <VideoView
         style={[styles.video, style]} 
         player={player} 
         contentFit="cover"
@@ -90,7 +93,9 @@ export default function VideoPreview({
           style={{ height: 130, width: '100%', position: 'absolute', bottom: 0, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 }}
         />
       )}
-      <View style={[styles.progressBar, { width: `${percentage}%`}]} />
+      <View style={styles.progressBarContainer}>
+        <View style={[styles.progressBar, { width: `${percentage}%`}]} />
+      </View>
     </View>
   )
 }
@@ -103,13 +108,18 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
   },
-  progressBar: {
-    position: 'fixed',
+  progressBarContainer: {
+    width: '100%',
+    justifyContent: 'flex-end',
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    height: 15,
+  },
+  progressBar: {
     height: 3,
     width: 0,
     backgroundColor: '#fff'
-  }
+  },
 })

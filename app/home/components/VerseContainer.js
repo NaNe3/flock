@@ -1,5 +1,5 @@
 import { use, useCallback, useEffect, useState } from "react"
-import { Animated, StyleSheet, Text, View } from "react-native"
+import { Animated, StyleSheet, Text, Touchable, TouchableOpacity, View } from "react-native"
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
@@ -91,9 +91,9 @@ export default function VerseContainer({
     hapticImpactSoft()
     console.log("Verse Pressed: ", verse)
     if (uniqueVersesWithMedia[verse] !== undefined) {
-      navigation.navigate('ViewImpressions', { work, book, chapter, verse })
+      navigation.navigate('ViewImpressions', { title: `${book} ${chapter}:${verse}`, location: { work, book, chapter, verse } })
     } else {
-      navigation.navigate('Capture', { work, book, chapter, verse })
+      navigation.navigate('Capture', { location: { work, book, chapter, verse } })
     }
   }
 
@@ -155,22 +155,27 @@ export default function VerseContainer({
                         />
                       )
                     })} */}
+                    <Text
+                      style={styles.verse}
+                    >{key} {verse}</Text>
                     {uniqueVersesWithMedia[key] !== undefined && (
                       <FadeInView style={styles.activityIndicator}>
                         {Array(uniqueVersesWithMedia[key]).fill().map((_, index) => {
                           const activityColor = activity.filter(a => a.verse === keyInt)[index].color
                           return (
-                            <View
+                            <TouchableOpacity 
+                              style={styles.activityItemTouchableArea}
                               key={`activity-${index}`}
-                              style={[styles.activityItem, index !== 0 && { marginTop: 5}, { borderColor: activityColor }]}
-                            />
+                              onPress={() => handleVersePress(keyInt)}
+                            >
+                              <View
+                                style={[styles.activityItem, index !== 0 && { marginTop: 5}, { borderColor: activityColor }]}
+                              />
+                            </TouchableOpacity>
                           )
                         })}
                       </FadeInView>
                     )}
-                    <Text
-                      style={styles.verse} 
-                    >{key} {verse}</Text>
                     {
                       uniqueVersesWithUserLikes.includes(keyInt)
                       && likes.filter(like => like.verse === keyInt).map((person, index) =>
@@ -269,7 +274,7 @@ const styles = StyleSheet.create({
   },
   activityIndicator: {
     position: 'absolute',
-    left: -20,
+    left: -35,
     width: 0,
     height: '100%',
     // borderWidth: 4,
@@ -278,9 +283,13 @@ const styles = StyleSheet.create({
   },
   activityItem: {
     flex: 1,
-    // maxHeight: 160,
     borderWidth: 4,
     borderRadius: 10,
     borderColor: gen.primaryColor,
+  },
+  activityItemTouchableArea: {
+    flex: 1,
+    maxHeight: 150,
+    paddingHorizontal: 15,
   }
 })

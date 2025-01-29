@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { CardStyleInterpolators, createStackNavigator, TransitionPresets, TransitionSpecs } from "@react-navigation/stack";
+import { StyleSheet } from "react-native";
+import { createStackNavigator, TransitionPresets } from "@react-navigation/stack";
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 
 import Home from "./home";
@@ -11,6 +11,8 @@ import Group from './home/group/Group';
 import Chapters from './home/Chapters';
 import AddFriend from './home/AddFriend';
 import CreatePlan from './home/CreatePlan';
+import StreakView from "./home/StreakView";
+import CommentPage from "./home/CommentPage";
 import CreateGroup from './home/CreateGroup';
 import PremiumOffer from './home/PremiumOffer';
 import ViewImpressions from "./home/ViewImpressions";
@@ -26,10 +28,11 @@ import FadeInView from "./components/FadeInView";
 import { getUserIdFromLocalStorage, setLocallyStoredVariable } from "./utils/localStorage"
 import { getFriendRequestsByUserId, getGroupsForUser, getRelationships } from "./utils/db-relationship"
 import { gen, currentTheme } from "./utils/styling/colors"
-import { getLogsByUserId, getPlanByUserId, } from "./utils/authenticate"
+import { checkUserStreak, getLogsByUserId, getPlanByUserId, } from "./utils/authenticate"
 import LoadingScreen from "./home/ LoadingScreen"
 import { checkRequiredDailyNotifications } from "./utils/notify"
 import { RealtimeProvider } from "./hooks/RealtimeProvider"
+import { forPushFromBottom } from "./utils/interpolations/forPushFromBottom";
 
 const Stack = createStackNavigator()
 
@@ -37,7 +40,7 @@ export default function Router() {
   const [currentRoute, setCurrentRoute] = useState('Home')
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState(0)
-  const withoutBar = ['PremiumOffer', 'Group', 'CreateGroup', 'Chapter', 'Capture', 'DailyReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers', 'ViewImpressions', 'ProfilePageRouter']
+  const withoutBar = ['PremiumOffer', 'Group', 'CreateGroup', 'Chapter', 'Capture', 'DailyReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers', 'ViewImpressions', 'ProfilePageRouter', 'CommentPage', 'StreakView']
 
   const [realtimeData, setRealtimeData] = useState({})
 
@@ -77,6 +80,7 @@ export default function Router() {
     const getUserLogs = async (userId) => {
       const { data } = await getLogsByUserId(userId)
       await setLocallyStoredVariable('user_logs', JSON.stringify(data))
+      await checkUserStreak(data)
       setProgress(prev => prev + 1)
     }
     const checkNotifications = async () => {
@@ -106,15 +110,15 @@ export default function Router() {
       setLoading={setLoading}
     />
   ) : (
-    <RealtimeProvider realtimeData={realtimeData}>
-      <FadeInView
-        time={1000}
-        style={styles.container}
+    <FadeInView
+      time={1000}
+      style={styles.container}
+    >
+      <NavigationContainer
+        theme={currentTheme === 'dark' ? DarkTheme : undefined}
+        onStateChange={handleStateChange}
       >
-        <NavigationContainer 
-          theme={currentTheme === 'dark' ? DarkTheme : undefined}
-          onStateChange={handleStateChange}
-        >
+        <RealtimeProvider realtimeData={realtimeData}>
           <Stack.Navigator 
             initialRouteName='Landing'
             screenOptions={{
@@ -203,16 +207,27 @@ export default function Router() {
               name='ViewImpressions'
               component={ViewImpressions}
               options={{ 
-                animationEnabled: true, 
+                animationEnabled: true, gestureEnabled: false,
                 ...TransitionPresets.ScaleFromCenterAndroid,
               }}
             />
             <Stack.Screen 
-              name='DailyReadingSummary'
-              component={DailyReadingSummary}
-              options={{ 
-                animationEnabled: true ,
+              name='DailyReadingSummary' component={DailyReadingSummary} options={{ 
+                animationEnabled: true,
                 ...TransitionPresets.ScaleFromCenterAndroid
+              }}
+            />
+            <Stack.Screen 
+              name='StreakView' component={StreakView} options={{ 
+                animationEnabled: true, 
+                ...TransitionPresets.ScaleFromCenterAndroid
+              }}
+            />
+            <Stack.Screen
+              name='CommentPage' component={CommentPage} options={{
+                animationEnabled: true,
+                gestureEnabled: false,
+                cardStyleInterpolator: forPushFromBottom
               }}
             />
           </Stack.Navigator>
@@ -222,9 +237,9 @@ export default function Router() {
               setCurrentRoute={setCurrentRoute}
             />
           )}
-        </NavigationContainer>
-      </FadeInView>
-    </RealtimeProvider>
+        </RealtimeProvider>
+      </NavigationContainer>
+    </FadeInView>
   )
   
 }

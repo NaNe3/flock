@@ -90,7 +90,7 @@ const LandingDisplay = ({ navigation, goal, plan }) => {
             <Text style={styles.subHeader}>START READING</Text>
           )
         }
-        <Text style={[styles.header, chapter.length < 10 && { fontSize: 60}]}>{chapter}</Text>
+        <Text style={[styles.header, chapter.length < 8 && { fontSize: 60}]}>{chapter}</Text>
       </View>
       <View style={styles.actionContainer}>
         <BasicButton

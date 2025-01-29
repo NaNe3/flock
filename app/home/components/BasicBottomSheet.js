@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 
 import { gen } from "../../utils/styling/colors";
@@ -12,19 +11,21 @@ export default function BasicBottomSheet({
   setVisibility,
   title,
   backgroundColor = gen.heckaGray2,
+  handleStyle = null,
   titleColor = '#fff',
   height = modalHeight,
   children
 }) {
-  const insets = useSafeAreaInsets();
   const bottomSheetRef = useRef(null);
   const opacity = useRef(new Animated.Value(0)).current
+  const foregroundTapped = useRef(false)
 
   const handleSheetChanges = useCallback((index) => {
     if (index === -1) setVisibility(false)
   }, []);
 
   const closeBottomSheet = () => {
+    foregroundTapped.current = true
     Animated.timing(opacity, {
       toValue: 0,
       duration: 200,
@@ -36,7 +37,7 @@ export default function BasicBottomSheet({
   useEffect(() => {
     Animated.timing(opacity, {
       toValue: 1,
-      duration: 300,
+      duration: 200,
       useNativeDriver: true
     }).start()
   }, [])
@@ -44,6 +45,11 @@ export default function BasicBottomSheet({
   // the reason there are defualt values for backgroundColor and height is because the component was originally static
   // originally the modal in Capture.js had these default values
 
+  const handleAnimate = (fromIndex, toIndex) => {
+    if (toIndex === -1 && !foregroundTapped.current) {
+      closeBottomSheet()
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -57,15 +63,16 @@ export default function BasicBottomSheet({
       <BottomSheet
         ref={bottomSheetRef}
         onChange={handleSheetChanges}
+        onAnimate={handleAnimate}
         enablePanDownToClose={true}
         backgroundStyle={{ backgroundColor }}
-        handleIndicatorStyle={{ backgroundColor: '#aaa' }}
+        handleStyle={handleStyle}
+        handleIndicatorStyle={{ backgroundColor: '#aaa', width: 40, height: 6 }}
       >
         <BottomSheetView style={[
           styles.contentContainer,
           backgroundColor && { backgroundColor },
           height && { height },
-          { paddingBottom: 10+insets.bottom }
         ]}>
           {title && (
             <Text style={[

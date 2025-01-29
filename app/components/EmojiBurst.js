@@ -32,7 +32,7 @@ const height = Dimensions.get('window').height
 // }
 
 export default function EmojiBurst({ emoji, callback }) {
-  const [rotation] = useState(Math.random() < 0.5 ? Math.random() * 50 : Math.random() * -50)
+  const [rotation] = useState(Math.random() < 0.5 ? Math.random() * 30 : Math.random() * -30)
   const [size] = useState(Math.random() * 90 + 50)
   const [offset] = useState([
     Math.floor(Math.random() * width),

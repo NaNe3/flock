@@ -93,3 +93,24 @@ export const checkIfUserHasStudiedPlanToday = async () => {
     return false
   }
 }
+
+export const getEmojiHistory = async () => {
+  const history = await getLocallyStoredVariable('emoji_history')
+
+  if (history) {
+    return JSON.parse(history)
+  } else {
+    await setLocallyStoredVariable('emoji_history', JSON.stringify(['💛', '🔥']))
+    return ['💛', '🔥']
+  }
+}
+
+export const setEmojiHistory = async (emoji) => {
+  const history = JSON.parse(await getLocallyStoredVariable('emoji_history'))
+  const newHistory = history 
+    ? history[1] === emoji
+      ? history
+      : [history[1], emoji] 
+    : [emoji]
+  await setLocallyStoredVariable('emoji_history', JSON.stringify(newHistory))
+}

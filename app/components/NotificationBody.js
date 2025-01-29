@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from "react"
-import { Animated, Dimensions, PanResponder, StyleSheet, Text, View } from "react-native"
+import { Animated, Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useNavigation } from "@react-navigation/native"
 import Icon from 'react-native-vector-icons/FontAwesome5'
 
 import Avatar from "./Avatar"
 
-import { gen } from "../utils/styling/colors"
+import { gen, currentTheme } from "../utils/styling/colors"
 import { getAttributeFromObjectInLocalStorage } from "../utils/localStorage"
 import { getLocalUriForFile } from "../utils/db-download"
 import { hapticImpactHeavy } from "../utils/haptics"
 import { getColorLight } from "../utils/getColorVariety"
+import { BlurView } from "expo-blur"
+import hexToRgba from "../utils/hexToRgba"
 
 const width = Dimensions.get('window').width
 const MAX_DRAG = 15
@@ -20,8 +23,10 @@ export default function NotificationBody({
   title,
   body,
   color,
+  route,
   proceed
 }) {
+  const navigation = useNavigation()
   const insets = useSafeAreaInsets()
   const translateY = useRef(new Animated.Value(-200)).current
   const release = useRef(false)
@@ -65,61 +70,77 @@ export default function NotificationBody({
       onPanResponderRelease: () => {
         const destination = release.current === true ? -200 : 0
         if (release.current === true) hapticImpactHeavy()
-
-        Animated.spring(translateY, {
-          toValue: destination,
-          timing: 1000,
-          useNativeDriver: false,
-        }).start(() => proceed())
+        dismiss(destination)
       },
     })
   ).current
 
+  const dismiss = (destination) => {
+    Animated.spring(translateY, {
+      toValue: destination,
+      timing: 1000,
+      useNativeDriver: false,
+    }).start(() => proceed())
+  }
+
   const additional = {
     transform: [{ translateY }],
     top: insets.top + 10,
-    backgroundColor: lightColor,
   }
 
   return (
     <Animated.View
-      style={[
-        styles.notification, 
-        styles.shadow, 
-        additional,
-      ]}
+      style={[ styles.container, styles.shadow, additional, ]}
       {...panResponder.panHandlers}
     >
-      <View style={[styles.avatarContainer, { borderColor: color }]}>
-        <Avatar
-          imagePath={image}
-          type={image.includes('profile') ? 'profile' : 'group'}
-          style={styles.avatar}
-        />
-      </View>
-      <View style={styles.informationContainer}>
-        <Text style={[styles.informationHeader, { color: color }]}>{title}</Text>
-        <Text style={[styles.informationBody, { color: color }]}>{body}</Text>
-      </View>
-      <Icon name='angle-down' size={20} color={color} />
+      <BlurView intensity={50} style={styles.notification} tint={currentTheme}>
+        <TouchableOpacity 
+          activeOpacity={0.2}
+          onPress={() => {
+            hapticImpactHeavy()
+            dismiss(-200)
+            navigation.navigate(route.name, { ...route.params })
+          }}
+          style={[ styles.notificationInner, { backgroundColor: hexToRgba(color, 0.4) } ]} 
+        >
+          <View style={[styles.avatarContainer, { borderColor: color }]}>
+            <Avatar
+              imagePath={image}
+              type={image.includes('profile') ? 'profile' : 'group'}
+              style={styles.avatar}
+            />
+          </View>
+          <View style={styles.informationContainer}>
+            <Text style={[styles.informationHeader, { color: color }]}>{title}</Text>
+            <Text style={[styles.informationBody, { color: color }]}>{body}</Text>
+          </View>
+          <Icon name='angle-down' size={20} color={color} />
+        </TouchableOpacity>
+      </BlurView>
     </Animated.View>
   )
 }
 
 const styles = StyleSheet.create({
-  notification: {
+  container: {
     zIndex: 1000,
     position: 'absolute',
     width: width-40,
     marginLeft: 20,
     marginHorizontal: 20,
-    padding: 14,
-
-    backgroundColor: gen.primaryColorLight,
     borderRadius: 20,
-
+    overflow: 'hidden',
+  },
+  notification: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  notificationInner: {
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    padding: 15, 
+    borderRadius: 20 
   },
   shadow: {
     shadowColor: gen.primaryBorder, // Black shadow color

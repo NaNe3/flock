@@ -195,7 +195,7 @@ function Chapter({ navigation, route }) {
       >
         <Animated.View style={[styles.contentContainer, { marginBottom: animatedMarginBottom }]}>
           <View style={styles.landingContainer}>
-            <Text style={styles.chapterHeading}>{book} {chapter}</Text>
+            <Text style={[styles.chapterHeading, { fontSize: book.length < 10 ? 48 : 35}]}>{book} {chapter}</Text>
           </View>
           <VerseContainer 
             navigation={navigation} 

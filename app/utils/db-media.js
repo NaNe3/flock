@@ -153,6 +153,7 @@ export const getReactionInformation = async (reaction_id) => {
   const { data, error } = await supabase
     .from('reaction')
     .select(`
+      media_id,
       sender_user_id ( id, full_name, avatar_path, color_id(color_hex))
     `)
     .eq('reaction_id', reaction_id)
@@ -168,6 +169,26 @@ export const getReactionInformation = async (reaction_id) => {
     id: id,
     full_name: full_name,
     avatar_path: avatar_path,
-    color: color_id.color_hex
+    color: color_id.color_hex,
+    media_id: data[0].media_id
   }
+}
+
+export const getLocationOfMedia = async (media_id) => {
+  const { data, error } = await supabase
+    .from('activity')
+    .select(`
+      work,
+      book,
+      chapter,
+      verse
+    `)
+    .eq('media_id', media_id)
+
+  if (error) {
+    console.error('Error getting location of media:', error)
+    return { error: error }
+  }
+
+  return { work: data[0].work, book: data[0].book, chapter: data[0].chapter, verse: data[0].verse }
 }

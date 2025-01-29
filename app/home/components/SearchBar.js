@@ -3,7 +3,7 @@ import { StyleSheet, View, TextInput, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { gen } from "../../utils/styling/colors";
 
-export default function SearchBar({ 
+export default function SearchBar({
   placeholder = 'Search...',
   query, 
   setQuery 

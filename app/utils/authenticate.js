@@ -1,5 +1,5 @@
 import { formatActivityFromSupabase } from './format';
-import { getLocallyStoredVariable, setUserInformationInLocalStorage } from './localStorage';
+import { getLocallyStoredVariable, setAttributeForObjectInLocalStorage, setUserInformationInLocalStorage } from './localStorage';
 import supabase from './supabase'
 
 export const initSession = async () => {
@@ -307,13 +307,14 @@ export const getMediaFromVerse = async (work, book, chapter, verse, userId) => {
       verse,
       user(id, fname, lname, avatar_path, color_id(color_hex)),
       media(created_at, media_id, media_type, media_path),
+      comment(comment_id, created_at, comment, color_scheme),
       group(group_image, group_name)
     `)
     .eq('work', work)
     .eq('book', book)
     .eq('chapter', chapter)
     .eq('verse', verse)
-    .not('media_id', 'is', null)
+    .or('media_id.not.is.null,comment_id.not.is.null')
     .or(`user_id.eq.${userId},user_id.in.(${friendIds.join(',')}),group_id.in.(${groupIds.join(',')})`)
     .order('created_at', { ascending: true })
 
@@ -325,13 +326,31 @@ export const getMediaFromVerse = async (work, book, chapter, verse, userId) => {
   return data.map(media => {
     const { user, ...newMedia} = media
     const { color_id, ...newUser } = user
-    return {
-      ...newMedia,
-      user: {
-        ...newUser,
-        color: color_id.color_hex,
-      }
-    }
+    return { ...newMedia, user: { ...newUser, color: color_id.color_hex, } }
+  })
+}
+
+export const getMediaByMediaId = async (mediaId) => {
+  const { data, error } = await supabase
+    .from('activity')
+    .select(`
+      verse,
+      user(id, fname, lname, avatar_path, color_id(color_hex)),
+      media(created_at, media_id, media_type, media_path),
+      comment(comment_id, created_at, comment, color_scheme),
+      group(group_image, group_name)
+    `)
+    .eq('media_id', mediaId)
+
+  if (error) {
+    console.error(error)
+    return { error: error }
+  }
+
+  return data.map(media => {
+    const { user, ...newMedia} = media
+    const { color_id, ...newUser } = user
+    return { ...newMedia, user: { ...newUser, color: color_id.color_hex, } }
   })
 }
 
@@ -350,7 +369,7 @@ export const getVersesWithActivity = async (work, book, chapter, userId) => {
       .eq('work', work)
       .eq('book', book)
       .eq('chapter', chapter)
-      .not('media_id', 'is', null)
+      .or('media_id.not.is.null,comment_id.not.is.null')
       .or(`user_id.eq.${userId},user_id.in.(${friendIds.join(',')}),group_id.in.(${groupIds.join(',')})`)
 
     if (error) {
@@ -473,6 +492,48 @@ export const updateUserStreak = async (userId) => {
 
     if (streakError) {
       console.log('error updating streak: ', streakError)
+    }
+  }
+}
+
+export const userHasStudiedToday = async () => {
+  const logs = JSON.parse(await getLocallyStoredVariable('user_logs'))
+  if (logs.length === 0) return false
+
+  const hasStudiedToday = logs.some(log => {
+    const today = new Date()
+    const logDate = new Date(log.created_at)
+    return today.toDateString() === logDate.toDateString()
+  })
+
+  return hasStudiedToday
+}
+
+const isTodayOrYesterday = (targetDate) => {
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+
+  const target = new Date(targetDate)
+
+  const isToday = today.toDateString() === target.toDateString()
+  const isYesterday = yesterday.toDateString() === target.toDateString()
+
+  return isToday || isYesterday
+}
+
+export const checkUserStreak = async (logs) => {
+  if (logs.length === 0) return
+  const hasStudiedYesterdayOrToday = logs.some(log => isTodayOrYesterday(log.created_at))
+
+  if (!hasStudiedYesterdayOrToday) {
+    const { error } = await supabase
+      .from('user')
+      .update({ current_streak: 0 })
+      .eq('id', logs[0].user_id)
+    
+    if (!error) {
+      await setAttributeForObjectInLocalStorage('user_information', 'current_streak', 0)
     }
   }
 }

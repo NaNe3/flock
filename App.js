@@ -15,6 +15,7 @@ import { StyleSheet } from 'react-native'
 import { gen, currentTheme } from './app/utils/styling/colors'
 import GetStarted from './app/onboard/GetStarted'
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
+import ThemeProvider from './app/hooks/ThemeProvider'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -79,7 +80,9 @@ function AppContent() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </SafeAreaProvider>
   )
 }

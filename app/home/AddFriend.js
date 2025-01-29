@@ -1,5 +1,4 @@
 import { View, Text, StyleSheet, Button, ScrollView, TouchableOpacity, ActivityIndicator, Linking, } from 'react-native'
-import * as Contacts from 'expo-contacts'
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import { createRelationship, getRelationships, removeRelationship } from '../utils/db-relationship'
@@ -13,11 +12,9 @@ import FadeInView from '../components/FadeInView'
 import SimpleHeader from '../components/SimpleHeader'
 import { searchForUsersByText } from '../utils/authenticate'
 import { hapticSelect } from '../utils/haptics'
-import StrongContentBox from '../components/StrongContentBox'
 import FriendRequestContainer from './components/FriendRequestContainer'
 
 import { useRealtime } from '../hooks/RealtimeProvider'
-import { getUsersFromListOfPhoneNumbers } from '../utils/db-users'
 import { timeAgoGeneral } from '../utils/timeDiff'
 import PersonBottomSheet from '../components/PersonBottomSheet'
 import { getColorLight } from '../utils/getColorVariety'
@@ -39,7 +36,7 @@ export default function AddFriend({ navigation }) {
   const [friendRequests, setFriendRequests] = useState([])
 
   const [searchResults, setSearchResults] = useState([])
-  const [contactsResults, setContactsResults] = useState([])
+  // const [contactsResults, setContactsResults] = useState([])
   const [resultsBuffering, setResultsBuffering] = useState([])
 
   const [personBottomSheetVisible, setPersonBottomSheetVisible] = useState(false)
@@ -74,25 +71,25 @@ export default function AddFriend({ navigation }) {
 
   useEffect(() => {
 
-    const getContactsPermission = async () => {
-      const { status } = await Contacts.getPermissionsAsync()
-      if (status === 'granted') {
-        setContactsEnabled(true)
-        const { data } = await Contacts.getContactsAsync()
-        setContacts(data)
+    // const getContactsPermission = async () => {
+    //   const { status } = await Contacts.getPermissionsAsync()
+    //   if (status === 'granted') {
+    //     setContactsEnabled(true)
+    //     const { data } = await Contacts.getContactsAsync()
+    //     setContacts(data)
 
-        // see if contacts results are users
-        const peopleWithPhoneNumbers = data.filter(contact => {
-          if (contact.phoneNumbers) return contact
-        })
-        const phoneNumbers = peopleWithPhoneNumbers.map(contact => contact.phoneNumbers[0].number.replace(/\D/g, ''))
-        const users = await getUsersFromListOfPhoneNumbers(phoneNumbers)
-        setContactsThatAreUsers(users)
-      }
-    }
+    //     // see if contacts results are users
+    //     const peopleWithPhoneNumbers = data.filter(contact => {
+    //       if (contact.phoneNumbers) return contact
+    //     })
+    //     const phoneNumbers = peopleWithPhoneNumbers.map(contact => contact.phoneNumbers[0].number.replace(/\D/g, ''))
+    //     const users = await getUsersFromListOfPhoneNumbers(phoneNumbers)
+    //     setContactsThatAreUsers(users)
+    //   }
+    // }
 
     init()
-    getContactsPermission()
+    // getContactsPermission()
   }, [])
 
   useEffect(() => {
@@ -100,20 +97,20 @@ export default function AddFriend({ navigation }) {
       const result = await searchForUsersByText(userId, query)
       setSearchResults(result)
     }
-    const getContactMatches = () => {
-      const results = contacts.filter(contact => {
-        const name = `${contact.firstName ?? ''} ${contact.lastName ?? ''}`
-        return name.toLowerCase().includes(query.toLowerCase())
-      })
-      setContactsResults(results)
-    }
+    // const getContactMatches = () => {
+    //   const results = contacts.filter(contact => {
+    //     const name = `${contact.firstName ?? ''} ${contact.lastName ?? ''}`
+    //     return name.toLowerCase().includes(query.toLowerCase())
+    //   })
+    //   setContactsResults(results)
+    // }
 
     if (query !== '') {
       getSearchResults()
-      getContactMatches()
+      // getContactMatches()
     } else {
       setSearchResults([])
-      setContactsResults([])
+      // setContactsResults([])
     }
   }, [query])
 
@@ -162,26 +159,26 @@ export default function AddFriend({ navigation }) {
     }
   }
 
-  const requestContactsPermission = async () => {
-    hapticSelect()
-    const { status } = await Contacts.requestPermissionsAsync()
-    if (status === 'granted') {
-      setContactsEnabled(true)
-      const { data } = await Contacts.getContactsAsync()
-      setContacts(data)
-    }
-    if (status === 'denied') {
-      Linking.openSettings()
-    }
-  }
+  // const requestContactsPermission = async () => {
+  //   hapticSelect()
+  //   const { status } = await Contacts.requestPermissionsAsync()
+  //   if (status === 'granted') {
+  //     setContactsEnabled(true)
+  //     const { data } = await Contacts.getContactsAsync()
+  //     setContacts(data)
+  //   }
+  //   if (status === 'denied') {
+  //     Linking.openSettings()
+  //   }
+  // }
 
-  const sendPrescriptedMessage = (contact) => {
-    const message = `Hello ${contact.firstName}, we should study on flock!`
-    const phoneNumber = contact.phoneNumbers[0].digits
-    const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`
+  // const sendPrescriptedMessage = (contact) => {
+  //   const message = `Hello ${contact.firstName}, we should study on flock!`
+  //   const phoneNumber = contact.phoneNumbers[0].digits
+  //   const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`
   
-    Linking.openURL(url).catch(err => console.error('An error occurred', err))
-  }
+  //   Linking.openURL(url).catch(err => console.error('An error occurred', err))
+  // }
 
   return (
     <View style={styles.container}>
@@ -205,7 +202,7 @@ export default function AddFriend({ navigation }) {
         {query === '' && (
           <View style={{ flex: 1 }}>
             {/* ENABLE CONTACTS BLOCK */}
-            {!contactsEnabled && (
+            {/* {!contactsEnabled && (
               <TouchableOpacity 
                 style={styles.contactOptionBox}
                 activeOpacity={0.7}
@@ -219,7 +216,7 @@ export default function AddFriend({ navigation }) {
                 >Enable contacts</Text>
                 <Icon name='chevron-right' size={20} color={gen.secondaryText} />
               </TouchableOpacity>
-            )}
+            )} */}
 
             {/* FRIEND REQUESTS HERE */}
             {friendRequests.length > 0 && (
@@ -290,7 +287,7 @@ export default function AddFriend({ navigation }) {
             })}
           </View>
         }
-        {contactsEnabled && contactsResults.length > 0 && (
+        {/* {contactsEnabled && contactsResults.length > 0 && (
           <View style={[styles.section, styles.contactSection]} >
             <Text style={styles.sectionHeaderText}>
               <Icon name='phone' size={16} />  Contacts
@@ -325,7 +322,7 @@ export default function AddFriend({ navigation }) {
                 })
             }
           </View>
-        )}
+        )} */}
       </ScrollView>
       {personBottomSheetVisible && (
         <PersonBottomSheet

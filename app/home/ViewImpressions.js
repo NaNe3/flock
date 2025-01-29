@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { StyleSheet, Text, TouchableOpacity, View, Animated, Easing, Touchable, PanResponder, Dimensions } from "react-native"
+import { StyleSheet, Text, TouchableOpacity, View, Animated, Easing, Touchable, PanResponder, Dimensions, ScrollView } from "react-native"
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import Icon from 'react-native-vector-icons/FontAwesome6'
@@ -7,24 +7,34 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { gen } from "../utils/styling/colors"
 import hexToRgba from "../utils/hexToRgba"
-import { getMediaFromVerse } from "../utils/authenticate"
+import { getMediaByMediaId, getMediaFromVerse } from "../utils/authenticate"
 import Media from "../components/Media"
 import Avatar from "../components/Avatar"
-import { hapticError, hapticSelect } from "../utils/haptics"
+import { hapticError, hapticImpactHeavy, hapticSelect } from "../utils/haptics"
 import { timeAgo } from "../utils/timeDiff"
-import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../utils/localStorage"
-import { getLocalUriForFile } from "../utils/db-download";
+import { getEmojiHistory, getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../utils/localStorage"
 import EmojiBurst from "../components/EmojiBurst";
 import { reactToMedia } from "../utils/db-media";
-import CommentBar from "../components/CommentBar";
-import FAIcon from "../components/FAIcon";
-
-const screenWidth = Dimensions.get('window').width;
+import EmojiModal from "../components/EmojiModal";
+import EmojiReaction from "../components/EmojiReaction";
+import { getFontSizeOfComment } from "../utils/format-comment";
+import EmptySpace from "../components/EmptySpace";
+import LoadingOverlay from "./components/LoadingOverlay";
+import { getCommentCount } from "../utils/db-comment";
 
 export default function ViewImpressions({ navigation, route }) {
-  const { work, book, chapter, verse } = route.params
+  // const { work, book, chapter, verse } = route.params
+  const { title, location, media_id } = route.params
   const insets = useSafeAreaInsets()
   const [emojis, setEmojis] = useState([])
+  const alreadySwiped = useRef(false)
+  const firstLoad = useRef(true)
+  const mediaChangeDirection = useRef(null)
+  const mediaChangeValue = useRef(null)
+  const mediaCount = useRef(0)
+  const currentMediaRef = useRef(0)
+  const currentMediaId = useRef(null)
+  const currentMediaType = useRef(null)
 
   const [userId, setUserId] = useState(null)
   const [media, setMedia] = useState([])
@@ -34,31 +44,53 @@ export default function ViewImpressions({ navigation, route }) {
   const [timeSincePosted, setTimeSincePosted] = useState('')
   const [userAvatar, setUserAvatar] = useState('')
   const [userName, setUserName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [commentCount, setCommentCount] = useState(null)
 
-  const [initialTouchX, setInitialTouchX] = useState(null)
+  const [defaultEmojis, setDefaultEmojis] = useState([])
+  const [emojiModalVisible, setEmojiModalVisible] = useState(false)
+  const isScrollEnabled = useRef(false)
 
   useFocusEffect(
     useCallback(() => {
       const getImpressions = async () => {
         const userId = await getUserIdFromLocalStorage()
-        const media = await getMediaFromVerse(work, book, chapter, verse, userId)
+        let media
+        if (location !== null && location !== undefined) {
+          const { work, book, chapter, verse } = location
+          media = await getMediaFromVerse(work, book, chapter, verse, userId)
+        } else if (media_id !== null && media_id !== undefined) {
+          media = await getMediaByMediaId(media_id)
+        }
         setUserId(userId)
         setMedia(media)
+        mediaCount.current = media.length
+        if (firstLoad.current) {
+          currentMediaId.current = media[0].media === null ? media[0].comment.comment_id : media[0].media.media_id
+          currentMediaType.current = media[0].media === null ? 'comment' : 'media'
+          firstLoad.current = false
+        }
 
         if (media.length > 0) {
-          const timeSince = timeAgo(media[currentMedia].media.created_at)
+          const timeCreated = media[currentMedia].media !== null ? media[currentMedia].media.created_at : media[currentMedia].comment.created_at
+          const timeSince = timeAgo(timeCreated)
           setTimeSincePosted(timeSince)
           setUserAvatar(media[currentMedia].user.avatar_path)
           setUserName(`${media[currentMedia].user.fname} ${media[currentMedia].user.lname}`)
+
+          // await getCommentInformation()
+          const mediaId = media[currentMedia].media !== null ? media[currentMedia].media.media_id : media[currentMedia].comment.comment_id
+          const commentCount = await getCommentCount(mediaId, media[currentMedia].media !== null ? 'media_id' : 'comment_id')
+          setCommentCount(commentCount)
         }
       }
 
+      alreadySwiped.current = false
       getImpressions()
     }, [])
   )
 
   useEffect(() => {
-
     const getMediaPreferences = async () => {
       const preferences = JSON.parse(await getLocallyStoredVariable('media_preferences'))
       if (preferences === null) await setLocallyStoredVariable('media_preferences', JSON.stringify({ soundEnabled: true }))
@@ -66,51 +98,86 @@ export default function ViewImpressions({ navigation, route }) {
     }
 
     getMediaPreferences()
+    const checkForSwipe = setInterval(() => {
+      if (mediaChangeDirection.current !== null) {
+        handleMediaChange(mediaChangeDirection.current)
+        mediaChangeDirection.current = null
+      }
+      if (mediaChangeValue.current !== null) {
+        setCurrentMedia(mediaChangeValue.current)
+        // currentMediaId.current = media[mediaChangeValue.current].media.media_id
+        mediaChangeValue.current = null
+      }
+    }, 50)
+
+    return () => clearInterval(checkForSwipe)
   }, [])
 
   useEffect(() => {
     if (media.length > 0) {
-      console.log(media[currentMedia])
-      const timeSince = timeAgo(media[currentMedia].media.created_at)
-      setTimeSincePosted(timeSince)
-      setUserAvatar(media[currentMedia].user.avatar_path)
-      setUserName(`${media[currentMedia].user.fname} ${media[currentMedia].user.lname}`)
+      getTimeSincePosted()
+      currentMediaId.current = media[currentMedia].media !== null ? media[currentMedia].media.media_id : media[currentMedia].comment.comment_id
+      currentMediaType.current = media[currentMedia].media !== null ? 'media' : 'comment'
+      getCommentInformation()
     }
   }, [currentMedia])
 
+  useEffect(() => {
+    if (!emojiModalVisible) getDefaultEmojis()
+  }, [emojiModalVisible])
+
+  const getTimeSincePosted = () => {
+    const timeCreated = media[currentMedia].media !== null ? media[currentMedia].media.created_at : media[currentMedia].comment.created_at
+    const timeSince = timeAgo(timeCreated)
+    setTimeSincePosted(timeSince)
+    setUserAvatar(media[currentMedia].user.avatar_path)
+    setUserName(`${media[currentMedia].user.fname} ${media[currentMedia].user.lname}`)
+  }
+
+  const getDefaultEmojis = async () => {
+    const defaults = await getEmojiHistory()
+    setDefaultEmojis(defaults)
+  }
+
+  const getCommentInformation = async () => {
+    const mediaId = media[currentMedia].media !== null ? media[currentMedia].media.media_id : media[currentMedia].comment.comment_id
+    const commentCount = await getCommentCount(mediaId, media[currentMedia].media !== null ? 'media_id' : 'comment_id')
+    setCommentCount(commentCount)
+  }
+
+  const handleEmojiPress = async (emoji) => {
+    setEmojiModalVisible(false)
+    setEmojis(prev => [...prev,
+      <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />,
+      <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />,
+    ])
+    setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 50)
+    setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 100)
+    setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 150)
+    setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 200)
+    setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 250)
+    await reactToMedia({
+      emoji: emoji,
+      media_id: media[currentMedia].media.media_id,
+      recipient_id: media[currentMedia].user.id,
+      sender_id: userId,
+    })
+  }
+
   const handleMediaChange = (event) => {
-    const touchX = event.nativeEvent.locationX;
-    if (touchX < screenWidth / 2) {
-      // LEFT
-      if (currentMedia > 0){
+    if (event === "right") {
+      if (currentMediaRef.current > 0) {
         hapticSelect()
-        setCurrentMedia(currentMedia - 1)
-      } else {
-        hapticError()
-      }
+        currentMediaRef.current = currentMediaRef.current - 1
+        mediaChangeValue.current = currentMediaRef.current
+      } else { hapticError() }
     } else {
-      // RIGHT
-      if (currentMedia < media.length - 1) {
+      if (currentMediaRef.current < mediaCount.current - 1) {
         hapticSelect()
-        setCurrentMedia(currentMedia + 1)
-      } else {
-        hapticError()
-      }
+        currentMediaRef.current = currentMediaRef.current + 1
+        mediaChangeValue.current = currentMediaRef.current
+      } else { hapticError() }
     }
-  }
-
-  const handlePressIn = (event) => {
-    setInitialTouchX(event.nativeEvent.locationX);
-  }
-
-  const handlePressOut = (event) => {
-    const finalTouchX = event.nativeEvent.locationX;
-    if (initialTouchX !== null && Math.abs(finalTouchX - initialTouchX) > 10) {
-      console.log('Dragged');
-    } else if (event) {
-      handleMediaChange(event)
-    }
-    setInitialTouchX(null);
   }
 
   const toggleSound = async () => {
@@ -118,6 +185,103 @@ export default function ViewImpressions({ navigation, route }) {
     setSoundEnabled(!soundEnabled)
     await setLocallyStoredVariable('media_preferences', JSON.stringify({ soundEnabled: !soundEnabled }))
   }
+
+  const pan = useRef(new Animated.ValueXY()).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => true,
+      onPanResponderMove: (evt, gestureState) => {
+        if (gestureState.dy < 0) {
+          pan.setValue({ x: gestureState.dx, y: !isScrollEnabled.current ? gestureState.dy : 0 });
+        } else {
+          pan.setValue({ x: gestureState.dx, y: 0 });
+        }
+
+        if (!isScrollEnabled.current) {
+          if (gestureState.dy < -150) {
+            // Swiped down
+            handleSwipeUp();
+          }
+        }
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dx > 50) {
+          mediaChangeDirection.current = "right"
+        }
+        if (gestureState.dx < -50) {
+          mediaChangeDirection.current = "left"
+        }
+        Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+      },
+    })
+  ).current;
+
+  const handleSwipeUp = () => {
+    if (!alreadySwiped.current) {
+      hapticImpactHeavy()
+      alreadySwiped.current = true
+      navigation.navigate("CommentPage", {
+        media_id: currentMediaId.current,
+        media_type: currentMediaType.current
+      })
+    }
+  }
+
+  const translateY = pan.y.interpolate({
+    inputRange: [-300, 0, 300],
+    outputRange: [-50, 0, 50],
+    extrapolate: 'clamp',
+  });
+  const translateX = pan.x.interpolate({
+    inputRange: [-100, 0, 100],
+    outputRange: [-50, 0, 50],
+    extrapolate: 'clamp',
+  })
+
+  const shakeAnimation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const shake = Animated.sequence([
+      Animated.timing(shakeAnimation, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: -1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        shake,
+        Animated.delay(1700), // Wait for 1.7 seconds before the next shake
+      ])
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [shakeAnimation]);
+
+  const shakeStyle = {
+    transform: [
+      {
+        rotate: shakeAnimation.interpolate({
+          inputRange: [-1, 1],
+          outputRange: ['-10deg', '10deg'],
+        }),
+      },
+    ],
+  };
 
   return (
     <View style={styles.container}>
@@ -133,14 +297,18 @@ export default function ViewImpressions({ navigation, route }) {
           >
             <Icon name="arrow-left" size={22} color={gen.primaryText} />
           </TouchableOpacity>
-          <Text style={styles.headerText}>{book} {chapter}:{verse}</Text>
+          {/* <Text style={styles.headerText}>{location.book} {location.chapter}:{location.verse}</Text> */}
+          <Text style={styles.headerText}>{title}</Text>
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate("Capture", {work, book, chapter, verse})
+              hapticImpactHeavy()
+              navigation.navigate("Capture", { work: location.work, book: location.book, chapter: location.chapter, verse: location.verse })
             }}
             style={styles.actionButton}
           >
-            <Icon name="camera" size={22} color={gen.primaryText} />
+            <Animated.View style={shakeStyle}>
+              <Icon name="feather-pointed" size={22} color={gen.primaryText} />
+            </Animated.View>
           </TouchableOpacity>
         </View>
         {media.length > 1 && (
@@ -155,21 +323,63 @@ export default function ViewImpressions({ navigation, route }) {
         )}
         {
           media.length > 0 ? (
-            <View style={styles.impressionContainer}>
-              <Media
-                path={media[currentMedia].media.media_path}
-                type={media[currentMedia].media.media_type}
-                style={styles.impression}
-                includeBottomShadow={true}
-                soundEnabled={soundEnabled}
-              />
-              {
-                media[currentMedia].media.media_type === 'picture' &&
-                <LinearGradient
-                  colors={['transparent', hexToRgba(gen.heckaGray, 0.8), gen.heckaGray]}
-                  style={{ height: 130, width: '100%', position: 'absolute', bottom: 0, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 }}
-                />
-              }
+            <Animated.View
+              {...panResponder.panHandlers}
+              style={[{transform: [{ translateY }, { translateX }]}, styles.impressionContainer]}
+            >
+              {media[currentMedia].media !== null ? (
+                <>
+                  <Media
+                    path={media[currentMedia].media.media_path}
+                    type={media[currentMedia].media.media_type}
+                    style={styles.impression}
+                    includeBottomShadow={true}
+                    soundEnabled={soundEnabled}
+                    declareLoadingState={setLoading}
+                  />
+                  {
+                    media[currentMedia].media.media_type === 'video' && (
+                      <TouchableOpacity 
+                        activeOpacity={0.7}
+                        style={styles.videoSoundContainer}
+                        onPress={toggleSound}
+                      >
+                        <Icon name={soundEnabled ? "volume-high" : 'volume-xmark'} size={16} color={gen.lightestGray} />
+                      </TouchableOpacity>
+                    )
+                  }
+                  {
+                    media[currentMedia].media.media_type === 'picture' &&
+                    <LinearGradient
+                      colors={['transparent', hexToRgba(gen.heckaGray, 0.8), gen.heckaGray]}
+                      style={{ height: 130, width: '100%', position: 'absolute', bottom: 0, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 }}
+                    />
+                  }
+                </>
+              ) : (
+                <View style={[styles.impression, styles.commentContainer, { backgroundColor: media[currentMedia].user.color }]}>
+                  <ScrollView 
+                    style={{ width: '100%', marginBottom: 60, paddingTop: 50 }}
+                    onTouchStart={() => isScrollEnabled.current = true}
+                    onTouchEnd={() => isScrollEnabled.current = false}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    <Text style={[
+                      styles.comment,
+                      { fontSize: getFontSizeOfComment(media[currentMedia].comment.comment) }
+                    ]}>{media[currentMedia].comment.comment}</Text>
+                    <EmptySpace size={60} />
+                  </ScrollView>
+                  <LinearGradient
+                    colors={[hexToRgba(media[currentMedia].user.color, 1), hexToRgba(media[currentMedia].user.color, 1), hexToRgba(media[currentMedia].user.color, 0)]}
+                    style={[styles.gradient, { top: 10 }]}
+                  />
+                  <LinearGradient
+                    colors={[hexToRgba(media[currentMedia].user.color, 0), hexToRgba(media[currentMedia].user.color, 1), hexToRgba(media[currentMedia].user.color, 1)]}
+                    style={[styles.gradient, { bottom: 60 }]}
+                  />
+                </View>
+              )}
               {
                 media[currentMedia].group && (
                   <View style={styles.impressionGroupContainer}>
@@ -186,22 +396,11 @@ export default function ViewImpressions({ navigation, route }) {
                   </View>
                 )
               }
-              {
-                media[currentMedia].media.media_type === 'video' && (
-                  <TouchableOpacity 
-                    activeOpacity={0.7}
-                    style={styles.videoSoundContainer}
-                    onPress={toggleSound}
-                  >
-                    <Icon name={soundEnabled ? "volume-high" : 'volume-xmark'} size={16} color={gen.lightestGray} />
-                  </TouchableOpacity>
-                )
-              }
               <View style={styles.footerContainer}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                   <View style={styles.authorContent}>
                     <View style={[styles.avatarContainer, { borderColor: media[currentMedia].user.color }]}>
-                      <Avatar 
+                      <Avatar
                         imagePath={userAvatar}
                         type="profile"
                         style={styles.avatar}
@@ -213,77 +412,47 @@ export default function ViewImpressions({ navigation, route }) {
                     </View>
                   </View>
                   <View style={styles.reactionBarContainer}>
+                    <View style={styles.actionBar}>
+                      <View style={styles.action}>
+                        <EmojiReaction 
+                          emoji={<Text style={{ fontSize: 30 }}>💬</Text>}
+                          onPress={handleSwipeUp}
+                        />
+                        <Text style={styles.actionText}>{commentCount}</Text>
+                      </View>
+                    </View>
                     <View style={styles.reactionBar}>
-                      <EmojiReaction emoji="💛" setEmojis={setEmojis} media_id={media[currentMedia].media.media_id} recipient_id={media[currentMedia].user.id} sender_id={userId} />
-                      <EmojiReaction emoji="🔥" setEmojis={setEmojis} media_id={media[currentMedia].media.media_id} recipient_id={media[currentMedia].user.id} sender_id={userId} />
-                      <EmojiReaction emoji={
-                        <Icon name="circle-plus" size={30} color={gen.secondaryText} />
-                      } />
+                      {defaultEmojis.map((emoji, index) => (
+                        <EmojiReaction key={`emoji-button-${index}`} emoji={emoji} size={30} onPress={handleEmojiPress}/>
+                      ))}
+                      <EmojiReaction
+                        emoji={ <Icon name="circle-plus" size={30} color={gen.actionText} /> }
+                        onPress={() => {
+                          hapticImpactHeavy()
+                          setEmojiModalVisible(true) 
+                        }}
+                      />
                     </View>
                   </View>
                 </View>
               </View>
-            </View>
+              {/* {loading && (
+                <LoadingOverlay />
+              )} */}
+            </Animated.View>
           ) : (
             <View style={styles.impression} />
           )
         }
       </View>
       { emojis.map(emoji => emoji) }
+      {emojiModalVisible && (
+        <EmojiModal
+          setEmojiModalVisible={setEmojiModalVisible} 
+          emojiOnPress={handleEmojiPress}
+        />
+      )}
     </View>
-  )
-}
-
-const EmojiReaction = ({ emoji, setEmojis, ...props }) => {
-  const scaleValue = useRef(new Animated.Value(1)).current
-  const isEmoji = typeof emoji === 'string'
-
-  const handlePressIn = async () => {
-    hapticSelect()
-    Animated.spring(scaleValue, {
-      toValue: 0.8,
-      duration: 100,
-      useNativeDriver: true,
-    }).start()
-    setTimeout(() => {
-      Animated.spring(scaleValue, {
-        toValue: 1, // Return to original size
-        duration: 100,  
-        useNativeDriver: true,
-      }).start()
-    }, 100)
-    if (isEmoji) {
-      setEmojis(prev => [...prev, 
-        <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />,
-        <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />,
-      ])
-      setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 50)
-      setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 100)
-      setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 150)
-      setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 200)
-      setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 250)
-
-      const { media_id, sender_id, recipient_id } = props
-      await reactToMedia({
-        emoji: emoji,
-        media_id: media_id,
-        sender_id: sender_id,
-        recipient_id: recipient_id
-      })
-    }
-  }
-
-  return (
-    <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
-      <TouchableOpacity
-        activeOpacity={0.7}
-        // onPressIn={handlePressIn}
-        // onPressOut={handlePressOut}
-        onPress={handlePressIn}
-      >
-        <Text style={[styles.emoji, !isEmoji && { marginLeft: 12 }]}>{emoji}</Text>
-      </TouchableOpacity>
-    </Animated.View>
   )
 }
 
@@ -360,17 +529,23 @@ const styles = StyleSheet.create({
   reactionBar: {
     paddingHorizontal: 10,
     paddingVertical: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: 'column',
+    justifyContent: 'center',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: hexToRgba(gen.primaryBackground, 0.8),
     borderRadius: 40,
   },
-  emoji: {
-    fontSize: 30,
-    marginHorizontal: 2,
-    opacity: 1,
+  actionBar: { marginVertical: 10, },
+  action: {
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 14,
+    fontFamily: 'nunito-bold',
+    color: '#fff',
+    marginTop: -8
   },
   mediaBarList: {
     width: '100%',
@@ -435,9 +610,20 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 55,
   },
+  commentContainer: {
+    width: '100%',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
   comment: {
-    fontSize: 18,
-    color: gen.tertiaryText,
+    color: "#fff",
     fontFamily: 'nunito-bold',
+  },
+  gradient: {
+    position: 'absolute', 
+    width: '100%', 
+    height: 60
   }
 })

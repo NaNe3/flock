@@ -1,9 +1,17 @@
 import tinycolor from "tinycolor2"
 import { getAttributeFromObjectInLocalStorage, getUserIdFromLocalStorage } from "./localStorage";
 
+// export const getColorLight = (color) => {
+//   const colorObj = tinycolor(color);
+//   const lightenedColor = colorObj.lighten(35);
+  
+//   return lightenedColor.toHexString();
+// }
+
 export const getColorLight = (color) => {
   const colorObj = tinycolor(color);
-  const lightenedColor = colorObj.lighten(25);
+  let lightenedColor = colorObj.lighten(25); // Start by lightening the color by 20%
+
   return lightenedColor.toHexString();
 }
 

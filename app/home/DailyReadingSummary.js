@@ -8,7 +8,7 @@ import BasicButton from "../components/BasicButton";
 import { gen, currentTheme } from "../utils/styling/colors";
 import { hapticImpactRigid } from "../utils/haptics";
 import { checkIfUserHasStudiedPlanToday, setLocallyStoredVariable, getLocallyStoredVariable, getUserIdFromLocalStorage } from "../utils/localStorage"
-import { createReadingLog } from "../utils/authenticate"
+import { createReadingLog, userHasStudiedToday } from "../utils/authenticate"
 import { manageStreakNotifications } from "../utils/notify";
 import { getPrimaryColor } from "../utils/getColorVariety";
 import FAIcon from "../components/FAIcon";
@@ -32,6 +32,7 @@ export default function DailyReadingSummary({ navigation, route }) {
   const [fadeAnims, setFadeAnims] = useState([])
   const [logging, setLogging] = useState(false)
 
+  const [alreadyStudied, setAlreadyStudied] = useState(false)
   const [userLogs, setUserLogs] = useState([])
   const [versesInStudy, setVersesInStudy] = useState(0)
   const [versesRead, setVersesRead] = useState(0)
@@ -42,6 +43,9 @@ export default function DailyReadingSummary({ navigation, route }) {
     const init = async () => {
       const primaryColor = await getPrimaryColor()
       setColor(primaryColor)
+
+      const hasStudiedToday = await userHasStudiedToday()
+      setAlreadyStudied(hasStudiedToday)
     }
     init()
 
@@ -177,7 +181,11 @@ export default function DailyReadingSummary({ navigation, route }) {
           style={styles.button}
           onPress={() => {
             hapticImpactRigid()
-            navigation.navigate('Landing')
+            // if (alreadyStudied) {
+            //   navigation.navigate('Landing')
+            // } else {
+              navigation.navigate('StreakView')
+            // }
           }}
         />
       </Animated.View>
@@ -189,7 +197,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    backgroundColor: gen.primaryBackground,
+    backgroundColor: gen.secondaryBackground,
     justifyContent: 'space-around',
     alignItems: 'center',
   },
@@ -238,7 +246,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: gen.secondaryBackground,
+    backgroundColor: gen.primaryBackground,
   },
   taskContent: {
     flex: 1,
@@ -264,7 +272,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     marginTop: -40,
     width: '100%',
-    backgroundColor: gen.secondaryBackground,
+    backgroundColor: gen.primaryBackground,
     borderRadius: 15,
   },
   item: {

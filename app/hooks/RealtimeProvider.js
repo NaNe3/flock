@@ -5,7 +5,7 @@ import { createActivityListeners, createReactionListener, incomingRequestListene
 import NotificationBody from '../components/NotificationBody';
 import { getInfoFromGroupMember, getSenderInformation } from '../utils/db-relationship';
 import { getLocallyStoredVariable, setLocallyStoredVariable } from '../utils/localStorage';
-import { getReactionInformation } from '../utils/db-media';
+import { getLocationOfMedia, getReactionInformation } from '../utils/db-media';
 import { gen } from '../utils/styling/colors';
 
 const RealtimeContext = createContext();
@@ -67,14 +67,23 @@ export const RealtimeProvider = ({ children, realtimeData }) => {
   const publishReaction = async (reaction) => {
     const { reaction_id } = reaction
     const sender = await getReactionInformation(reaction_id)
-    publishNotification({ image: sender.avatar_path, title: `${sender.full_name}`, body: `reacted to your impression with ${reaction.emoji}`, color: sender.color })
+    const location = await getLocationOfMedia(sender.media_id)
+
+    // TODO - find the impression route
+    publishNotification({ 
+      image: sender.avatar_path, 
+      title: `${sender.full_name}`, 
+      body: `reacted with ${reaction.emoji}`, 
+      color: sender.color, 
+      route: { name: 'ViewImpressions', params: { title: `${location.book} ${location.chapter}:${location.verse}`, media_id: sender.media_id } }
+    })
   }
 
   const alterStatusToAccepted = async (userId, recipientId) => {
     const friends = JSON.parse(await getLocallyStoredVariable('user_friends'))
     const newFriends = friends.map(friend => {
       if (friend.id === recipientId) {
-        publishNotification({ image: friend.avatar_path, title: `${friend.fname} ${friend.lname}`, body: 'accepted your friend request', color: friend.color })
+        publishNotification({ image: friend.avatar_path, title: `${friend.fname} ${friend.lname}`, body: 'accepted your friend request', color: friend.color, route: { name: 'AddFriend', params: null } })
 
         return { ...friend, status: 'accepted' }
       } else { return friend }
@@ -90,7 +99,7 @@ export const RealtimeProvider = ({ children, realtimeData }) => {
     const friends = JSON.parse(await getLocallyStoredVariable('user_friend_requests'))
     const newFriends = [...friends, data]
     await setLocallyStoredVariable('user_friend_requests', JSON.stringify(newFriends))
-    publishNotification({ image: data.avatar_path, title: `${data.fname} ${data.lname}`, body: 'sent you a friend request', color: data.color })
+    publishNotification({ image: data.avatar_path, title: `${data.fname} ${data.lname}`, body: 'sent you a friend request', color: data.color, route: { name: 'AddFriend', params: null } })
 
     setIncoming(senderId)
   }
@@ -98,7 +107,7 @@ export const RealtimeProvider = ({ children, realtimeData }) => {
   const getNewGroupRequest = async (groupMemberInfo) => {
     if (!groupMemberInfo.is_leader) {
       const result = await getInfoFromGroupMember(groupMemberInfo.group_member_id)
-      publishNotification({ image: result.group.group_image, title: `${result.full_name}`, body: `invited you to join ${result.group.group_name}`, color: result.color })
+      publishNotification({ image: result.group.group_image, title: `${result.full_name}`, body: `invited you to join ${result.group.group_name}`, color: result.color, route: { name: 'GroupPage', params: null } })
       setGroupInvites(result.group.group_name)
     }
   }
@@ -136,6 +145,7 @@ export const RealtimeProvider = ({ children, realtimeData }) => {
           title={displayedNotification.title}
           body={displayedNotification.body}
           color={displayedNotification.color}
+          route={displayedNotification.route}
           proceed={proceed}
         />
       )}

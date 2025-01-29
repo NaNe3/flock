@@ -4,15 +4,14 @@ import VideoPreview from "./VideoPreview"
 
 import { gen } from "../utils/styling/colors"
 import { checkIfFileExistsWithPath, downloadFileWithPath, getLocalUriForFile } from "../utils/db-download"
+import LoadingOverlay from "../home/components/LoadingOverlay"
 
 export default function Media({
   path,
   type = "video",
-  onPress,
-  onPressIn,
-  onPressOut,
   includeBottomShadow = false,
   soundEnabled=null,
+  declareLoadingState,
   style
 }) {
   const [mediaPath, setMediaPath] = useState(getLocalUriForFile(path))
@@ -20,8 +19,7 @@ export default function Media({
   const [mediaDownloaded, setMediaDownloaded] = useState(null)
   const [loadingAnimation] = useState(new Animated.Value(0))
   const [muted, setMuted] = useState(!soundEnabled ?? false)
-
-  const [timeToPause, setTimeToPause] = useState(false)
+  const [playing, setPlaying] = useState(true)
 
   useEffect(() => {
     setMediaDownloaded(false)
@@ -31,20 +29,6 @@ export default function Media({
   useEffect(() => {
     setMuted(!soundEnabled)
   }, [soundEnabled])
-
-  // useEffect(() => {
-  //   if (path) {
-
-  //     const newPath = { uri: getLocalUriForFile(path) }
-  //     setMediaPath(newPath)
-  //     setMediaType(type)
-  //   }
-  // }, [path])
-
-  // useEffect(() => {
-  //   setMediaDownloaded(false)
-  //   mediaAllocation()
-  // }, [])
 
   const mediaAllocation = async () => {
     try {
@@ -110,52 +94,41 @@ export default function Media({
 
   return (
     <Animated.View style={[styles.mediaBox, style, { backgroundColor }]}>
-      {
-        mediaDownloaded && mediaType === "video"
-          ? (
-            <TouchableOpacity
-              onPressIn={onPressIn}
-              onPressOut={(event) => {
-                event.persist()
-                setTimeToPause(true)
-                setTimeout(() => {
-                  onPressOut(event)
-                  setTimeToPause(false)
-                }, 10)
-              }}
-              onPress={onPress}
-              activeOpacity={1}
-              style={[style, { flex: 1}]}
-            >
-              <VideoPreview
-                source={mediaPath} 
-                muted={muted}
-                includeBottomShadow={includeBottomShadow}
-                style={[styles.media, style]} 
-
-                timeToPause={timeToPause}
-              />
-            </TouchableOpacity>
-          )
-          : (
-            <TouchableOpacity 
-              onPress={onPress} 
-              onPressIn={onPressIn}
-              onPressOut={onPressOut}
-              activeOpacity={1}
-              style={[style, { flex: 1}]}
-            >
-              <Image 
-                source={mediaPath} 
-                onPress={onPress}
-                onLoadStart={() => console.log("loading")}
-                onLoad={() => console.log("loaded")}
-                style={[styles.media, style]} 
-              />
-            </TouchableOpacity>
-
-          )
-      }
+      {mediaDownloaded ? (
+        <>
+          {
+            mediaType === "video"
+              ? (
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() => {
+                    setPlaying(playing === true ? false : true)
+                  }}
+                  style={[style, { flex: 1}]}
+                >
+                  <VideoPreview
+                    source={mediaPath} 
+                    muted={muted}
+                    includeBottomShadow={includeBottomShadow}
+                    declareLoadingState={declareLoadingState}
+                    style={[styles.media, style]} 
+                    playing={playing}
+                  />
+                </TouchableOpacity>
+              )
+              : (
+                <Image
+                  source={mediaPath} 
+                  onLoadStart={() => declareLoadingState(true)}
+                  onLoad={() => declareLoadingState(false)}
+                  style={[styles.media, style]} 
+                />
+              )
+          }
+        </>
+      ) : (
+        <LoadingOverlay />
+      )}
     </Animated.View>
   )
 }

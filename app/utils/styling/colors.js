@@ -69,21 +69,21 @@ const darkTheme = {
 
 export const currentTheme = 'dark'
 
-const theme = {
+export const themes = {
   'light': lightTheme,
   'dark': darkTheme,
 }
 
 export const gen = {
-  primaryColor: theme[currentTheme].primaryColor,
-  primaryColorLight: theme[currentTheme].primaryColorLight,
-  primaryColorShadow: theme[currentTheme].primaryColorShadow,
-  primaryColorShadowDisabled: theme[currentTheme].primaryColorShadowDisabled,
-  primaryColorDisabled: theme[currentTheme].primaryColorDisabled,
-  secondaryColor: theme[currentTheme].secondaryColor,
+  primaryColor: themes[currentTheme].primaryColor,
+  primaryColorLight: themes[currentTheme].primaryColorLight,
+  primaryColorShadow: themes[currentTheme].primaryColorShadow,
+  primaryColorShadowDisabled: themes[currentTheme].primaryColorShadowDisabled,
+  primaryColorDisabled: themes[currentTheme].primaryColorDisabled,
+  secondaryColor: themes[currentTheme].secondaryColor,
 
-  blue: theme[currentTheme].primaryColor,
-  lightBlue: theme[currentTheme].primaryColorLight,
+  blue: themes[currentTheme].primaryColor,
+  lightBlue: themes[currentTheme].primaryColorLight,
   red: '#F88379',
   orange: '#FFBF00',
 
@@ -99,25 +99,25 @@ export const gen = {
   navy: '#002E5D',
   maroon: '#831515',
 
-  primaryBackground: theme[currentTheme].primaryBackground,
-  secondaryBackground: theme[currentTheme].secondaryBackground,
-  tertiaryBackground: theme[currentTheme].tertiaryBackground,
-  quaternaryBackground: theme[currentTheme].quaternaryBackground,
+  primaryBackground: themes[currentTheme].primaryBackground,
+  secondaryBackground: themes[currentTheme].secondaryBackground,
+  tertiaryBackground: themes[currentTheme].tertiaryBackground,
+  quaternaryBackground: themes[currentTheme].quaternaryBackground,
 
-  primaryText: theme[currentTheme].primaryText,
-  secondaryText: theme[currentTheme].secondaryText,
-  tertiaryText: theme[currentTheme].tertiaryText,
-  actionText: theme[currentTheme].actionText,
-  oppositeText: theme[currentTheme].oppositeText,
+  primaryText: themes[currentTheme].primaryText,
+  secondaryText: themes[currentTheme].secondaryText,
+  tertiaryText: themes[currentTheme].tertiaryText,
+  actionText: themes[currentTheme].actionText,
+  oppositeText: themes[currentTheme].oppositeText,
 
-  navigationSelected: theme[currentTheme].navigationSelected,
-  navigationUnselected: theme[currentTheme].navigationUnselected,
+  navigationSelected: themes[currentTheme].navigationSelected,
+  navigationUnselected: themes[currentTheme].navigationUnselected,
 
-  mediaSeen: theme[currentTheme].mediaSeen,
-  mediaUnseen: theme[currentTheme].mediaUnseen,
-  modalBackdrop: theme[currentTheme].modalBackdrop,
+  mediaSeen: themes[currentTheme].mediaSeen,
+  mediaUnseen: themes[currentTheme].mediaUnseen,
+  modalBackdrop: themes[currentTheme].modalBackdrop,
 
-  primaryBorder: theme[currentTheme].primaryBorder,
+  primaryBorder: themes[currentTheme].primaryBorder,
 }
 
 // export const useTheme = () => {
@@ -134,5 +134,5 @@ export const gen = {
 //     getTheme();
 //   }, []);
 
-//   return theme[currentTheme];
+//   return themes[currentTheme];
 // };

@@ -24,45 +24,131 @@ export function getTimeSincePosted(date) {
   }
 }
 
-export async function getComments(work, book, chapter, verse) {
-  const { data: comments, error } = await supabase
-    .from('activity')
+export async function getReplies(commentIds) {
+  const { data: replies, error } = await supabase
+    .from('media_comment')
     .select(`
-      activity_id,
-      comment(*),
-      user(avatar_path, fname, lname)
+      media_comment_id, created_at, comment, replying_to, media_id, reply_count,
+      user_id (id, full_name, avatar_path, color_id(color_hex))
     `)
-    .eq('work', work)
-    .eq('book', book)
-    .eq('chapter', chapter)
-    .eq('verse', verse)
-    .not('comment_id', 'is', null)
-    .order('created_at', { ascending: false })
+    .in('replying_to', commentIds)
+    .order('created_at', { ascending: true })
 
-  return { comments: comments, error: error }
+  if (error) {
+    console.error('error', error)
+    return { error: error }
+  }
+
+  const newReplies = replies.map(c => {
+    const { user_id: user, ...comment} = c
+    return { user, ...comment, }
+  })
+  return newReplies
 }
 
-export async function addComment({ work, book, chapter, verse, user_id, comment }) {
-  const { data: commentRow, error: commentError } = await supabase
+export async function getComments(media_id, column) {
+  const { data: comments, error } = await supabase
+    .from('media_comment')
+    .select(`
+      media_comment_id, created_at, comment, replying_to, media_id, reply_count,
+      user_id (id, full_name, avatar_path, color_id(color_hex))
+    `)
+    .eq(column, media_id)
+    .is('replying_to', null)
+    .order('created_at', { ascending: false })
+  
+  if (error) {
+    console.error('error', error)
+    return { error: error }
+  }
+
+  const newComments = comments.map(c => {
+    const { user_id: user, ...comment} = c
+    return { user, ...comment, }
+  })
+  return newComments
+}
+
+export async function getCommentCount(media_id, column) {
+  const { count, error } = await supabase
+    .from('media_comment')
+    .select('*', { count: 'exact', head: true })
+    .eq(column, media_id)
+
+  if (error) {
+    console.error(error.message)
+    return { error: error.message }
+  }
+
+  return count
+}
+
+export async function createComment({ media_id, comment_id, user_id, replying_to, comment }) {
+  const { data, error } = await supabase
+    .from('media_comment')
+    .insert([
+      {
+        media_id: media_id,
+        comment_id: comment_id,
+        user_id: user_id,
+        replying_to: replying_to,
+        comment: comment,
+      }
+    ])
+
+  if (error) {
+    console.error('error', error)
+    return { error: error }
+  }
+
+  if (replying_to !== null) {
+    const { data: currentReplyCount, error: getCountError } = await supabase
+      .from('media_comment')
+      .select('reply_count')
+      .eq('media_comment_id', replying_to)
+    if (getCountError) { console.error('error', getCountError) }
+
+    const newReplyCount = currentReplyCount[0].reply_count + 1
+
+    const { error: updateError } = await supabase
+      .from('media_comment')
+      .update({ reply_count: newReplyCount })
+      .eq('media_comment_id', replying_to)
+    if (updateError) { console.error('error', updateError) }
+  }
+}
+
+export async function publishMainComment({ comment, color_scheme, user_id, group_id, location }) {
+  // 1. create comment row
+  const { data, error } = await supabase
     .from('comment')
-    .insert({ comment: comment})
-    .select('comment_id')
+    .insert([ { comment: comment, color_scheme: color_scheme } ])
+    .select()
 
-  if (!commentError) {
-    // 2) create LIKE log
-    const { data: activityRow, error: activityError } = await supabase
+  if (!error) {
+    // 2. create activity row
+    // reqs: work, book, chapter, verse, user_id, group_id, comment_id
+    const { work, book, chapter, verse } = location
+    const { error: activityError } = await supabase
       .from('activity')
-      .insert({ work, book, chapter, verse, comment_id: commentRow[0].comment_id, user_id: user_id })
-      .select()
-
-    if (!activityError) {
-      return { commentRow: commentRow, activityRow: activityRow, activityError: activityError }
-    } else {
-      console.error(activityError)
+      .insert([
+        {
+          work: work,
+          book: book,
+          chapter: chapter,
+          verse: verse,
+          group_id: group_id,
+          user_id: user_id,
+          comment_id: data[0].comment_id
+        }
+      ])
+  
+    if (activityError) {
+      console.error('activityError', activityError)
       return { error: activityError }
     }
   } else {
-    console.error(error)
-    return { error: commentError }
+    console.error('error in creating commetn: ', error)
+    return { error: error }
   }
 }
