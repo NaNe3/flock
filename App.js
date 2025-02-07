@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { Text, View } from 'react-native'
+import { useEffect, useState } from 'react'
+import { View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
@@ -7,20 +7,16 @@ import { useFonts } from 'expo-font'
 import Onboard from './app/onboard'
 import Router from './app/Router'
 import SignIn from './app/SignIn'
-import { finishOnboarding, getInitialSystemVariables, setLocallyStoredVariable } from './app/utils/localStorage'
+import { getInitialSystemVariables } from './app/utils/localStorage'
 import { StatusBar } from 'expo-status-bar'
 import { initSession, setUserInformationFromUUID } from './app/utils/authenticate'
-import { createStackNavigator } from '@react-navigation/stack'
-import { StyleSheet } from 'react-native'
-import { gen, currentTheme } from './app/utils/styling/colors'
-import GetStarted from './app/onboard/GetStarted'
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
-import ThemeProvider from './app/hooks/ThemeProvider'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import ThemeProvider, { useTheme } from './app/hooks/ThemeProvider'
 
 SplashScreen.preventAutoHideAsync()
 
 function AppContent() {
-  const insets = useSafeAreaInsets()
+  const { theme, currentTheme } = useTheme()
   const [isOnboardComplete, setIsOnboardComplete] = useState(false)
   const [session, setSession] = useState(null)
 
@@ -62,7 +58,7 @@ function AppContent() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[{ flex: 1 }, { backgroundColor: theme && theme.primaryBackground }]}>
       <GestureHandlerRootView>
         {!isOnboardComplete ? (
           <Onboard setSession={setSession} setIsOnboardComplete={setIsOnboardComplete} />
@@ -86,10 +82,3 @@ export default function App() {
     </SafeAreaProvider>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-  },
-})

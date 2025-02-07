@@ -1,4 +1,4 @@
-import { gen } from './styling/colors';
+import { constants } from './styling/colors';
 
 export const offered = [
   'Old Testament',
@@ -9,11 +9,11 @@ export const offered = [
 ]
 
 export const offeredColors = {
-  'Old Testament': { background: '#000', text: gen.orange },
-  'New Testament': { background: '#000', text: gen.orange },
-  'Book Of Mormon': { background: gen.navy, text: gen.orange },
-  'Doctrine And Covenants': { background: gen.heckaGray, text: gen.orange },
-  'Pearl Of Great Price': { background: gen.heckaGray, text: gen.orange },
+  'Old Testament': { background: '#000', text: constants.orange },
+  'New Testament': { background: '#000', text: constants.orange },
+  'Book Of Mormon': { background: constants.navy, text: constants.orange },
+  'Doctrine And Covenants': { background: constants.heckaGray, text: constants.orange },
+  'Pearl Of Great Price': { background: constants.heckaGray, text: constants.orange },
 }
 const books = {
   'Old Testament': [

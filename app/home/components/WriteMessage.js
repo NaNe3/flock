@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react"
-import { Keyboard, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native"
+import { Image, Keyboard, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native"
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
-import { gen } from "../../utils/styling/colors"
+import { constants } from "../../utils/styling/colors"
 import { getColorLight, getPrimaryColor } from "../../utils/getColorVariety"
 import { MessageInput } from "./MessageInput"
 import EmptySpace from "../../components/EmptySpace"
@@ -12,10 +12,11 @@ import { publishMainComment } from "../../utils/db-comment"
 import { LinearGradient } from "expo-linear-gradient"
 import hexToRgba from "../../utils/hexToRgba"
 
-export function WriteMessage({ navigation, location }) {
-  const [color, setColor] = useState(gen.gray)
+export function WriteMessage({ navigation, location, recipient }) {
+  console.log("WRIIIIIITE MESSAGE: ", location)
+  const [color, setColor] = useState(constants.gray)
   const [userId, setUserId] = useState(null)
-  const [colorLight, setColorLight] = useState(gen.grayLight)
+  const [colorLight, setColorLight] = useState(constants.grayLight)
   const [comment, setComment] = useState('')
   const [wordCount, setWordCount] = useState(0)
   const [ isPublishing, setIsPublishing ] = useState(false)
@@ -45,7 +46,7 @@ export function WriteMessage({ navigation, location }) {
       comment: comment,
       color_scheme: 0,
       user_id: userId,
-      group_id: null,
+      group_id: recipient.info.recipient_id,
       location: location
     })
 
@@ -95,20 +96,40 @@ export function WriteMessage({ navigation, location }) {
           { wordCount != 0 && <Text style={styles.wordCount}>{wordCount} / 150</Text> }
           {/* <Text style={styles.wordCount}>{wordCount} words</Text> */}
         </View>
-        <TouchableOpacity
-          activeOpacity={!isPublishing ? comment.length > 1 ? 0.7 : 0.5 : 0.5}
-          style={[styles.publishButton, { backgroundColor: colorLight, opacity: isPublishing || comment.length === 0 ? 0.5 : 1 }]}
-          onPress={() => {
-            console.log(comment.length)
-            if (isPublishing || comment.length === 0) return
-            hapticImpactSoft()
-            handleCommentPublish()
-          }}
-        >
-          <Text style={[styles.publishText, { color }]}>
-            <Icon name="feather-pointed" size={18} color={color} /> publish
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.bottomBarContainer}>
+          <TouchableOpacity
+            style={styles.groupSelectContainer}
+            activeOpacity={0.7}
+            onPress={() => {
+              hapticSelect()
+              recipient.action(true)
+            }}
+          >
+            <View style={styles.groupSelect}>
+              <Image source={{ uri: recipient.avatar }} style={styles.groupAvatar} />
+              <Text 
+                style={styles.groupText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >{recipient.info.recipient}</Text>
+            </View>
+            <Icon name="chevron-down" size={15} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={!isPublishing ? comment.length > 1 ? 0.7 : 0.5 : 0.5}
+            style={[styles.publishButton, { backgroundColor: colorLight, opacity: isPublishing || comment.length === 0 ? 0.5 : 1 }]}
+            onPress={() => {
+              console.log(comment.length)
+              if (isPublishing || comment.length === 0) return
+              hapticImpactSoft()
+              handleCommentPublish()
+            }}
+          >
+            <Text style={[styles.publishText, { color }]}>
+              <Icon name="feather-pointed" size={18} color={color} /> publish
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableWithoutFeedback>
   )
@@ -146,12 +167,44 @@ const styles = StyleSheet.create({
     fontFamily: 'nunito-bold',
     color: '#fff',
   },
-  publishButton: {
+  bottomBarContainer: {
+    paddingHorizontal: 10,
+    flexDirection: 'row',
     position: 'absolute',
-    bottom: 20,
-    right: 20,
+    bottom: 15,
+  },
+  groupSelectContainer: {
+    flex: 1,
+    height: 50,
+    borderRadius: 100,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  groupSelect: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  groupAvatar: {
+    width: 35,
+    height: 35,
+    borderRadius: 100,
+    marginRight: 10,
+  },
+  groupText: {
+    fontFamily: 'nunito-bold',
+    fontSize: 16,
+    color: '#fff',
+  },
+  publishButton: {
     paddingHorizontal: 15,
     paddingVertical: 10,
+    marginLeft: 10,
     borderRadius: 55,
     justifyContent: 'center',
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import { Alert, AppState, Linking, StyleSheet, Switch, Text, View } from "react-native"
-import { gen } from "../utils/styling/colors"
+import { constants } from "../utils/styling/colors"
 import { Camera } from "expo-camera"
 import { useEffect, useState } from "react";
 
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: gen.heckaGray,
+    backgroundColor: constants.heckaGray,
   },
   permissionText: {
     fontSize: 18,

@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Button, Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { gen } from "../utils/styling/colors";
+import { Animated, Dimensions, StyleSheet, TouchableOpacity } from "react-native";
 import { getPrimaryColor } from "../utils/getColorVariety";
 import { getAttributeFromObjectInLocalStorage } from "../utils/localStorage";
 import { hapticImpactHeavy } from "../utils/haptics";
+import { useTheme } from "../hooks/ThemeProvider";
 
 const { width, height } = Dimensions.get('window')
 
 export default function StreakView({ navigation }) {
-  const [ color, setColor ] = useState(gen.secondaryBackground)
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
+  const [ color, setColor ] = useState(theme.secondaryBackground)
   const animatedValue = useRef(new Animated.Value(0)).current
   const streakScale = useRef(new Animated.Value(1)).current
   const instructionOpacity = useRef(new Animated.Value(0)).current
@@ -79,7 +83,7 @@ export default function StreakView({ navigation }) {
     if (!animationFinished) return
 
     Animated.timing(instructionOpacity, {
-      toValue: 1,
+      toValue: 0.5,
       duration: 500,
       useNativeDriver: true,
     }).start()
@@ -144,43 +148,45 @@ export default function StreakView({ navigation }) {
           },
         ]}
       />
-      <Animated.Text style={[styles.streak, { color: streakChanged ? '#fff' : gen.secondaryText }, { transform: [{ translateX: rumble }, { scale: streakScale }] }]}>
+      <Animated.Text style={[styles.streak, { color: streakChanged ? '#fff' : theme.secondaryText }, { transform: [{ translateX: rumble }, { scale: streakScale }] }]}>
         {streakDisplayed}
       </Animated.Text>
-      <Animated.Text style={[styles.helperText, { color: streakChanged ? '#fff' : gen.secondaryText }]}>DAYS STUDIED</Animated.Text>
+      <Animated.Text style={[styles.helperText, { color: streakChanged ? '#fff' : theme.secondaryText }]}>DAYS STUDIED</Animated.Text>
       <Animated.Text style={[styles.instructionText, { opacity: instructionOpacity }]}>tap to continue</Animated.Text>
     </TouchableOpacity>
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  streak: {
-    color: gen.secondaryText,
-    fontSize: 150,
-    fontFamily: 'nunito-bold',
-    textAlign: 'center'
-  },
-  helperText: {
-    color: gen.gray,
-    fontSize: 24,
-    fontFamily: 'nunito-bold',
-    marginTop: -20
-  },
-  circle: {
-    position: 'absolute',
-  },
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    streak: {
+      color: theme.secondaryText,
+      fontSize: 150,
+      fontFamily: 'nunito-bold',
+      textAlign: 'center'
+    },
+    helperText: {
+      color: theme.gray,
+      fontSize: 24,
+      fontFamily: 'nunito-bold',
+      marginTop: -20
+    },
+    circle: {
+      position: 'absolute',
+    },
 
-  instructionText: {
-    position: 'absolute',
-    bottom: 80,
-    fontFamily: 'nunito-bold',
-    fontSize: 24,
-    color: "#D3D3D3",
-  }
-})
+    instructionText: {
+      position: 'absolute',
+      bottom: 80,
+      fontFamily: 'nunito-bold',
+      fontSize: 24,
+      color: "#fff",
+    }
+  })
+}

@@ -6,7 +6,6 @@ import NotificationBody from '../components/NotificationBody';
 import { getInfoFromGroupMember, getSenderInformation } from '../utils/db-relationship';
 import { getLocallyStoredVariable, setLocallyStoredVariable } from '../utils/localStorage';
 import { getLocationOfMedia, getReactionInformation } from '../utils/db-media';
-import { gen } from '../utils/styling/colors';
 
 const RealtimeContext = createContext();
 
@@ -131,11 +130,6 @@ export const RealtimeProvider = ({ children, realtimeData }) => {
       }, 20)
     }
   }
-
-  // useEffect(() => {
-  //   console.log("queue", queue)
-  //   console.log("displayed", displayedNotification)
-  // }, [queue, displayedNotification])
 
   return (
     <RealtimeContext.Provider value={{ media, incoming, requested, groupInvites }}>

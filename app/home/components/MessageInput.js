@@ -24,7 +24,7 @@ export function MessageInput({ navigation, comment, setComment, scrollToBottom, 
       value={comment}
       onChange={handleInput}
       scrollEnabled={false}
-      placeholder="starting writing your message here!"
+      placeholder="thoughts and impressions..."
       placeholderTextColor={!customColor ? '#fff' : customColor}
     />
   )

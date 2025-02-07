@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
 import { createStackNavigator, TransitionPresets } from "@react-navigation/stack";
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 
@@ -10,7 +9,7 @@ import Chapter from './home/Chapter';
 import Group from './home/group/Group';
 import Chapters from './home/Chapters';
 import AddFriend from './home/AddFriend';
-import CreatePlan from './home/CreatePlan';
+// import CreatePlan from './home/CreatePlan';
 import StreakView from "./home/StreakView";
 import CommentPage from "./home/CommentPage";
 import CreateGroup from './home/CreateGroup';
@@ -18,29 +17,31 @@ import PremiumOffer from './home/PremiumOffer';
 import ViewImpressions from "./home/ViewImpressions";
 import AddPeopleToGroup from './home/AddPeopleToGroup';
 import NotificationsPage from './home/NotificationsPage';
-import DailyReadingSummary from "./home/DailyReadingSummary";
+import ReadingSummary from "./home/ReadingSummary";
 import ProfilePageRouter from './home/profile/ProfilePageRouter';
 import GroupDetailsRouter from './home/group/GroupDetailsRouter';
 
 import NavigationBar from "./components/NavigationBar";
 import FadeInView from "./components/FadeInView";
 
-import { getUserIdFromLocalStorage, setLocallyStoredVariable } from "./utils/localStorage"
+import { getAttributeFromObjectInLocalStorage, getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "./utils/localStorage"
 import { getFriendRequestsByUserId, getGroupsForUser, getRelationships } from "./utils/db-relationship"
-import { gen, currentTheme } from "./utils/styling/colors"
-import { checkUserStreak, getLogsByUserId, getPlanByUserId, } from "./utils/authenticate"
+import { checkUserStreak, getLogsByUserId, getPlanByUserId, getPlanItemsByPlanId, } from "./utils/authenticate"
 import LoadingScreen from "./home/ LoadingScreen"
 import { checkRequiredDailyNotifications } from "./utils/notify"
 import { RealtimeProvider } from "./hooks/RealtimeProvider"
 import { forPushFromBottom } from "./utils/interpolations/forPushFromBottom";
+import { useTheme } from "./hooks/ThemeProvider";
+import GroupPage from "./home/GroupPage";
 
 const Stack = createStackNavigator()
 
 export default function Router() {
+  const { theme, currentTheme } = useTheme()
   const [currentRoute, setCurrentRoute] = useState('Home')
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState(0)
-  const withoutBar = ['PremiumOffer', 'Group', 'CreateGroup', 'Chapter', 'Capture', 'DailyReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers', 'ViewImpressions', 'ProfilePageRouter', 'CommentPage', 'StreakView']
+  const withoutBar = ['PremiumOffer', 'Group', 'CreateGroup', 'Chapter', 'Capture', 'ReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers', 'ViewImpressions', 'ProfilePageRouter', 'CommentPage', 'StreakView']
 
   const [realtimeData, setRealtimeData] = useState({})
 
@@ -62,8 +63,13 @@ export default function Router() {
       setProgress(prev => prev + 1)
     }
     const getUserPlan = async (userId) => {
-      const { plan } = await getPlanByUserId(userId)
-      await setLocallyStoredVariable(plan.plan_name, JSON.stringify(plan))
+      // FUTURE - get user plans by user_id
+      //        - create table user_plans
+      const { plan_id, plan_name } = await getPlanByUserId(userId)
+      const { plan_items } = await getPlanItemsByPlanId(plan_id)
+
+      await setLocallyStoredVariable('user_plans', JSON.stringify([ { plan_id, plan_name } ]))
+      await setLocallyStoredVariable(`plan_${plan_id}_items`, JSON.stringify(plan_items))
       setProgress(prev => prev + 1)
     }
     const getUserFriends = async (userId) => {
@@ -110,10 +116,7 @@ export default function Router() {
       setLoading={setLoading}
     />
   ) : (
-    <FadeInView
-      time={1000}
-      style={styles.container}
-    >
+    <FadeInView time={1000} style={{ flex: 1, backgroundColor: theme.primaryBackground }} >
       <NavigationContainer
         theme={currentTheme === 'dark' ? DarkTheme : undefined}
         onStateChange={handleStateChange}
@@ -122,7 +125,7 @@ export default function Router() {
           <Stack.Navigator 
             initialRouteName='Landing'
             screenOptions={{
-              cardStyle: { backgroundColor: gen.primaryBackground },
+              cardStyle: { backgroundColor: theme.primaryBackground },
               headerShown: false,
             }}
           >
@@ -158,11 +161,6 @@ export default function Router() {
               options={{ animationEnabled: true }}
             />
             <Stack.Screen
-              name='CreatePlan'
-              component={CreatePlan}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen
               name='CreateGroup'
               component={CreateGroup}
               options={{ animationEnabled: true }}
@@ -170,6 +168,11 @@ export default function Router() {
             <Stack.Screen
               name='AddFriend'
               component={AddFriend}
+              options={{ animationEnabled: false }}
+            />
+            <Stack.Screen
+              name='GroupPage'
+              component={GroupPage}
               options={{ animationEnabled: true }}
             />
             <Stack.Screen
@@ -212,7 +215,7 @@ export default function Router() {
               }}
             />
             <Stack.Screen 
-              name='DailyReadingSummary' component={DailyReadingSummary} options={{ 
+              name='ReadingSummary' component={ReadingSummary} options={{ 
                 animationEnabled: true,
                 ...TransitionPresets.ScaleFromCenterAndroid
               }}
@@ -241,12 +244,4 @@ export default function Router() {
       </NavigationContainer>
     </FadeInView>
   )
-  
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-  },
-})

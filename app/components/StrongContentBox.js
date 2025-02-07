@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, Touchable, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome'
-import { gen } from '../utils/styling/colors'
+import { useTheme } from '../hooks/ThemeProvider'
 
 export default function StrongContentBox({ 
   navigation,
@@ -9,11 +10,15 @@ export default function StrongContentBox({
   onPress = null,
   children
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   return (
     <View style={styles.container}>
       <View style={{ 
         borderBottomWidth: 2,
-        borderColor: gen.primaryBorder, 
+        borderColor: theme.primaryBorder, 
       }}>
         <Text style={styles.containerTitle}>{title}</Text>
       </View>
@@ -26,7 +31,7 @@ export default function StrongContentBox({
               padding: 15,
             }}
           >
-            <Text style={styles.createGroupButton}><Icon name="plus" size={18} color={gen.actionText} /> ADD FRIENDS</Text>
+            <Text style={styles.createGroupButton}><Icon name="plus" size={18} color={theme.actionText} /> ADD FRIENDS</Text>
           </TouchableOpacity>
         }
       </View>
@@ -34,27 +39,29 @@ export default function StrongContentBox({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    backgroundColor: gen.primaryBackground,
-    borderRadius: 15,
-    marginTop: 30,
-  },
-  containerTitle: {
-    fontSize: 16,
-    fontFamily: 'nunito-bold',
-    color: gen.actionText,
-    marginLeft: 15,
-    marginVertical: 15,
-  }, 
-  groupRowContainer: {
-    width: '100%',
-  },
-  createGroupButton: {
-    textAlign: 'center',
-    fontFamily: 'nunito-bold',
-    color: gen.primaryText,
-    fontSize: 16,
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      width: '100%',
+      backgroundColor: theme.primaryBackground,
+      borderRadius: 15,
+      marginTop: 30,
+    },
+    containerTitle: {
+      fontSize: 16,
+      fontFamily: 'nunito-bold',
+      color: theme.actionText,
+      marginLeft: 15,
+      marginVertical: 15,
+    }, 
+    groupRowContainer: {
+      width: '100%',
+    },
+    createGroupButton: {
+      textAlign: 'center',
+      fontFamily: 'nunito-bold',
+      color: theme.primaryText,
+      fontSize: 16,
+    }
+  })
+}

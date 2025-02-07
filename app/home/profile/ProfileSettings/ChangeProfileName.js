@@ -6,12 +6,15 @@ import BasicButton from "../../../components/BasicButton"
 import BasicTextInput from "../../../components/BasicTextInput"
 
 import { hapticSelect } from "../../../utils/haptics"
-import { gen } from "../../../utils/styling/colors"
 import { updateUserNameById } from "../../../utils/db-users"
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../../../utils/localStorage"
 import { ScrollView } from "react-native-gesture-handler"
+import { useTheme } from "../../../hooks/ThemeProvider"
 
 export default function ChangeProfileName({ navigation }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [buttonMessage, setButtonMessage] = useState("update")
   const [disabled, setDisabled] = useState(true)
   const [formerName, setFormerName] = useState("")
@@ -87,15 +90,17 @@ export default function ChangeProfileName({ navigation }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.secondaryBackground,
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  button: {
-    alignSelf: 'center',
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.secondaryBackground,
+    },
+    contentContainer: {
+      flex: 1,
+    },
+    button: {
+      alignSelf: 'center',
+    }
+  })
+}

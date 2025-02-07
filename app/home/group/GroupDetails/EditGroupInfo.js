@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import { StyleSheet, View, ScrollView, Text, TouchableOpacity } from "react-native"
-import Icon from 'react-native-vector-icons/FontAwesome6'
 import * as ImagePicker from 'expo-image-picker'
 
 
@@ -9,13 +8,17 @@ import BasicButton from "../../../components/BasicButton"
 import SimpleHeader from "../../../components/SimpleHeader"
 import BasicTextInput from "../../../components/BasicTextInput"
 
-import { gen } from "../../../utils/styling/colors"
 import { hapticSelect } from "../../../utils/haptics"
 import { updateGroupAvatar, updateGroupName } from "../../../utils/db-image"
 import { getLocalUriForFile } from "../../../utils/db-download"
+import { useTheme } from "../../../hooks/ThemeProvider"
 
 export default function EditGroupInfo({ navigation, route }) {
   const { group_id, group_name, group_avatar, group_plan, members } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const avatarFormatted = getLocalUriForFile(group_avatar)
   const [image, setImage] = useState(avatarFormatted)
   const [groupName, setGroupName] = useState(group_name)
@@ -137,72 +140,74 @@ export default function EditGroupInfo({ navigation, route }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-  },
-  contentContainer: {
-    flex: 1,
-    paddingTop: 50,
-  },
-  groupPhoto: {
-    width: 150,
-    height: 200,
-    backgroundColor: gen.primaryBackground,
-    alignSelf: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 5,
-    borderWidth: 5,
-    borderRadius: 20,
-    borderColor: gen.primaryBorder,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 50,
-    backgroundColor: gen.primaryBackground,
-    flex: 1,
-    width: '80%',
-    alignSelf: 'center',
-  },
-  saveButton: {
-    width: '100%',
-  },
-  clearButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    backgroundColor: gen.primaryColorLight,
-  },
-  clearButtonText: {
-    color: gen.primaryColor,
-    fontFamily: 'nunito-bold',
-    fontSize: 12,
-  },
-  modifications: {
-    backgroundColor: gen.tertiaryBackground,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    paddingTop: 5,
-    paddingHorizontal: 10,
-    paddingBottom: 35,
-    marginBottom: -30,
-  },
-  modification: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderRadius: 10,
-    marginHorizontal: 5,
-    marginVertical: 8,
-  },
-  modificationText: {
-    flex: 1,
-    color: gen.primaryText,
-    fontFamily: 'nunito-bold',
-    fontSize: 16
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+    },
+    contentContainer: {
+      flex: 1,
+      paddingTop: 50,
+    },
+    groupPhoto: {
+      width: 150,
+      height: 200,
+      backgroundColor: theme.primaryBackground,
+      alignSelf: 'center',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 5,
+      borderWidth: 5,
+      borderRadius: 20,
+      borderColor: theme.primaryBorder,
+    },
+    buttonContainer: {
+      position: 'absolute',
+      bottom: 50,
+      backgroundColor: theme.primaryBackground,
+      flex: 1,
+      width: '80%',
+      alignSelf: 'center',
+    },
+    saveButton: {
+      width: '100%',
+    },
+    clearButton: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 10,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      backgroundColor: theme.primaryColorLight,
+    },
+    clearButtonText: {
+      color: theme.primaryColor,
+      fontFamily: 'nunito-bold',
+      fontSize: 12,
+    },
+    modifications: {
+      backgroundColor: theme.tertiaryBackground,
+      borderTopLeftRadius: 10,
+      borderTopRightRadius: 10,
+      paddingTop: 5,
+      paddingHorizontal: 10,
+      paddingBottom: 35,
+      marginBottom: -30,
+    },
+    modification: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      borderRadius: 10,
+      marginHorizontal: 5,
+      marginVertical: 8,
+    },
+    modificationText: {
+      flex: 1,
+      color: theme.primaryText,
+      fontFamily: 'nunito-bold',
+      fontSize: 16
+    },
+  })
+}

@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View, TextInput, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { gen } from "../../utils/styling/colors";
+import { useTheme } from '../../hooks/ThemeProvider';
 
 export default function SearchBar({
   placeholder = 'Search...',
   query, 
   setQuery 
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [localQuery, setLocalQuery] = useState('');
   const [typingInterval, setTypingInterval] = useState(null);
 
@@ -48,28 +51,30 @@ export default function SearchBar({
   );
 }
 
-const styles = StyleSheet.create({
-  searchBar: {
-    flex: 1,
-    backgroundColor: gen.secondaryBackground,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: '100%',
-    color: gen.primaryText,
-    fontFamily: 'nunito-bold',
-  },
-  clearButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+function style(theme) {
+  return StyleSheet.create({
+    searchBar: {
+      flex: 1,
+      backgroundColor: theme.secondaryBackground,
+      borderRadius: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+    },
+    searchIcon: {
+      marginRight: 10,
+    },
+    searchInput: {
+      flex: 1,
+      height: '100%',
+      color: theme.primaryText,
+      fontFamily: 'nunito-bold',
+    },
+    clearButton: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
+}

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-import { gen } from '../utils/styling/colors';
+import { classic } from '../utils/styling/colors';
 import { hapticImpactSoft } from '../utils/haptics';
-import getColorVariety, { getColorVarietyAsync } from "../utils/getColorVariety";
+import getColorVariety from "../utils/getColorVariety";
 
 export default function OnboardButton({ 
   title,
@@ -12,13 +12,13 @@ export default function OnboardButton({
   style: customStyling, 
   disabled = false, 
   icon,
-  color = gen.primaryColor,
+  color = classic.primaryColor,
 }) {
   const [isPressed, setIsPressed] = useState(false)
-  const [primaryColor, setPrimaryColor] = useState(gen.primaryColor)
-  const [primaryColorShadow, setPrimaryColorShadow] = useState(gen.primaryColorShadow)
-  const [primaryColorDisabled, setPrimaryColorDisabled] = useState(gen.primaryColorDisabled)
-  const [primaryColorShadowDisabled, setPrimaryColorShadowDisabled] = useState(gen.primaryColorShadowDisabled)
+  const [primaryColor, setPrimaryColor] = useState(classic.primaryColor)
+  const [primaryColorShadow, setPrimaryColorShadow] = useState(classic.primaryColorShadow)
+  const [primaryColorDisabled, setPrimaryColorDisabled] = useState(classic.primaryColorDisabled)
+  const [primaryColorShadowDisabled, setPrimaryColorShadowDisabled] = useState(classic.primaryColorShadowDisabled)
   
   useEffect(() => {
     const colors = getColorVariety(color)

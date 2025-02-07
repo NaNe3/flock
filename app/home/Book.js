@@ -6,10 +6,14 @@ import FadeInView from "../components/FadeInView"
 
 import { getBooksFromWork, getChaptersFromBook } from "../utils/read"
 import { hapticSelect } from "../utils/haptics"
-import { gen } from "../utils/styling/colors"
+import { useTheme } from "../hooks/ThemeProvider"
 
 export default function Book({ navigation, route }) {
   const { work } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const [booksInWork, setBooksInWork] = useState([])
   useEffect(() => {
     const { books } = getBooksFromWork(work)
@@ -50,25 +54,27 @@ export default function Book({ navigation, route }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.secondaryBackground,
-  },
-  contentContainer: {
-    flex: 1,
-    paddingVertical: 20,
-  },
-  bookRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  bookText: {
-    fontFamily: 'nunito-bold', 
-    fontSize: 20, 
-    textAlign: 'center',
-    color: gen.primaryText
-  }
-});
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.secondaryBackground,
+    },
+    contentContainer: {
+      flex: 1,
+      paddingVertical: 20,
+    },
+    bookRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 15,
+    },
+    bookText: {
+      fontFamily: 'nunito-bold', 
+      fontSize: 20, 
+      textAlign: 'center',
+      color: theme.primaryText
+    }
+  });
+}

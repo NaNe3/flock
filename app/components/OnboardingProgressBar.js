@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from 'react-native-vector-icons/FontAwesome5'
 
-import { gen } from "../utils/styling/colors";
+import { constants } from "../utils/styling/colors";
 import { hapticSelect } from "../utils/haptics";
 
 export default function OnboardingProgressBar({ 
@@ -46,7 +46,7 @@ export default function OnboardingProgressBar({
           })
         }}
       >
-        <Icon name="arrow-left" size={25} color={gen.gray} />
+        <Icon name="arrow-left" size={25} color={constants.gray} />
       </TouchableOpacity>
       <View style={styles.progressBar}>
         <Animated.View style={[styles.progress, { width: displayedProgress }]} />      
@@ -66,13 +66,13 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     height: 10,
-    backgroundColor: gen.lightestGray,
+    backgroundColor: constants.lightestGray,
     borderRadius: 5,
     marginLeft: 20
   },
   progress: {
     height: '100%', 
-    backgroundColor: gen.gray, 
+    backgroundColor: constants.gray, 
     borderRadius: 5 
   }
 })

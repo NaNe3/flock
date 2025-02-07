@@ -6,8 +6,8 @@ import Avatar from './Avatar';
 import FadeInView from './FadeInView';
 
 import { timeAgo } from '../utils/timeDiff';
-import { gen } from '../utils/styling/colors';
 import { hapticSelect } from '../utils/haptics';
+import { useTheme } from '../hooks/ThemeProvider';
 
 export default function BasicComment({ 
   comment,
@@ -15,9 +15,12 @@ export default function BasicComment({
   setReplyingTo,
   isReply=false,
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const [timeSince, setTimeSince] = useState(timeAgo(comment.created_at));
   const [hasBeenSelected, setHasBeenSelected] = useState(false)
-
   const commentScale = useRef(new Animated.Value(1)).current
 
   const handleReplyPress = () => {
@@ -59,7 +62,7 @@ export default function BasicComment({
 
   return (
     <Animated.View key={`comment-${comment.comment_media_id}`} style={{ transform: [{ scale: commentScale }] }}>
-      <FadeInView style={[styles.comment, replyingTo === comment.media_comment_id && { backgroundColor: gen.tertiaryBackground }]}>
+      <FadeInView style={[styles.comment, replyingTo === comment.media_comment_id && { backgroundColor: theme.tertiaryBackground }]}>
         <View style={[styles.avatarContainer, { borderColor: comment.user.color_id.color_hex }, isReply && { width: 35, height: 35 }]}>
           <Avatar
             imagePath={comment.user.avatar_path}
@@ -82,7 +85,7 @@ export default function BasicComment({
             style={{ padding: 5 }}
             onPress={handleReplyPress}
           >
-            <Icon name='reply' size={15} color={gen.secondaryText} />
+            <Icon name='reply' size={15} color={theme.secondaryText} />
           </TouchableOpacity>
         </View>
       </FadeInView>
@@ -90,54 +93,56 @@ export default function BasicComment({
   )
 }
 
-const styles = StyleSheet.create({
-  comment: {
-    borderRadius: 10,
-    paddingVertical: 13,
-    paddingHorizontal: 5,
-    marginHorizontal: 10,
-    flexDirection: 'row',
-  },
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    padding: 2,
-    overflow: 'hidden',
-    borderRadius: 25,
-    borderWidth: 3,
-  },
-  avatar: {
-    flex: 1,
-    borderRadius: 100
-  },
-  commentContent: {
-    flex: 1,
-    marginLeft: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  commentUser: {
-    fontSize: 14,
-    color: gen.secondaryText,
-    fontFamily: 'nunito-bold',
-  },
-  commentText: {
-    fontSize: 16,
-    fontFamily: 'nunito-bold',
-    color: gen.primaryText,
-  },
-  commentLink: {
-    fontSize: 14,
-    marginTop: 5,
-    color: gen.primaryText,
-    fontFamily: 'nunito-bold',
-    textDecorationLine: 'underline',
-  },
-  replyCount: {
-    fontSize: 14,
-    color: gen.secondaryText,
-    fontFamily: 'nunito-bold',
-    textDecorationLine: 'underline',
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    comment: {
+      borderRadius: 10,
+      paddingVertical: 13,
+      paddingHorizontal: 5,
+      marginHorizontal: 10,
+      flexDirection: 'row',
+    },
+    avatarContainer: {
+      width: 40,
+      height: 40,
+      padding: 2,
+      overflow: 'hidden',
+      borderRadius: 25,
+      borderWidth: 3,
+    },
+    avatar: {
+      flex: 1,
+      borderRadius: 100
+    },
+    commentContent: {
+      flex: 1,
+      marginLeft: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    commentUser: {
+      fontSize: 14,
+      color: theme.secondaryText,
+      fontFamily: 'nunito-bold',
+    },
+    commentText: {
+      fontSize: 16,
+      fontFamily: 'nunito-bold',
+      color: theme.primaryText,
+    },
+    commentLink: {
+      fontSize: 14,
+      marginTop: 5,
+      color: theme.primaryText,
+      fontFamily: 'nunito-bold',
+      textDecorationLine: 'underline',
+    },
+    replyCount: {
+      fontSize: 14,
+      color: theme.secondaryText,
+      fontFamily: 'nunito-bold',
+      textDecorationLine: 'underline',
+    }
+  })
+}

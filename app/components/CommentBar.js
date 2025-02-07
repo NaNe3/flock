@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View, Keyboard, Animated, Text, Dimensions } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
-import { gen } from "../utils/styling/colors";
 import { getPrimaryColor } from "../utils/getColorVariety";
 import { createComment } from "../utils/db-comment";
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from "../utils/localStorage";
 import { hapticImpactSoft, hapticSelect } from "../utils/haptics";
+import { useTheme } from "../hooks/ThemeProvider";
 
 const width = Dimensions.get('window').width
 
@@ -18,6 +18,9 @@ export default function CommentBar({
   replyingTo,
   setReplyingTo
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [comment, setComment] = useState('')
   const [userId, setUserId] = useState(null)
   const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0));
@@ -57,7 +60,9 @@ export default function CommentBar({
     comment,
     setComment,
     replyingTo,
-    setReplyingTo
+    setReplyingTo,
+    styles,
+    theme
   }
 
   return (
@@ -79,7 +84,9 @@ const CommentInput = ({
   comment,
   setComment,
   replyingTo,
-  setReplyingTo
+  setReplyingTo,
+  styles,
+  theme
 }) => {
   const commentInputRef = useRef(null)
   const [replyWasActive, setReplyWasActive] = useState(false)
@@ -109,7 +116,7 @@ const CommentInput = ({
         <Animated.View style={styles.commentReplyingBar}>
           <Text style={styles.commentReplyingText}>replying</Text>
           <TouchableOpacity onPress={handleCancelReply}>
-            <Icon name="circle-xmark" size={20} color={gen.secondaryText} />
+            <Icon name="circle-xmark" size={20} color={theme.secondaryText} />
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -134,9 +141,11 @@ const CommentPublishButton = ({
   media_type, 
   setComments,
   replyingTo,
-  setReplyingTo
+  setReplyingTo,
+  styles,
+  theme
 }) => {
-  const [color, setColor] = useState(gen.secondaryBackground)
+  const [color, setColor] = useState(theme.secondaryBackground)
   const [userInfo, setUserInfo] = useState(null)
 
   useEffect(() => {
@@ -189,51 +198,53 @@ const CommentPublishButton = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: width,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    position: 'absolute',
-  },
-  searchBar: {
-    flex: 1, 
-    justifyContent: 'center',
-    backgroundColor: gen.secondaryBackground,
-    borderRadius: 20,
-  },
-  searchInput: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    maxHeight: 150,
-    fontSize: 16,
-    fontFamily: 'nunito-bold',
-    color: gen.primaryText,
-    borderWidth: 1,
-    borderRadius: 20,
-    borderColor: gen.primaryBorder,
-  },
-  publishButton: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: gen.primaryBackground,
-    borderRadius: 50,
-    marginLeft: 10
-  },
-  commentReplyingBar: {
-    width: '100%',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  commentReplyingText: {
-    color: gen.secondaryText,
-    fontSize: 16,
-    fontFamily: 'nunito-bold',
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      width: width,
+      paddingHorizontal: 20,
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      position: 'absolute',
+    },
+    searchBar: {
+      flex: 1, 
+      justifyContent: 'center',
+      backgroundColor: theme.secondaryBackground,
+      borderRadius: 20,
+    },
+    searchInput: {
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      maxHeight: 150,
+      fontSize: 16,
+      fontFamily: 'nunito-bold',
+      color: theme.primaryText,
+      borderWidth: 1,
+      borderRadius: 20,
+      borderColor: theme.primaryBorder,
+    },
+    publishButton: {
+      width: 50,
+      height: 50,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.primaryBackground,
+      borderRadius: 50,
+      marginLeft: 10
+    },
+    commentReplyingBar: {
+      width: '100%',
+      paddingVertical: 8,
+      paddingHorizontal: 20,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    commentReplyingText: {
+      color: theme.secondaryText,
+      fontSize: 16,
+      fontFamily: 'nunito-bold',
+    }
+  })
+}

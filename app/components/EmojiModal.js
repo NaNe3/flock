@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View, Text, Dimensions } from "react-native";
-import { getEmojis } from "unicode-emoji"
+// import { getEmojis } from "unicode-emoji"
 
-import { gen } from "../utils/styling/colors";
 import BasicBottomSheet from "../home/components/BasicBottomSheet";
 import hexToRgba from "../utils/hexToRgba";
 import EmojiReaction from "./EmojiReaction";
-import { LinearGradient } from "expo-linear-gradient";
-
-const height = Dimensions.get('window').height
+import { useTheme } from "../hooks/ThemeProvider";
 
 export default function EmojiModal({ setEmojiModalVisible, emojiOnPress }) {
-  const [allEmojis, setAllEmojis] = useState([])
-  const [displayedEmojis, setDisplayedEmojis] = useState([])
-  const pageSize = 48
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
+  // const [allEmojis, setAllEmojis] = useState([])
+  // const [displayedEmojis, setDisplayedEmojis] = useState([])
+  // const pageSize = 48
   
   // useEffect(() => {
   //   const emojis = getEmojis()
@@ -29,7 +30,7 @@ export default function EmojiModal({ setEmojiModalVisible, emojiOnPress }) {
 
   return (
     <BasicBottomSheet
-      backgroundColor={gen.primaryBackground}
+      backgroundColor={theme.primaryBackground}
       handleStyle={styles.handleStyle}
       setVisibility={setEmojiModalVisible}
       height={400}
@@ -80,10 +81,10 @@ export default function EmojiModal({ setEmojiModalVisible, emojiOnPress }) {
           <View style={{ position: 'absolute', bottom: 0, width: '100%', height: 230 }}>
             <LinearGradient
               colors={['transparent', 
-                hexToRgba(gen.heckaGray, 0.85), 
-                hexToRgba(gen.heckaGray, 0.90), 
-                hexToRgba(gen.heckaGray, 0.98), 
-                gen.heckaGray]}
+                hexToRgba(theme.heckaGray, 0.85), 
+                hexToRgba(theme.heckaGray, 0.90), 
+                hexToRgba(theme.heckaGray, 0.98), 
+                theme.heckaGray]}
               style={styles.gradient}
             />
           </View> */}
@@ -93,48 +94,50 @@ export default function EmojiModal({ setEmojiModalVisible, emojiOnPress }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    overflow: 'hidden',
-  },
-  handleStyle: {
-    height: 50,
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    backgroundColor: hexToRgba(gen.primaryBackground, 0.95),
-    justifyContent: 'center',
-  },
-  contentContainer: {
-    width: '100%',
-    height: '100%',
-  },
-  row: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginBottom: 40,
-  },
-  rowHeader: {
-    fontFamily: 'nunito-bold',
-    fontSize: 18,
-    color: gen.secondaryText,
-    marginBottom: 10,
-  },
-  rowContent: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  gradient: {
-    height: 430,
-    marginBottom: -200,
-    width: '100%',
-    position: 'absolute',
-    bottom: 0,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      width: '100%',
+      overflow: 'hidden',
+    },
+    handleStyle: {
+      height: 50,
+      borderTopLeftRadius: 40,
+      borderTopRightRadius: 40,
+      backgroundColor: hexToRgba(theme.primaryBackground, 0.95),
+      justifyContent: 'center',
+    },
+    contentContainer: {
+      width: '100%',
+      height: '100%',
+    },
+    row: {
+      width: '100%',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      marginBottom: 40,
+    },
+    rowHeader: {
+      fontFamily: 'nunito-bold',
+      fontSize: 18,
+      color: theme.secondaryText,
+      marginBottom: 10,
+    },
+    rowContent: {
+      width: '100%',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+    },
+    gradient: {
+      height: 430,
+      marginBottom: -200,
+      width: '100%',
+      position: 'absolute',
+      bottom: 0,
+      borderBottomLeftRadius: 40,
+      borderBottomRightRadius: 40
+    }
+  })
+}

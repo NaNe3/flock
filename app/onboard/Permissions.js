@@ -2,13 +2,10 @@ import { Alert, AppState, Linking, StyleSheet, Switch, Text, View } from "react-
 import { use, useEffect, useState } from "react";
 import * as Notifications from 'expo-notifications';
 
-import { gen } from "../utils/styling/colors";
-
 export default function Permissions({ setDisabled, onboardingData }) {
   const [appState, setAppState] = useState(AppState.currentState);
   const [notificationStatus, setNotificationStatus] = useState(false)
   const [pushStatus, setPushStatus] = useState(false)
-
 
   useEffect(() => {
     const init = async () => {

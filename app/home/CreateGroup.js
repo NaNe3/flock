@@ -1,4 +1,4 @@
-import { Profiler, useEffect, useState } from 'react';
+import { Profiler, useEffect, useRef, useState } from 'react';
 import { Text, View, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import Icon from 'react-native-vector-icons/FontAwesome5'
@@ -15,9 +15,9 @@ import { getLocalUriForFile } from '../utils/db-download';
 import { createGroup } from '../utils/db-image';
 import { hapticSelect } from '../utils/haptics';
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from '../utils/localStorage';
-import { gen } from '../utils/styling/colors';
 import Avatar from '../components/Avatar';
 import { getGroupsForUser } from '../utils/db-relationship';
+import { useTheme } from '../hooks/ThemeProvider';
 
 const GroupDetails = ({
   image,
@@ -25,6 +25,10 @@ const GroupDetails = ({
   groupName,
   setGroupName
 }) => {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -74,7 +78,7 @@ const GroupDetails = ({
 
         <View style={styles.planDetails}>
           <Text style={styles.bookText}>Come Follow Me</Text>
-          <Text style={{ fontFamily: 'nunito-bold', fontSize: 13, color: gen.gray }}>11,456 studying</Text>
+          <Text style={{ fontFamily: 'nunito-bold', fontSize: 13, color: theme.gray }}>11,456 studying</Text>
         </View>
       </TouchableOpacity>
     </>
@@ -82,6 +86,9 @@ const GroupDetails = ({
 }
 
 const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [userAvatar, setUserAvatar] = useState(null)
   const [userName, setUserName] = useState('')
 
@@ -109,8 +116,8 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
             />
           )}
           <View>
-            <Text style={{ fontFamily: 'nunito-bold', fontSize: 18, color: gen.primaryText, marginLeft: 15 }}>{userName}</Text>
-            <Text style={{ fontFamily: 'nunito-bold', fontSize: 14, color: gen.secondaryText, marginLeft: 15 }}>leader</Text>
+            <Text style={{ fontFamily: 'nunito-bold', fontSize: 18, color: theme.primaryText, marginLeft: 15 }}>{userName}</Text>
+            <Text style={{ fontFamily: 'nunito-bold', fontSize: 14, color: theme.secondaryText, marginLeft: 15 }}>leader</Text>
           </View>
         </View>
 
@@ -123,11 +130,11 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
                 <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: 'center' }}>
                   <View style={{ flex: 1, marginRight: 20 }}>
                     <Text 
-                      style={{ fontFamily: 'nunito-bold', fontSize: 18, color: gen.primaryText, marginLeft: 15, overflow: 'hidden' }}
+                      style={{ fontFamily: 'nunito-bold', fontSize: 18, color: theme.primaryText, marginLeft: 15, overflow: 'hidden' }}
                       numberOfLines={1}
                       ellipsizeMode='tail'
                     >{friend.fname} {friend.lname}</Text>
-                    <Text style={{ fontFamily: 'nunito-bold', fontSize: 14, color: gen.darkishGray, marginLeft: 15 }}>member</Text>
+                    <Text style={{ fontFamily: 'nunito-bold', fontSize: 14, color: theme.darkishGray, marginLeft: 15 }}>member</Text>
                   </View>
                   <TouchableOpacity 
                     style={styles.removeButton}
@@ -150,8 +157,8 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
             setScreenVisible('addPeople')
           }}
         >
-          <Text style={[styles.bookText, { color: gen.actionText, textAlign: 'center', width: '100%' }]}>
-            <Icon name='plus' size={16} color={gen.actionText} /> Add People
+          <Text style={[styles.bookText, { color: theme.actionText, textAlign: 'center', width: '100%' }]}>
+            <Icon name='plus' size={16} color={theme.actionText} /> Add People
           </Text>
         </TouchableOpacity>
       </View>
@@ -160,6 +167,9 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
 }
 
 export default function CreateGroup({ navigation }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [leader, setLeader] = useState(null)
   const [image, setImage] = useState(null)
   const [friendsAdded, setFriendsAdded] = useState([])
@@ -252,98 +262,100 @@ export default function CreateGroup({ navigation }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-  },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 30,
-  },
-  groupPhoto: {
-    width: 150,
-    height: 200,
-    backgroundColor: gen.primaryBackground,
-    alignSelf: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 5,
-    borderWidth: 5,
-    borderRadius: 20,
-    borderColor: gen.primaryBorder,
-  },
-  sectionHeader: {
-    fontFamily: 'nunito-bold',
-    fontSize: 20,
-    color: gen.actionText,
-    marginVertical: 15,
-  },
-  sectionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 5,
-    borderColor: gen.primaryBorder,
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
-  },
-  book: {
-    width: 70,
-    height: 90,
-    padding: 5,
-    borderRadius: 10,
-    backgroundColor: gen.navy,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 20,
-    overflow: 'hidden',
-  },
-  innerBookText: {
-    fontSize: 10,
-    color: gen.orange,
-    textAlign: 'center',
-    fontFamily: 'nunito-bold',
-  },
-  bookText: {
-    fontSize: 18,
-    fontFamily: 'nunito-bold',
-    color: gen.primaryText
-  },
-  planDetails: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  peopleContainer: {
-    width: '100%',
-    borderRadius: 15,
-    borderWidth: 5,
-    borderColor: gen.primaryBorder,
-  },
-  personRow: {
-    width: '100%',
-    paddingHorizontal: 20,
-    paddingVertical: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: 3,
-    borderColor: gen.primaryBorder,
-  },
-  friendImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-  },
-  modal: {
-    flex: 1,
-    width: '100%',
-    alignItems: 'center',
-  },
-  removeButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    backgroundColor: gen.red,
-    borderRadius: 15,
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+    },
+    contentContainer: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingTop: 30,
+    },
+    groupPhoto: {
+      width: 150,
+      height: 200,
+      backgroundColor: theme.primaryBackground,
+      alignSelf: 'center',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 5,
+      borderWidth: 5,
+      borderRadius: 20,
+      borderColor: theme.primaryBorder,
+    },
+    sectionHeader: {
+      fontFamily: 'nunito-bold',
+      fontSize: 20,
+      color: theme.actionText,
+      marginVertical: 15,
+    },
+    sectionContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 5,
+      borderColor: theme.primaryBorder,
+      borderRadius: 15,
+      padding: 20,
+      marginBottom: 20,
+    },
+    book: {
+      width: 70,
+      height: 90,
+      padding: 5,
+      borderRadius: 10,
+      backgroundColor: theme.navy,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 20,
+      overflow: 'hidden',
+    },
+    innerBookText: {
+      fontSize: 10,
+      color: theme.orange,
+      textAlign: 'center',
+      fontFamily: 'nunito-bold',
+    },
+    bookText: {
+      fontSize: 18,
+      fontFamily: 'nunito-bold',
+      color: theme.primaryText
+    },
+    planDetails: {
+      flex: 1,
+      justifyContent: 'space-between',
+    },
+    peopleContainer: {
+      width: '100%',
+      borderRadius: 15,
+      borderWidth: 5,
+      borderColor: theme.primaryBorder,
+    },
+    personRow: {
+      width: '100%',
+      paddingHorizontal: 20,
+      paddingVertical: 13,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderBottomWidth: 3,
+      borderColor: theme.primaryBorder,
+    },
+    friendImage: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+    },
+    modal: {
+      flex: 1,
+      width: '100%',
+      alignItems: 'center',
+    },
+    removeButton: {
+      paddingVertical: 5,
+      paddingHorizontal: 12,
+      backgroundColor: theme.red,
+      borderRadius: 15,
+    },
+  })
+}

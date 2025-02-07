@@ -3,13 +3,13 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from "react-nati
 import { useFocusEffect } from "@react-navigation/native"
 import Icon from 'react-native-vector-icons/FontAwesome'
 
-import { gen } from "../utils/styling/colors"
 import SimpleHeader from "../components/SimpleHeader"
 import { getLocallyStoredVariable } from "../utils/localStorage"
 import Avatar from "../components/Avatar"
 import SearchBar from "./components/SearchBar"
 import { hapticSelect } from "../utils/haptics"
 import FadeInView from "../components/FadeInView"
+import { useTheme } from "../hooks/ThemeProvider"
 
 export default function AddPeopleToGroup({ 
   navigation, 
@@ -18,6 +18,9 @@ export default function AddPeopleToGroup({
   setScreenVisible=null,
   allowUninvite=true,
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [friends, setFriends] = useState([])
@@ -75,8 +78,8 @@ export default function AddPeopleToGroup({
               }}
               style={styles.addFriendButton}
             >
-              <Text style={{ color: gen.primaryText, fontFamily: 'nunito-bold', fontSize: 12 }}>
-                <Icon name="plus" color={gen.primaryText} /> ADD FRIEND
+              <Text style={{ color: theme.primaryText, fontFamily: 'nunito-bold', fontSize: 12 }}>
+                <Icon name="plus" color={theme.primaryText} /> ADD FRIEND
               </Text>
             </TouchableOpacity>
           }
@@ -99,7 +102,7 @@ export default function AddPeopleToGroup({
                 const friendInfo = getFriendInfo(friend)
                 return (
                   <FadeInView key={index} style={styles.friendContentContainer}>
-                    <View style={[styles.avatarContainer, { borderColor: friendInfo.status === 'accepted'  ? friend.color : gen.primaryBorder }]}>
+                    <View style={[styles.avatarContainer, { borderColor: friendInfo.status === 'accepted'  ? friend.color : theme.primaryBorder }]}>
                       <Avatar
                         imagePath={friendInfo.image}
                         type="profile"
@@ -109,15 +112,15 @@ export default function AddPeopleToGroup({
                     <View style={styles.friendInfo}>
                       {/* <Image source={{ uri: friendInfo.image }} style={styles.friendImage} /> */}
                       <Text 
-                        style={[styles.friendName, { color: friendInfo.status === 'accepted' ? gen.primaryText : gen.secondaryText }]}
+                        style={[styles.friendName, { color: friendInfo.status === 'accepted' ? theme.primaryText : theme.secondaryText }]}
                         numberOfLines={1}
                         ellipsizeMode='tail'
                       >{friendInfo.name}</Text>
-                      <Text style={[styles.friendStatus, { color: friendInfo.status === 'accepted' ? gen.secondaryText : gen.tertiaryText }]}>{friendInfo.status === 'accepted' ? 'friends' : 'friend request sent'}</Text>
+                      <Text style={[styles.friendStatus, { color: friendInfo.status === 'accepted' ? theme.secondaryText : theme.tertiaryText }]}>{friendInfo.status === 'accepted' ? 'friends' : 'friend request sent'}</Text>
                     </View>
 
                     <TouchableOpacity 
-                      style={[styles.sendButton, { backgroundColor: friendInfo.added ? allowUninvite ? gen.red : gen.lightBlue : gen.primaryColor }]}
+                      style={[styles.sendButton, { backgroundColor: friendInfo.added ? allowUninvite ? theme.red : theme.lightBlue : theme.primaryColor }]}
                       onPress={() => {
                         if (allowUninvite) {
                           if (!friendInfo.added) {
@@ -144,7 +147,7 @@ export default function AddPeopleToGroup({
               })
             : (
               <View style={styles.noResultsContainer}>
-                <Text style={{ textAlign: 'center', fontFamily: 'nunito-bold', fontSize: 20, color: gen.secondaryText, marginTop: 30 }}>NO RESULTS</Text>
+                <Text style={{ textAlign: 'center', fontFamily: 'nunito-bold', fontSize: 20, color: theme.secondaryText, marginTop: 30 }}>NO RESULTS</Text>
                 <TouchableOpacity
                   style={styles.noResultsButton}
                   activeOpacity={0.7}
@@ -153,8 +156,8 @@ export default function AddPeopleToGroup({
                     navigation.navigate('AddFriend')
                   }}
                 >
-                  <Icon name="search" size={24} style={{ marginRight: 10 }} color={gen.primaryText} /> 
-                  <Text style={{ fontFamily: 'nunito-bold', fontSize: 24, color: gen.primaryText, textAlign: 'center' }}>
+                  <Icon name="search" size={24} style={{ marginRight: 10 }} color={theme.primaryText} /> 
+                  <Text style={{ fontFamily: 'nunito-bold', fontSize: 24, color: theme.primaryText, textAlign: 'center' }}>
                     look for friend
                   </Text>
                 </TouchableOpacity>
@@ -167,90 +170,92 @@ export default function AddPeopleToGroup({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  searchContainer: {
-    width: '100%',
-    height: 50, 
-    flexDirection: 'row',
-    marginTop: 10,
-  },
-  addFriendButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    backgroundColor: gen.tertiaryBackground,
-  },
-  contentContainer:{
-    width: '100%',
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  friendContainer: {
-    flex: 1,
-    paddingTop: 30,
-    marginTop: 10,
-  }, 
-  friendContentContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  friendInfo: { 
-    flexDirection: 'column', 
-    justifyContent: 'center',
-    flex: 1 
-  },
-  avatarContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 100,
-    overflow: 'hidden',
-    marginRight: 10,
-    padding: 2,
-    borderWidth: 3,
-    borderColor: gen.primaryBorder,
-  },
-  friendImage: {
-    flex: 1,
-    borderRadius: 100,
-  },
-  friendName: {
-    fontSize: 18,
-    fontFamily: 'nunito-bold',
-    flexShrink: 1,
-    overflow: 'hidden',
-    color: gen.primaryText
-  },
-  friendStatus: {
-    fontSize: 12,
-    fontFamily: 'nunito-bold',
-    color: gen.tertiaryText,
-  },
-  sendButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    backgroundColor: gen.primaryColor,
-    borderRadius: 15,
-  },
-  noResultsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noResultsButton: {
-    width: 250,
-    padding: 20,
-    borderRadius: 20,
-    backgroundColor: gen.secondaryBackground,
-    marginTop: 20,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    searchContainer: {
+      width: '100%',
+      height: 50, 
+      flexDirection: 'row',
+      marginTop: 10,
+    },
+    addFriendButton: {
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      backgroundColor: theme.tertiaryBackground,
+    },
+    contentContainer:{
+      width: '100%',
+      flex: 1,
+      paddingHorizontal: 20,
+    },
+    friendContainer: {
+      flex: 1,
+      paddingTop: 30,
+      marginTop: 10,
+    }, 
+    friendContentContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 20,
+    },
+    friendInfo: { 
+      flexDirection: 'column', 
+      justifyContent: 'center',
+      flex: 1 
+    },
+    avatarContainer: {
+      width: 50,
+      height: 50,
+      borderRadius: 100,
+      overflow: 'hidden',
+      marginRight: 10,
+      padding: 2,
+      borderWidth: 3,
+      borderColor: theme.primaryBorder,
+    },
+    friendImage: {
+      flex: 1,
+      borderRadius: 100,
+    },
+    friendName: {
+      fontSize: 18,
+      fontFamily: 'nunito-bold',
+      flexShrink: 1,
+      overflow: 'hidden',
+      color: theme.primaryText
+    },
+    friendStatus: {
+      fontSize: 12,
+      fontFamily: 'nunito-bold',
+      color: theme.tertiaryText,
+    },
+    sendButton: {
+      paddingVertical: 5,
+      paddingHorizontal: 12,
+      backgroundColor: theme.primaryColor,
+      borderRadius: 15,
+    },
+    noResultsContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    noResultsButton: {
+      width: 250,
+      padding: 20,
+      borderRadius: 20,
+      backgroundColor: theme.secondaryBackground,
+      marginTop: 20,
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    }
+  })
+}

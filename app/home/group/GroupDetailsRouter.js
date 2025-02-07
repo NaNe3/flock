@@ -1,19 +1,22 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, StyleSheet } from 'react-native';
 
-import { gen } from '../../utils/styling/colors';
-
 import AddGroupMembers from './GroupDetails/AddGroupMembers';
 import AllGroupMembers from './GroupDetails/AllGroupMembers';
 import GroupDetails from './GroupDetails/GroupDetails';
 import EditGroupInfo from './GroupDetails/EditGroupInfo';
 import GroupDelete from './GroupDetails/GroupDelete';
 import GroupLeave from './GroupDetails/GroupLeave';
+import { useTheme } from '../../hooks/ThemeProvider';
+import { useEffect, useState } from 'react';
 
 const Stack = createStackNavigator()
 
 export default function GroupDetailsRouter({ route }) {
   // const { group_id, group_name, group_avatar, group_plan, members } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
 
   return (
     <View style={styles.container}>
@@ -54,9 +57,11 @@ export default function GroupDetailsRouter({ route }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+    },
+  })
+}

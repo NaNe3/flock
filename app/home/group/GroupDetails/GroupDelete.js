@@ -6,11 +6,15 @@ import SimpleHeader from "../../../components/SimpleHeader"
 import BasicTextInput from "../../../components/BasicTextInput"
 import BasicButton from "../../../components/BasicButton"
 
-import { gen } from "../../../utils/styling/colors"
 import { deleteGroupByGroupId } from "../../../utils/db-image"
+import { useTheme } from "../../../hooks/ThemeProvider"
 
 export default function GroupDelete({ navigation, route }) {
   const { group_id, group_name, group_avatar } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const inputRef = useRef(null)
   const [deleteButtonDisabled, setDeleteButtonDisabled] = useState(true)
   const [verification, setVerification] = useState('')
@@ -49,7 +53,7 @@ export default function GroupDelete({ navigation, route }) {
         />
         <View style={styles.deleteButtonContainer}>
           <View style={styles.warningBox}>
-            <Icon name="warning" size={20} color={gen.primaryText} />
+            <Icon name="warning" size={20} color={theme.primaryText} />
             <Text style={styles.disclaimerText}>
               This action cannot be undone 😭
             </Text>
@@ -67,53 +71,55 @@ export default function GroupDelete({ navigation, route }) {
   ) 
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.secondaryBackground,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-    alignItems: 'center',
-  },
-  inputBox: {
-    backgroundColor: gen.primaryBackground,
-  },
-  confirmationText: {
-    fontFamily: 'nunito-bold',
-    fontSize: 24,
-    color: gen.primaryText,
-  },
-  secondaryText: {
-    fontFamily: 'nunito-regular',
-    fontSize: 16,
-    color: gen.actionText,
-  },
-  disclaimerText: {
-    fontFamily: 'nunito-regular',
-    fontSize: 14,
-    color: gen.actionText,
-    marginHorizontal: 20,
-  },
-  deleteButtonContainer: {
-    width: '100%',
-    position: 'absolute',
-    bottom: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteButton: {
-    width: '100%',
-    marginTop: 15,
-    alignSelf: 'center',
-  },
-  warningBox: {
-    flexDirection: 'row', 
-    marginTop: 30, 
-    padding: 20, 
-    alignItems: 'center',
-    backgroundColor: gen.primaryBackground,
-    borderRadius: 10,
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.secondaryBackground,
+    },
+    content: {
+      flex: 1,
+      padding: 20,
+      alignItems: 'center',
+    },
+    inputBox: {
+      backgroundColor: theme.primaryBackground,
+    },
+    confirmationText: {
+      fontFamily: 'nunito-bold',
+      fontSize: 24,
+      color: theme.primaryText,
+    },
+    secondaryText: {
+      fontFamily: 'nunito-regular',
+      fontSize: 16,
+      color: theme.actionText,
+    },
+    disclaimerText: {
+      fontFamily: 'nunito-regular',
+      fontSize: 14,
+      color: theme.actionText,
+      marginHorizontal: 20,
+    },
+    deleteButtonContainer: {
+      width: '100%',
+      position: 'absolute',
+      bottom: 50,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    deleteButton: {
+      width: '100%',
+      marginTop: 15,
+      alignSelf: 'center',
+    },
+    warningBox: {
+      flexDirection: 'row', 
+      marginTop: 30, 
+      padding: 20, 
+      alignItems: 'center',
+      backgroundColor: theme.primaryBackground,
+      borderRadius: 10,
+    }
+  })
+}

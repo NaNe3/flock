@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, Touchable, TouchableOpacity, View } from 'react-native'
-import Icon from 'react-native-vector-icons/FontAwesome5'
+import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { offered, offeredColors } from '../utils/read'
 import { hapticSelect } from '../utils/haptics'
-import { gen } from '../utils/styling/colors';
 
-import InteractiveHeaderBar from '../components/InteractiveHeaderBar';
-import SearchBar from './components/SearchBar';
+import { useTheme } from '../hooks/ThemeProvider';
 
 const WorkShelf = ({ navigation }) => {
+  const { theme }= useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   return (
     <View style={styles.libraryContent}>
       {
@@ -48,7 +49,7 @@ const WorkShelf = ({ navigation }) => {
                 >{book}</Text>
                 {
                   (book == 'Old Testament' || book == 'New Testament') && (
-                    <Text style={{ fontFamily: 'nunito-bold', fontSize: 12, marginLeft: 20, color: gen.gray }}>King James Version</Text>
+                    <Text style={{ fontFamily: 'nunito-bold', fontSize: 12, marginLeft: 20, color: theme.gray }}>King James Version</Text>
                   )
                 }
               </View>
@@ -61,7 +62,7 @@ const WorkShelf = ({ navigation }) => {
         activeOpacity={0.7}
       >
         <Text style={styles.addButtonText}>
-          <Icon name='plus' size={18} color={gen.actionText} /> ADD
+          <Icon name='plus' size={18} color={theme.actionText} /> ADD
         </Text>
       </TouchableOpacity> */}
     </View>
@@ -70,6 +71,9 @@ const WorkShelf = ({ navigation }) => {
 
 export default function LibraryPage({ navigation }) {
   const [query, setQuery] = useState('')
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
 
   return (
     <View style={styles.container}>
@@ -91,68 +95,70 @@ export default function LibraryPage({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: gen.primaryBackground,
-    alignItems: 'center',
-  },
-  contentContainer: {
-    width: '100%', 
-    paddingTop: 5,
-    paddingHorizontal: 20,
-  },
-  searchBarContainer: {
-    width: '100%',
-    height: 50, 
-    flexDirection: 'row',
-    marginBottom: 10 
-  },
-  libraryContent: {
-    paddingTop: 10,
-    flex: 1,
-    width: '100%',
-    flexDirection: 'column',
-  },
-  bookRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  book: {
-    width: 60,
-    height: 70,
-    borderRadius: 10,
-    backgroundColor: gen.navy,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bookName: {
-    fontSize: 8,
-    fontFamily: 'nunito-bold',
-    color: gen.primaryColor,
-  },
-  addBookButton: {
-    width: '100%',
-    marginTop: 20,
-    borderRadius: 20,
-    borderColor: gen.primaryBorder,
-    borderWidth: 5,
-  },
-  addButtonText: {
-    fontFamily: 'nunito-bold', 
-    fontSize: 18, 
-    color: gen.actionText,
-    textAlign: 'center',
-    alignItems: 'center',
-    paddingVertical: 20 
-  },
-  bookHeader: {
-    color: gen.primaryText,
-    fontFamily: 'nunito-bold', 
-    fontSize: 22, 
-    marginLeft: 20 
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      width: '100%',
+      backgroundColor: theme.primaryBackground,
+      alignItems: 'center',
+    },
+    contentContainer: {
+      width: '100%', 
+      paddingTop: 5,
+      paddingHorizontal: 20,
+    },
+    searchBarContainer: {
+      width: '100%',
+      height: 50, 
+      flexDirection: 'row',
+      marginBottom: 10 
+    },
+    libraryContent: {
+      paddingTop: 10,
+      flex: 1,
+      width: '100%',
+      flexDirection: 'column',
+    },
+    bookRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 15,
+    },
+    book: {
+      width: 60,
+      height: 70,
+      borderRadius: 10,
+      backgroundColor: theme.navy,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    bookName: {
+      fontSize: 8,
+      fontFamily: 'nunito-bold',
+      color: theme.primaryColor,
+    },
+    addBookButton: {
+      width: '100%',
+      marginTop: 20,
+      borderRadius: 20,
+      borderColor: theme.primaryBorder,
+      borderWidth: 5,
+    },
+    addButtonText: {
+      fontFamily: 'nunito-bold', 
+      fontSize: 18, 
+      color: theme.actionText,
+      textAlign: 'center',
+      alignItems: 'center',
+      paddingVertical: 20 
+    },
+    bookHeader: {
+      color: theme.primaryText,
+      fontFamily: 'nunito-bold', 
+      fontSize: 22, 
+      marginLeft: 20 
+    },
+  })
+}

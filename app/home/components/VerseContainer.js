@@ -1,36 +1,35 @@
-import { use, useCallback, useEffect, useState } from "react"
-import { Animated, StyleSheet, Text, Touchable, TouchableOpacity, View } from "react-native"
+import { useCallback, useEffect, useState } from "react"
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
-import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import UserDisplayInteraction from "../../components/UserDisplayInteraction"
 import FadeInView from "../../components/FadeInView"
 
-import { gen } from "../../utils/styling/colors"
 import { getAllVersesWithLikesInChapter, getVersesWithActivity } from "../../utils/authenticate"
-import { invokeLikeVerse } from "../../utils/db-invoke-edge"
+import { invokeLikeVerse } from "../../utils/db-like"
 import { hapticImpactSoft, hapticSelect } from "../../utils/haptics"
 import { useFocusEffect } from "@react-navigation/native"
 import { useRealtime } from "../../hooks/RealtimeProvider"
-import { formatActivityFromSupabase } from "../../utils/format"
+import { useTheme } from "../../hooks/ThemeProvider"
 
 export default function VerseContainer({
   navigation,
   verses,
-  // setModalVisible,
-  // setVerseSelected,
   userInformation,
   work,
   book,
   chapter,
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const { media } = useRealtime()
   const [versesLiking, setVersesLiking] = useState([])
   const [likes, setLikes] = useState([])
   const [uniqueVersesWithUserLikes, setUniqueVersesWithUserLikes] = useState([])
   const [uniqueVersesWithMedia, setUniqueVersesWithMedia] = useState({})
   const [activity, setActivity] = useState([])
-  const [mediaCount, setMediaCount] = useState({})
 
   // realtime activity
   useEffect(() => {
@@ -116,11 +115,7 @@ export default function VerseContainer({
         setLikes(newLikes)
         setUniqueVersesWithUserLikes(findUniqueVersesWithUserLikes(newLikes))
       }
-      const result = await invokeLikeVerse(work, book, chapter, verse, userInformation.user_id)
-      if (!result.ok) {
-        // Whatever happens when user like fails
-        console.error("Error liking verse", result)
-      }
+      await invokeLikeVerse({ location: { work: work, book: book, chapter: chapter, verse: verse }, user_id: userInformation.user_id })
     }
     setVersesLiking(prev => prev.filter(v => v !== verse))
   }
@@ -194,102 +189,76 @@ export default function VerseContainer({
   )
 }
 
-// const MediaItem = ({ media, top }) => {
-//   return (
-//     <View style={[styles.mediaBox, { top: 5+top }]}>
-//       {/* glass-water, gauge, ice-cream, jet-fighter-up,  */}
-//       <Icon name="play" size={12} color={gen.mediaUnseen} />
-//       <View style={{ position: 'absolute', right: -7, bottom: -10, borderRadius: 10, borderWidth: 2, borderColor: gen.primaryBackground }}>
-//         <Avatar
-//           imagePath={media.user.avatar_path}
-//           type="profile"
-//           style={{ width: 15, height: 15, borderRadius: 10 }}
-//         />
-//       </View>
-//     </View>
-//   )
-// }
-
-const styles = StyleSheet.create({
-  verseContainer: {
-    flex: 1,
-    marginHorizontal: 50,
-    paddingBottom: 70
-  },
-  verseBox: {
-    width: '100%',
-    marginBottom: 30,
-  },
-  verse: {
-    fontSize: 22,
-    fontFamily: 'nunito-bold',
-    textAlign: 'left',
-    color: gen.primaryText,
-  },
-  // mediaBox: {
-  //   position: 'absolute',
-  //   left: -35,
-  //   width: 25,
-  //   height: 33,
-  //   borderRadius: 5,
-  //   borderWidth: 3,
-  //   borderColor: gen.mediaUnseen,
-
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  // },
-  likeContainer: {
-    position: 'absolute',
-    top: 6,
-    right: -30,
-    fontSize: 14,
-    fontFamily: 'nunito-bold',
-    color: '#000'
-  },
-  commentContainer: {
-    position: 'absolute',
-    top: 56,
-    left: -40,
-    fontSize: 14,
-    fontFamily: 'nunito-bold',
-    color: '#000'
-  },
-  likeNumber: {
-    fontFamily: 'nunito-regular', 
-    fontSize: 14,
-    color: gen.darkishGray,
-    textAlign: 'center',
-  },
-  likedLog: {
-    fontFamily: 'nunito-bold',
-    fontSize: 18,
-    color: '#000',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  personHighlight: {
-    color: gen.primaryColor,
-    backgroundColor: '#FFFFE0',
-    fontFamily: 'nunito-bold',
-  },
-  activityIndicator: {
-    position: 'absolute',
-    left: -35,
-    width: 0,
-    height: '100%',
-    // borderWidth: 4,
-    // borderRadius: 10,
-    // borderColor: gen.primaryColor,
-  },
-  activityItem: {
-    flex: 1,
-    borderWidth: 4,
-    borderRadius: 10,
-    borderColor: gen.primaryColor,
-  },
-  activityItemTouchableArea: {
-    flex: 1,
-    maxHeight: 150,
-    paddingHorizontal: 15,
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    verseContainer: {
+      flex: 1,
+      marginHorizontal: 50,
+      paddingBottom: 70
+    },
+    verseBox: {
+      width: '100%',
+      marginBottom: 30,
+    },
+    verse: {
+      fontSize: 22,
+      fontFamily: 'nunito-bold',
+      textAlign: 'left',
+      color: theme.primaryText,
+    },
+    likeContainer: {
+      position: 'absolute',
+      top: 6,
+      right: -30,
+      fontSize: 14,
+      fontFamily: 'nunito-bold',
+      color: '#000'
+    },
+    commentContainer: {
+      position: 'absolute',
+      top: 56,
+      left: -40,
+      fontSize: 14,
+      fontFamily: 'nunito-bold',
+      color: '#000'
+    },
+    likeNumber: {
+      fontFamily: 'nunito-regular', 
+      fontSize: 14,
+      color: theme.darkishGray,
+      textAlign: 'center',
+    },
+    likedLog: {
+      fontFamily: 'nunito-bold',
+      fontSize: 18,
+      color: '#000',
+      textAlign: 'center',
+      marginBottom: 10,
+    },
+    personHighlight: {
+      color: theme.primaryColor,
+      backgroundColor: '#FFFFE0',
+      fontFamily: 'nunito-bold',
+    },
+    activityIndicator: {
+      position: 'absolute',
+      left: -35,
+      width: 0,
+      height: '100%',
+      // borderWidth: 4,
+      // borderRadius: 10,
+      // borderColor: theme.primaryColor,
+    },
+    activityItem: {
+      flex: 1,
+      borderWidth: 4,
+      borderRadius: 10,
+      borderColor: theme.primaryColor,
+    },
+    activityItemTouchableArea: {
+      flex: 1,
+      maxHeight: 150,
+      paddingHorizontal: 15,
+    }
+  })
+}

@@ -30,3 +30,34 @@ export const forPushFromBottom = ({ current, next, inverted, layouts: { screen }
     },
   };
 };
+
+export const forPushFromLeft = ({ current, next, inverted, layouts: { screen } }) => {
+  const translateFocused = Animated.multiply(
+    current.progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [screen.width, 0],
+      extrapolate: 'clamp',
+    }),
+    inverted
+  );
+
+  const translateUnfocused = next
+    ? Animated.multiply(
+        next.progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -screen.width],
+          extrapolate: 'clamp',
+        }),
+        inverted
+      )
+    : 0;
+
+  return {
+    cardStyle: {
+      transform: [
+        { translateX: translateFocused },
+        { translateX: translateUnfocused },
+      ],
+    },
+  };
+};

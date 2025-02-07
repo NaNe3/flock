@@ -8,6 +8,12 @@ export default function ThemeProvider({ children }) {
   const [theme, setTheme] = useState()
   const [currentTheme, setCurrentTheme] = useState('light')
 
+  const changeTheme = async (theme) => {
+    await setLocallyStoredVariable('user_theme', theme)
+    setCurrentTheme(theme)
+    setTheme(themes[theme])
+  }
+
   useEffect(() => {
     const init = async () => {
       const theme = await getLocallyStoredVariable('user_theme')
@@ -16,12 +22,15 @@ export default function ThemeProvider({ children }) {
       }
       setCurrentTheme(theme ?? 'light')
       setTheme(themes[theme ?? 'light'])
+      // const fakeTheme = 'dark'
+      // setCurrentTheme(fakeTheme)
+      // setTheme(themes[fakeTheme])
     }
 
     init()
   }, [])
 
-  return <ThemeContext.Provider value={{ theme, currentTheme }}>{children}</ThemeContext.Provider>
+  return <ThemeContext.Provider value={{ theme, currentTheme, changeTheme }}>{children}</ThemeContext.Provider>
 }
 
 export const useTheme = () => {

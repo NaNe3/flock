@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getVersesFromChapter } from "../utils/read";
 
 import BasicButton from '../components/BasicButton';
 import EmptySpace from '../components/EmptySpace';

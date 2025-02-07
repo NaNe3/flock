@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 
-import { gen } from "../../utils/styling/colors";
+import { constants } from "../../utils/styling/colors";
 
 const height = Dimensions.get('window').height;
 const modalHeight = Math.floor(height * 0.7)
@@ -10,7 +10,7 @@ const modalHeight = Math.floor(height * 0.7)
 export default function BasicBottomSheet({ 
   setVisibility,
   title,
-  backgroundColor = gen.heckaGray2,
+  backgroundColor = constants.heckaGray2,
   handleStyle = null,
   titleColor = '#fff',
   height = modalHeight,
@@ -113,6 +113,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: gen.heckaGray2,
+    backgroundColor: constants.heckaGray2,
   },
 })

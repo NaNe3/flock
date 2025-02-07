@@ -77,6 +77,7 @@ const getFormattedDate = () => {
   return `${year}-${month}-${day}`;
 }
 
+// REWRITE TO GET ONLY COME FOLLOW ME PLAN
 export const checkIfUserHasStudiedPlanToday = async () => {
   try {
     const logs = JSON.parse(await AsyncStorage.getItem(`user_logs`))
@@ -91,6 +92,19 @@ export const checkIfUserHasStudiedPlanToday = async () => {
   } catch (error) {
     console.log(`Error getting reading log from local storage: ${error}`);
     return false
+  }
+}
+
+export const getLogsFromToday = async () => {
+  try {
+    const logs = JSON.parse(await AsyncStorage.getItem(`user_logs`))
+    const day = getFormattedDate()
+    console.log("day: ", day)
+
+    return logs.filter(log => log.created_at.includes(day))
+  } catch (error) {
+    console.log(`Error getting reading log from local storage: ${error}`);
+    return []
   }
 }
 

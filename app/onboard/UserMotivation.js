@@ -4,7 +4,7 @@ import { Text, View, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import BasicButton from '../components/BasicButton';
 import { hapticSelect } from '../utils/haptics';
 import EmptySpace from '../components/EmptySpace';
-import { gen } from '../utils/styling/colors';
+import { constants } from '../utils/styling/colors';
 
 // SELECT MULTIPLE OPTIONS!!!
 
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 20,
     borderWidth: 3,
-    borderColor: gen.lightGray,
+    borderColor: constants.lightGray,
     borderRadius: 10,
     marginBottom: 13,
     flexDirection: 'row',
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'nunito-bold',
     flexWrap: 'wrap',
-    color: gen.darkGray,
+    color: constants.darkGray,
   },
   emoji: { 
     width: 40

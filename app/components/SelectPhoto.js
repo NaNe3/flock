@@ -42,6 +42,7 @@ export default function SelectPhoto({
     ).start()
   }, [pulseAnim])
 
+  console.log("primaryColor: ", primaryColor, "color: ", color)
   const borderColor = pulseAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['#ccc', primaryColor === null ? color : primaryColor],

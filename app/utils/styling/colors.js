@@ -1,6 +1,23 @@
-import getColorVariety, { getColorVarietyAsync } from "../getColorVariety"
+export const constants = {
+  blue: '#0ba3ff',
+  lightBlue: '#c9ebff',
+  red: '#F88379',
+  orange: '#FFBF00',
 
-const lightTheme = {
+  heckaGray: '#333333',
+  heckaGray2: '#444444',
+  darkGray: '#616161',
+  darkishGray: '#999',
+  gray: '#AAA',
+  gray2: '#CCC',
+  lightGray: '#D3D3D3',
+  lightestGray: '#eee',
+
+  navy: '#002E5D',
+  maroon: '#831515',
+}
+
+export const classic = {
   primaryBackground: '#ffffff', 
   secondaryBackground: '#eee',
   tertiaryBackground: '#eee',
@@ -21,15 +38,7 @@ const lightTheme = {
   mediaUnseen: '#999',
   modalBackdrop: "rgba(70,70,70,0.5)",
 
-  // ORANGE THEME
-  // primaryColor: '#FFBF00',
-  // primaryColorLight: '#fff2cc',
-  // primaryColorShadow: '#ba7700',
-  // primaryColorDisabledShadow: '#b7a774',
-  // primaryColorDisabled: '#ffecb2',
-  // secondaryColor: '#05D5FA',
   
-  // BLUE THEME
   primaryColor: '#0ba3ff',
   primaryColorLight: '#c9ebff',
   primaryColorShadow: '#005591',
@@ -65,74 +74,12 @@ const darkTheme = {
   primaryColorShadowDisabled: '#70878f',
   primaryColorDisabled: '#c9ebff',
   secondaryColor: '#FFBF00',
+
 }
 
-export const currentTheme = 'dark'
+// export const currentTheme = 'light'
 
 export const themes = {
-  'light': lightTheme,
-  'dark': darkTheme,
+  'light': {...classic, ...constants},
+  'dark': {...darkTheme, ...constants}
 }
-
-export const gen = {
-  primaryColor: themes[currentTheme].primaryColor,
-  primaryColorLight: themes[currentTheme].primaryColorLight,
-  primaryColorShadow: themes[currentTheme].primaryColorShadow,
-  primaryColorShadowDisabled: themes[currentTheme].primaryColorShadowDisabled,
-  primaryColorDisabled: themes[currentTheme].primaryColorDisabled,
-  secondaryColor: themes[currentTheme].secondaryColor,
-
-  blue: themes[currentTheme].primaryColor,
-  lightBlue: themes[currentTheme].primaryColorLight,
-  red: '#F88379',
-  orange: '#FFBF00',
-
-  heckaGray: '#333333',
-  heckaGray2: '#444444',
-  darkGray: '#616161',
-  darkishGray: '#999',
-  gray: '#AAA',
-  gray2: '#CCC',
-  lightGray: '#D3D3D3',
-  lightestGray: '#eee',
-
-  navy: '#002E5D',
-  maroon: '#831515',
-
-  primaryBackground: themes[currentTheme].primaryBackground,
-  secondaryBackground: themes[currentTheme].secondaryBackground,
-  tertiaryBackground: themes[currentTheme].tertiaryBackground,
-  quaternaryBackground: themes[currentTheme].quaternaryBackground,
-
-  primaryText: themes[currentTheme].primaryText,
-  secondaryText: themes[currentTheme].secondaryText,
-  tertiaryText: themes[currentTheme].tertiaryText,
-  actionText: themes[currentTheme].actionText,
-  oppositeText: themes[currentTheme].oppositeText,
-
-  navigationSelected: themes[currentTheme].navigationSelected,
-  navigationUnselected: themes[currentTheme].navigationUnselected,
-
-  mediaSeen: themes[currentTheme].mediaSeen,
-  mediaUnseen: themes[currentTheme].mediaUnseen,
-  modalBackdrop: themes[currentTheme].modalBackdrop,
-
-  primaryBorder: themes[currentTheme].primaryBorder,
-}
-
-// export const useTheme = () => {
-//   const [currentTheme, setCurrentTheme] = useState('dark');
-
-//   useEffect(() => {
-//     const getTheme = async () => {
-//       const storedTheme = await AsyncStorage.getItem('theme');
-//       if (storedTheme) {
-//         setCurrentTheme(storedTheme);
-//       }
-//     };
-
-//     getTheme();
-//   }, []);
-
-//   return themes[currentTheme];
-// };

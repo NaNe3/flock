@@ -1,19 +1,19 @@
-import { ScrollView, StyleSheet, TouchableOpacity, View, Text } from "react-native"
+import { StyleSheet, TouchableOpacity, View, Text } from "react-native"
 import Icon from 'react-native-vector-icons/FontAwesome6'
 import SimpleHeader from "../../../components/SimpleHeader"
 
-import { gen } from "../../../utils/styling/colors"
-import Avatar from "../../../components/Avatar"
 import { hapticSelect } from "../../../utils/haptics"
-import PersonBottomSheet from "../../../components/PersonBottomSheet"
-import { use, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { getLocallyStoredVariable, setLocallyStoredVariable } from "../../../utils/localStorage"
-import { timeAgoGeneral } from "../../../utils/timeDiff"
 import AddPeopleToGroup from "../../AddPeopleToGroup"
 import { addGroupMembers, removeGroupMembers } from "../../../utils/db-image"
+import { useTheme } from "../../../hooks/ThemeProvider"
 
 export default function AllGroupMembers({ navigation, route }) {
   const { group_id, members, isGroupLeader } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [addingFriends, setAddingFriends] = useState(false)
   const [friendsAdded, setFriendsAdded] = useState(members)
 
@@ -96,7 +96,7 @@ export default function AllGroupMembers({ navigation, route }) {
             }}
             style={styles.addFriendButton}
           >
-            <Text style={{ color: gen.primaryText, fontFamily: 'nunito-bold', fontSize: 12 }}>
+            <Text style={{ color: theme.primaryText, fontFamily: 'nunito-bold', fontSize: 12 }}>
               <Icon name="plus" /> ADD FRIEND
             </Text>
           </TouchableOpacity>
@@ -112,61 +112,63 @@ export default function AllGroupMembers({ navigation, route }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-  },
-  contentContainer: {
-    flex: 1
-  },
-  optionRow: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  optionRowText: {
-    fontFamily: 'nunito-bold',
-    fontSize: 16,
-    color: gen.primaryText
-  },
-  optionRowTextSecondary: {
-    fontFamily: 'nunito-bold',
-    fontSize: 14,
-    marginTop: -3,
-    color: gen.secondaryText
-  },
-  personContentContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarImageContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 50,
-    borderWidth: 2,
-    borderColor: gen.gray,
-    padding: 2,
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
-  },
-  userNameLeft: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  addFriendButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    backgroundColor: gen.tertiaryBackground,
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+    },
+    contentContainer: {
+      flex: 1
+    },
+    optionRow: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    optionRowText: {
+      fontFamily: 'nunito-bold',
+      fontSize: 16,
+      color: theme.primaryText
+    },
+    optionRowTextSecondary: {
+      fontFamily: 'nunito-bold',
+      fontSize: 14,
+      marginTop: -3,
+      color: theme.secondaryText
+    },
+    personContentContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    avatarImageContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 50,
+      borderWidth: 2,
+      borderColor: theme.gray,
+      padding: 2,
+      overflow: 'hidden',
+    },
+    avatarImage: {
+      flex: 1,
+      width: '100%',
+      height: '100%',
+      borderRadius: 50,
+    },
+    userNameLeft: {
+      flex: 1,
+      marginLeft: 10,
+    },
+    addFriendButton: {
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      backgroundColor: theme.tertiaryBackground,
+    },
+  })
+}

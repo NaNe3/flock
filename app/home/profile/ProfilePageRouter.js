@@ -1,16 +1,19 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, StyleSheet } from 'react-native';
 
-import { gen } from '../../utils/styling/colors';
-
 import ProfilePage from './ProfilePage'
 import ChangeProfileName from './ProfileSettings/ChangeProfileName';
 import ChangeProfilePicture from './ProfileSettings/ChangeProfilePicture';
 import ChangeProfileColor from './ProfileSettings/ChangeProfileColor';
+import { useTheme } from '../../hooks/ThemeProvider';
+import { useEffect, useState } from 'react';
 
 const Stack = createStackNavigator()
 
 export default function GroupDetailsRouter() {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
 
   return (
     <View style={styles.container}>
@@ -40,9 +43,11 @@ export default function GroupDetailsRouter() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+    },
+  })
+}

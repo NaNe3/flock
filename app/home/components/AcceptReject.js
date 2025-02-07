@@ -1,7 +1,7 @@
 import { TouchableOpacity, View } from "react-native"
 import { StyleSheet, Text } from "react-native"
 
-import { gen } from "../../utils/styling/colors"
+import { constants } from "../../utils/styling/colors"
 
 export default function AcceptReject({ accept, reject }) {
   return (
@@ -35,8 +35,8 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 10,
   },
-  acceptButton: { backgroundColor: gen.primaryColor },
-  rejectButton: { backgroundColor: gen.red },
+  acceptButton: { backgroundColor: constants.blue },
+  rejectButton: { backgroundColor: constants.red },
   buttonText: {
     fontFamily: 'nunito-bold',
     fontSize: 15,

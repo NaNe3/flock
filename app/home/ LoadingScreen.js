@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View, Animated } from "react-native";
-import { gen } from "../utils/styling/colors";
 import { getPrimaryColor } from "../utils/getColorVariety";
+import { useTheme } from "../hooks/ThemeProvider";
 
 export default function LoadingScreen({
   progress,
   steps,
   setLoading,
 }) {
-  const [primaryColor, setPrimaryColor] = useState(gen.primaryColor)
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
+  const [primaryColor, setPrimaryColor] = useState(theme.primaryColor)
   const [progressDisplayed] = useState(new Animated.Value(0))
   const [messageSelected, setMessageSelected] = useState(0)
 
@@ -65,31 +69,33 @@ export default function LoadingScreen({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: gen.primaryBackground,
-  },
-  message: {
-    marginHorizontal: 20,
-    marginBottom: 50,
-    fontFamily: 'nunito-bold',
-    fontSize: 24,
-    textAlign: 'center',
-    color: gen.gray,
-  },
-  progressBar: {
-    width: '75%',
-    height: 12,
-    backgroundColor: gen.lightestGray,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  progress: {
-    height: '100%',
-    backgroundColor: gen.primaryColor,
-    borderRadius: 100
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.primaryBackground,
+    },
+    message: {
+      marginHorizontal: 20,
+      marginBottom: 50,
+      fontFamily: 'nunito-bold',
+      fontSize: 24,
+      textAlign: 'center',
+      color: theme.gray,
+    },
+    progressBar: {
+      width: '75%',
+      height: 12,
+      backgroundColor: theme.lightestGray,
+      borderRadius: 10,
+      overflow: 'hidden',
+    },
+    progress: {
+      height: '100%',
+      backgroundColor: theme.primaryColor,
+      borderRadius: 100
+    },
+  })
+}

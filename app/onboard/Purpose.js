@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Animated, Image, TouchableOpacity } from 'react-native';
 
-import BasicButton from '../components/BasicButton';
-import { hapticError, hapticSelect } from '../utils/haptics';
-import { gen } from '../utils/styling/colors';
+import { hapticSelect } from '../utils/haptics';
 
 const TextBlock = ({ children }) => {
   const fadeAnim = useState(new Animated.Value(0))[0]
@@ -155,8 +153,5 @@ const styles = StyleSheet.create({
     fontFamily: 'nunito-regular',
     fontSize: 16,
     marginBottom: 10,
-  },
-  textHighlight: {
-    color: gen.primaryColor,
   },
 });

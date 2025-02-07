@@ -191,6 +191,7 @@ export const likeVerse = async (userId, book, chapter, verse) => {
 }
 
 export const getAllVersesWithLikesInChapter = async (work, book, chapter, user_id) => {
+  console.log("work: ", work, "book: ", book, "chapter: ", chapter, "user_id: ", user_id)
   const { data, error } = await supabase
     .from('activity')
     .select(`
@@ -203,7 +204,7 @@ export const getAllVersesWithLikesInChapter = async (work, book, chapter, user_i
     .eq('chapter', chapter)
     .eq('user_id', user_id)
     .not('like_id', 'is', null)
-
+  
   if (error) {
     console.error(error)
     return error
@@ -416,16 +417,25 @@ export const getPlanByUserId = async (userId) => {
     const { data, error } = await supabase
       .from('user')
       .select(`
-        plan (plan_name, plan_info)
+        plan (plan_id, plan_name)
       `)
       .eq('id', userId)
+    if (error) { console.error(error) }
+    return { ...data[0].plan }
+  } catch (error) {
+    console.error(error)
+    return { error: error }
+  }
+}
 
-    if (error) {
-      console.error(error)
-      return { error: error }
-    }
-
-    return data[0]
+export const getPlanItemsByPlanId = async (planId) => {
+  try {
+    const { data, error } = await supabase
+      .from('plan_item')
+      .select()
+      .eq('plan_id', planId)
+    if (error) { console.error(error) }
+    return { plan_items: data }
   } catch (error) {
     console.error(error)
     return { error: error }
@@ -538,12 +548,13 @@ export const checkUserStreak = async (logs) => {
   }
 }
 
-export const createReadingLog = async (userId, plan_id) => {
+export const createPlanReadingLogWithPlanItem = async (userId, plan_id, plan_item_id) => {
   const { data, error } = await supabase
     .from('log')
     .insert({
       user_id: userId,
       plan_id: plan_id,
+      plan_item_id: plan_item_id,
     })
     .select()
 
@@ -556,6 +567,44 @@ export const createReadingLog = async (userId, plan_id) => {
   }
 
   return { data: data[0] }
+}
+
+export const createPlanReadingLogFromChapter = async (userId, work, book, chapter) => {
+  console.log("work: ", work, "book: ", book, "chapter: ", chapter)
+  const { data, error } = await supabase
+    .from('log')
+    .insert({
+      user_id: userId,
+      work: work,
+      book: book,
+      chapter: chapter,
+    })
+    .select()
+
+  if (error) {
+    console.error(error)
+    return { error }
+  } else {
+    await updateLastStudiedLog(userId, data[0].log_id)
+    await updateUserStreak(userId)
+  }
+
+  return { data: data[0] }
+}
+
+export const userHasStudiedPlanItem = async (userId, planItemId) => {
+  const { count, error } = await supabase
+    .from('log')
+    .select('*', { count: 'exact' })
+    .eq('user_id', userId)
+    .eq('plan_item_id', planItemId)
+
+  if (error) {
+    console.error(error)
+    return { error }
+  }
+
+  return count > 0
 }
 
 export const getLogsByUserId = async (userId) => {

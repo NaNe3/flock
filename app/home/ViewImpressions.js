@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { StyleSheet, Text, TouchableOpacity, View, Animated, Easing, Touchable, PanResponder, Dimensions, ScrollView } from "react-native"
+import { StyleSheet, Text, TouchableOpacity, View, Animated, PanResponder, ScrollView } from "react-native"
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import Icon from 'react-native-vector-icons/FontAwesome6'
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { gen } from "../utils/styling/colors"
 import hexToRgba from "../utils/hexToRgba"
 import { getMediaByMediaId, getMediaFromVerse } from "../utils/authenticate"
 import Media from "../components/Media"
@@ -19,12 +18,15 @@ import EmojiModal from "../components/EmojiModal";
 import EmojiReaction from "../components/EmojiReaction";
 import { getFontSizeOfComment } from "../utils/format-comment";
 import EmptySpace from "../components/EmptySpace";
-import LoadingOverlay from "./components/LoadingOverlay";
 import { getCommentCount } from "../utils/db-comment";
+import { useTheme } from "../hooks/ThemeProvider";
 
 export default function ViewImpressions({ navigation, route }) {
-  // const { work, book, chapter, verse } = route.params
   const { title, location, media_id } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const insets = useSafeAreaInsets()
   const [emojis, setEmojis] = useState([])
   const alreadySwiped = useRef(false)
@@ -285,7 +287,7 @@ export default function ViewImpressions({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.contentContainer, { marginTop: insets.top, marginBottom: insets.bottom }]} >
+      <View style={[styles.contentContainer, { marginTop: insets.top, marginBottom: insets.bottom === 0 ? 10 : insets.bottom }]} >
         <View style={styles.contentActionBar}>
           <TouchableOpacity
             activeOpacity={0.7}
@@ -295,19 +297,24 @@ export default function ViewImpressions({ navigation, route }) {
             }}
             style={styles.actionButton}
           >
-            <Icon name="arrow-left" size={22} color={gen.primaryText} />
+            <Icon name="arrow-left" size={22} color={theme.primaryText} />
           </TouchableOpacity>
-          {/* <Text style={styles.headerText}>{location.book} {location.chapter}:{location.verse}</Text> */}
           <Text style={styles.headerText}>{title}</Text>
           <TouchableOpacity
             onPress={() => {
               hapticImpactHeavy()
-              navigation.navigate("Capture", { work: location.work, book: location.book, chapter: location.chapter, verse: location.verse })
+              const destination = {
+                work: location.work,
+                book: location.book,
+                chapter: location.chapter,
+                verse: location.verse
+              }
+              navigation.navigate("Capture", { location: location })
             }}
             style={styles.actionButton}
           >
             <Animated.View style={shakeStyle}>
-              <Icon name="feather-pointed" size={22} color={gen.primaryText} />
+              <Icon name="feather-pointed" size={22} color={theme.primaryText} />
             </Animated.View>
           </TouchableOpacity>
         </View>
@@ -316,7 +323,7 @@ export default function ViewImpressions({ navigation, route }) {
             {media.map((item, index) => (
               <View 
                 key={`media-bar-${index}`}
-                style={[styles.mediaBar, index === currentMedia && { backgroundColor: gen.mediaUnseen}]} 
+                style={[styles.mediaBar, index === currentMedia && { backgroundColor: theme.mediaUnseen}]} 
               />
             ))}
           </View>
@@ -344,14 +351,14 @@ export default function ViewImpressions({ navigation, route }) {
                         style={styles.videoSoundContainer}
                         onPress={toggleSound}
                       >
-                        <Icon name={soundEnabled ? "volume-high" : 'volume-xmark'} size={16} color={gen.lightestGray} />
+                        <Icon name={soundEnabled ? "volume-high" : 'volume-xmark'} size={16} color={theme.lightestGray} />
                       </TouchableOpacity>
                     )
                   }
                   {
                     media[currentMedia].media.media_type === 'picture' &&
                     <LinearGradient
-                      colors={['transparent', hexToRgba(gen.heckaGray, 0.8), gen.heckaGray]}
+                      colors={['transparent', hexToRgba(theme.heckaGray, 0.8), theme.heckaGray]}
                       style={{ height: 130, width: '100%', position: 'absolute', bottom: 0, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 }}
                     />
                   }
@@ -426,7 +433,7 @@ export default function ViewImpressions({ navigation, route }) {
                         <EmojiReaction key={`emoji-button-${index}`} emoji={emoji} size={30} onPress={handleEmojiPress}/>
                       ))}
                       <EmojiReaction
-                        emoji={ <Icon name="circle-plus" size={30} color={gen.actionText} /> }
+                        emoji={ <Icon name="circle-plus" size={30} color={theme.actionText} /> }
                         onPress={() => {
                           hapticImpactHeavy()
                           setEmojiModalVisible(true) 
@@ -456,174 +463,176 @@ export default function ViewImpressions({ navigation, route }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: gen.secondaryBackground,
-  },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingTop: 0,
-    paddingBottom: 0,
-    width: '100%',
-  },
-  contentActionBar: {
-    flexDirection: 'row',
-    marginVertical: 10,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  actionButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerText: {
-    fontSize: 18,
-    fontFamily: 'nunito-bold',
-    color: gen.primaryText,
-  },
-  footerContainer: {
-    width: '100%',
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-    position: 'absolute',
-    bottom: 0,
-    flexDirection: 'column',
-  },
-  authorContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10
-  },
-  authorInformation: { marginLeft: 10, },
-  authorName: {
-    fontSize: 16,
-    fontFamily: 'nunito-bold',
-    color: gen.lightestGray,
-  },
-  authorCreatedAt: {
-    fontSize: 13,
-    fontFamily: 'nunito-bold',
-    color: gen.lightGray,
-  },
-  impressionContainer: {
-    width: '100%',
-    flex: 1,
-  },
-  impression: {
-    width: '100%',
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-    borderRadius: 40,
-  },
-  reactionBarContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  reactionBar: {
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: hexToRgba(gen.primaryBackground, 0.8),
-    borderRadius: 40,
-  },
-  actionBar: { marginVertical: 10, },
-  action: {
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  actionText: {
-    fontSize: 14,
-    fontFamily: 'nunito-bold',
-    color: '#fff',
-    marginTop: -8
-  },
-  mediaBarList: {
-    width: '100%',
-    height: 5,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 10,
-    paddingHorizontal: 10,
-  },
-  mediaBar: {
-    flex: 1,
-    height: 5,
-    borderRadius: 5,
-    marginHorizontal: 2,
-    backgroundColor: gen.mediaSeen,
-  },
-  impressionGroupContainer: {
-    padding: 7,
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.secondaryBackground,
+    },
+    contentContainer: {
+      flex: 1,
+      paddingHorizontal: 10,
+      paddingTop: 0,
+      paddingBottom: 0,
+      width: '100%',
+    },
+    contentActionBar: {
+      flexDirection: 'row',
+      marginVertical: 10,
+      justifyContent: 'space-around',
+      alignItems: 'center',
+    },
+    actionButton: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerText: {
+      fontSize: 18,
+      fontFamily: 'nunito-bold',
+      color: theme.primaryText,
+    },
+    footerContainer: {
+      width: '100%',
+      paddingHorizontal: 10,
+      paddingBottom: 10,
+      position: 'absolute',
+      bottom: 0,
+      flexDirection: 'column',
+    },
+    authorContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 10
+    },
+    authorInformation: { marginLeft: 10, },
+    authorName: {
+      fontSize: 16,
+      fontFamily: 'nunito-bold',
+      color: theme.lightestGray,
+    },
+    authorCreatedAt: {
+      fontSize: 13,
+      fontFamily: 'nunito-bold',
+      color: theme.lightGray,
+    },
+    impressionContainer: {
+      width: '100%',
+      flex: 1,
+    },
+    impression: {
+      width: '100%',
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+      borderRadius: 40,
+    },
+    reactionBarContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    reactionBar: {
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: hexToRgba(theme.primaryBackground, 0.8),
+      borderRadius: 40,
+    },
+    actionBar: { marginVertical: 10, },
+    action: {
+      flexDirection: 'column',
+      alignItems: 'center',
+    },
+    actionText: {
+      fontSize: 14,
+      fontFamily: 'nunito-bold',
+      color: '#fff',
+      marginTop: -8
+    },
+    mediaBarList: {
+      width: '100%',
+      height: 5,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginVertical: 10,
+      paddingHorizontal: 10,
+    },
+    mediaBar: {
+      flex: 1,
+      height: 5,
+      borderRadius: 5,
+      marginHorizontal: 2,
+      backgroundColor: theme.mediaSeen,
+    },
+    impressionGroupContainer: {
+      padding: 7,
+      position: 'absolute',
+      top: 12,
+      left: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
 
-    backgroundColor: hexToRgba(gen.heckaGray, 0.5),
-    borderRadius: 50,
-  },
-  groupAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 30,
-  },
-  groupText: {
-    fontSize: 16,
-    fontFamily: 'nunito-bold',
-    color: '#fff',
-    marginLeft: 10,
-    marginRight: 5,
-  },
-  videoSoundContainer: {
-    height: 40,
-    width: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    top: 15,
-    right: 20,
-    padding: 10,
-    backgroundColor: hexToRgba(gen.heckaGray, 0.5),
-    borderRadius: 50,
-  },
-  avatarContainer: {
-    width: 55,
-    height: 55,
-    padding: 2,
-    borderRadius: 55,
-    borderWidth: 3,
-    borderColor: gen.primaryBorder
-  },
-  avatar: {
-    flex: 1,
-    borderRadius: 55,
-  },
-  commentContainer: {
-    width: '100%',
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  comment: {
-    color: "#fff",
-    fontFamily: 'nunito-bold',
-  },
-  gradient: {
-    position: 'absolute', 
-    width: '100%', 
-    height: 60
-  }
-})
+      backgroundColor: hexToRgba(theme.heckaGray, 0.5),
+      borderRadius: 50,
+    },
+    groupAvatar: {
+      width: 30,
+      height: 30,
+      borderRadius: 30,
+    },
+    groupText: {
+      fontSize: 16,
+      fontFamily: 'nunito-bold',
+      color: '#fff',
+      marginLeft: 10,
+      marginRight: 5,
+    },
+    videoSoundContainer: {
+      height: 40,
+      width: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'absolute',
+      top: 15,
+      right: 20,
+      padding: 10,
+      backgroundColor: hexToRgba(theme.heckaGray, 0.5),
+      borderRadius: 50,
+    },
+    avatarContainer: {
+      width: 55,
+      height: 55,
+      padding: 2,
+      borderRadius: 55,
+      borderWidth: 3,
+      borderColor: theme.primaryBorder
+    },
+    avatar: {
+      flex: 1,
+      borderRadius: 55,
+    },
+    commentContainer: {
+      width: '100%',
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    comment: {
+      color: "#fff",
+      fontFamily: 'nunito-bold',
+    },
+    gradient: {
+      position: 'absolute', 
+      width: '100%', 
+      height: 60
+    }
+  })
+}

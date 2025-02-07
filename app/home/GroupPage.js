@@ -1,20 +1,19 @@
-import { useEffect, useState, useCallback } from 'react'
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Touchable } from 'react-native'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 
 import { hapticSelect } from '../utils/haptics'
-import { acceptGroupInvitation, rejectGroupInvitation } from '../utils/db-relationship'
-import { gen } from '../utils/styling/colors'
+import { getLocallyStoredVariable, getUserIdFromLocalStorage } from '../utils/localStorage'
+import { useTheme } from '../hooks/ThemeProvider'
 
 import BorderBoxWithHeaderText from '../components/BorderBoxWithHeaderText'
-import EmptySpace from '../components/EmptySpace'
 import Avatar from '../components/Avatar'
-import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from '../utils/localStorage'
 import FadeInView from '../components/FadeInView'
 import InviteRow from './components/InviteRow'
+import SimpleHeader from '../components/SimpleHeader'
 
-const GroupBox = ({ 
+const GroupBox = ({
   innunciated=false,
   group,
   groups,
@@ -22,12 +21,15 @@ const GroupBox = ({
   navigation,
   userId,
 }) => {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const { group_id, group_name, group_image, group_plan, members, status } = group
   const leader = members.find(member => member.is_leader)
 
   return (
     <BorderBoxWithHeaderText
-      title={innunciated ? ["NEW ACTIVITY", gen.primaryColor, "fire"] : null}
+      title={innunciated ? ["NEW ACTIVITY", theme.primaryColor, "fire"] : null}
       innunciated={innunciated}
       style={{ margin: 20 }}
     >
@@ -55,18 +57,18 @@ const GroupBox = ({
         <View style={styles.groupContent}>
           <View style={{ flex: 1 }}>
             <Text 
-              style={{ fontFamily: 'nunito-bold', fontSize: 18, color: gen.actionText }}
+              style={{ fontFamily: 'nunito-bold', fontSize: 18, color: theme.actionText }}
               numberOfLines={1}
               ellipsizeMode='tail'
             >{group_name}</Text>
             {
               status !== 'pending' ? (
-                <Text style={{ fontFamily: 'nunito-bold', fontSize: 12, color: gen.gray }}>
-                  <Icon name='users' size={12} color={gen.gray} /> {members.length} MEMBERS
+                <Text style={{ fontFamily: 'nunito-bold', fontSize: 12, color: theme.gray }}>
+                  <Icon name='users' size={12} color={theme.gray} /> {members.length} MEMBERS
                 </Text>
               ) : (
                 <Text 
-                  style={{ fontFamily: 'nunito-bold', fontSize: 12, color: gen.gray }}
+                  style={{ fontFamily: 'nunito-bold', fontSize: 12, color: theme.gray }}
                   numberOfLines={1}
                   ellipsizeMode='tail'
                 >
@@ -92,47 +94,13 @@ const GroupBox = ({
             }
           </View>
         </View>
-        <Icon name='chevron-right' size={20} color={gen.gray} />
+        <Icon name='chevron-right' size={20} color={theme.gray} />
       </TouchableOpacity>
       {
         status === 'pending' && (
           <View style={{ width: '100%', marginTop: 15 }}>
             <InviteRow setGroups={setGroups} userId={userId} groupId={group_id}/>
           </View>
-          // <View style={styles.inviteRow}>
-          //   <TouchableOpacity 
-          //     activeOpacity={0.7}
-          //     style={[styles.button, styles.acceptButton]}
-          //     onPress={() => {
-          //       hapticSelect()
-          //       acceptGroupInvitation(userId, group_id)
-          //       // update group status in local storage and hook
-          //       setGroups(prev => {
-          //         const newGroups = prev.map(g => g.group_id === group_id ? { ...g, status: 'accepted' } : g)
-          //         return newGroups
-          //       })
-          //     }}
-          //   >
-          //     <Text style={styles.buttonText}>ACCEPT</Text>
-          //   </TouchableOpacity>
-          //   <View style={{ width: 10 }} />
-          //   <TouchableOpacity 
-          //     activeOpacity={0.7}
-          //     style={[styles.button, styles.rejectButton]}
-          //     onPress={() => {
-          //       hapticSelect()
-          //       rejectGroupInvitation(userId, group_id)
-          //       // update group status in local storage and hook
-          //       setGroups(prev => {
-          //         const newGroups = prev.filter(g => g.group_id !== group_id)
-          //         setLocallyStoredVariable('user_groups', JSON.stringify(newGroups))
-          //         return newGroups
-          //       })
-          //     }}
-          //   >
-          //     <Text style={styles.buttonText}>REJECT</Text>
-          //   </TouchableOpacity>
-          // </View>
         )
       }
     </BorderBoxWithHeaderText>
@@ -140,6 +108,9 @@ const GroupBox = ({
 }
 
 export default function GroupPage({ navigation }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [userId, setUserId] = useState('')
   const [groups, setGroups] = useState([])
 
@@ -163,10 +134,10 @@ export default function GroupPage({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* <View style={styles.searchBarContainer}>
-        <View style={styles.searchBar}>
-        </View>
-      </View> */}
+      <SimpleHeader 
+        title={"Groups"}
+        navigation={navigation}
+      />
       <ScrollView 
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -197,7 +168,7 @@ export default function GroupPage({ navigation }) {
             }}
           >
             <Text style={styles.createButtonText}>
-              <Icon name='plus' size={20} color={gen.actionText} /> NEW GROUP
+              <Icon name='plus' size={20} color={theme.actionText} /> NEW GROUP
             </Text>
           </TouchableOpacity>
         </FadeInView>
@@ -207,68 +178,70 @@ export default function GroupPage({ navigation }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollContainer: {
-    flex: 1,
-    width: '100%',
-    paddingTop: 30,
-    paddingHorizontal: 20,
-  },
-  groupContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  groupMembers: {
-    width: '100%',
-    flexDirection: 'row',
-  },
-  memberImage: {
-    width: 25,
-    height: 25,
-    borderRadius: 15,
-    marginRight: 5,
-  },
-  groupImage: {
-    // width: 80,
-    // height: 110,
-    width: 60,
-    height: 80,
-    borderRadius: 7,
-  },
-  groupContent: {
-    flex: 1,
-    marginLeft: 15,
-  },
-  createGroupButton: {
-    width: '100%',
-    marginBottom: 20,
-    borderRadius: 20,
-    borderColor: gen.primaryBorder,
-    borderWidth: 5,
-  },
-  createButtonText: {
-    fontFamily: 'nunito-bold', 
-    fontSize: 18, 
-    color: gen.actionText,
-    textAlign: 'center', 
-    paddingVertical: 20 
-  },
-  searchBarContainer: { 
-    height: 50, 
-    flexDirection: 'row',
-    paddingHorizontal: 20, 
-    marginBottom: 10 
-  },
-  // searchBar: {
-  //   flex: 1,
-  //   backgroundColor: gen.secondaryBackground,
-  //   borderRadius: 30,
-  // }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scrollContainer: {
+      flex: 1,
+      width: '100%',
+      paddingTop: 30,
+      paddingHorizontal: 20,
+    },
+    groupContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    groupMembers: {
+      width: '100%',
+      flexDirection: 'row',
+    },
+    memberImage: {
+      width: 25,
+      height: 25,
+      borderRadius: 15,
+      marginRight: 5,
+    },
+    groupImage: {
+      // width: 80,
+      // height: 110,
+      width: 60,
+      height: 80,
+      borderRadius: 7,
+    },
+    groupContent: {
+      flex: 1,
+      marginLeft: 15,
+    },
+    createGroupButton: {
+      width: '100%',
+      marginBottom: 20,
+      borderRadius: 20,
+      borderColor: theme.primaryBorder,
+      borderWidth: 5,
+    },
+    createButtonText: {
+      fontFamily: 'nunito-bold', 
+      fontSize: 18, 
+      color: theme.actionText,
+      textAlign: 'center', 
+      paddingVertical: 20 
+    },
+    searchBarContainer: { 
+      height: 50, 
+      flexDirection: 'row',
+      paddingHorizontal: 20, 
+      marginBottom: 10 
+    },
+    // searchBar: {
+    //   flex: 1,
+    //   backgroundColor: theme.secondaryBackground,
+    //   borderRadius: 30,
+    // }
+  })
+}

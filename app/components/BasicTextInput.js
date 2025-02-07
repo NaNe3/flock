@@ -1,9 +1,8 @@
-import { forwardRef, useEffect, useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import { TextInput, TouchableOpacity, StyleSheet, View } from 'react-native'
 
-import { hapticSelect } from '../utils/haptics'
-import { gen } from '../utils/styling/colors'
 import { getPrimaryColor } from '../utils/getColorVariety'
+import { useTheme } from '../hooks/ThemeProvider'
 
 const BasicTextInput = forwardRef(({
   placeholder, 
@@ -18,6 +17,9 @@ const BasicTextInput = forwardRef(({
   selection,
   multiline=false,
 }, ref) => {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(getStyle(theme))
+  useEffect(() => { setStyles(getStyle(theme)) }, [theme])
   const [isFocused, setIsFocused] = useState(false)
   const [primaryColor, setPrimaryColor] = useState(null)
 
@@ -43,7 +45,7 @@ const BasicTextInput = forwardRef(({
           style,
           (isFocused && focus) && { borderColor: primaryColor },
         ]}
-        placeholderTextColor={gen.actionText}
+        placeholderTextColor={theme.actionText}
         onFocus={() => {
           setIsFocused(true)
           onFocus()
@@ -60,23 +62,25 @@ const BasicTextInput = forwardRef(({
   )
 })
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  textInput: {
-    width: '100%',
-    padding: 20,
-    marginTop: 20,
-    borderRadius: 15,
-    borderWidth: 3,
-    borderColor: gen.primaryBorder,
-    fontFamily: 'nunito-bold',
-    fontSize: 18,
-    maxHeight: 140,
-    color: gen.actionText,
-  },
-});
+export default BasicTextInput
 
-export default BasicTextInput;
+function getStyle(theme) {
+  return StyleSheet.create({
+    container: {
+      width: '100%',
+      alignItems: 'center',
+    },
+    textInput: {
+      width: '100%',
+      padding: 20,
+      marginTop: 20,
+      borderRadius: 15,
+      borderWidth: 3,
+      borderColor: theme.primaryBorder,
+      fontFamily: 'nunito-bold',
+      fontSize: 18,
+      maxHeight: 140,
+      color: theme.actionText,
+    },
+  })
+}

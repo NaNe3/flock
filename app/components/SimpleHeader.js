@@ -1,12 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 
 import { hapticSelect } from '../utils/haptics'
-import { gen } from '../utils/styling/colors'
+import { useTheme } from '../hooks/ThemeProvider'
 
-const SimpleHeader = ({
+export default function SimpleHeader({
   navigation, 
   functionalNavigation = null,
   title = null,
@@ -15,7 +15,10 @@ const SimpleHeader = ({
   component = null,
   rightIcon = null,
   verticalPadding = 0
-}) => {
+}) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const insets = useSafeAreaInsets()
   const fadeAnim = useRef(new Animated.Value(0)).current
 
@@ -45,7 +48,7 @@ const SimpleHeader = ({
           <Icon 
             name='chevron-left'
             size={20}
-            color={gen.primaryText}
+            color={theme.primaryText}
           />
           { title && (
             <Text style={styles.headerTitle}>{title}</Text>
@@ -73,33 +76,33 @@ const SimpleHeader = ({
   )
 }
 
-const styles = StyleSheet.create({
-  header: {
-    width: '100%',
-    height: 100,
-    paddingTop: 40,
-    backgroundColor: gen.primaryBackground
-  },
-  headerContent: {
-    height: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-  },
-  headerTitle: {
-    fontFamily: 'nunito-bold',
-    fontSize: 23,
-    marginLeft: 10,
-    color: gen.primaryText
-  },
-  middleTitle: {
-    fontFamily: 'nunito-bold', 
-    fontSize: 23, 
-    flex: 1, 
-    textAlign: 'center',
-    color: gen.primaryText,
-  }
-})
-
-export default SimpleHeader
+function style(theme) {
+  return StyleSheet.create({
+    header: {
+      width: '100%',
+      height: 100,
+      paddingTop: 40,
+      backgroundColor: theme.primaryBackground
+    },
+    headerContent: {
+      height: 60,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+    },
+    headerTitle: {
+      fontFamily: 'nunito-bold',
+      fontSize: 23,
+      marginLeft: 10,
+      color: theme.primaryText
+    },
+    middleTitle: {
+      fontFamily: 'nunito-bold', 
+      fontSize: 23, 
+      flex: 1, 
+      textAlign: 'center',
+      color: theme.primaryText,
+    }
+  })
+}

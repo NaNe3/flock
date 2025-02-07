@@ -3,13 +3,13 @@ import { Text, View, StyleSheet, TouchableOpacity, Keyboard, TouchableWithoutFee
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import * as AppleAuthentication from 'expo-apple-authentication';
 
-import { createUserThroughAppleAuthentication, setUserInformationFromUUID, signInUserThroughAppleAuthentication } from './utils/authenticate';
-import { finishOnboarding, setLocallyStoredVariable, setUserInformationInLocalStorage } from './utils/localStorage';
-import { gen } from './utils/styling/colors';
+import { signInUserThroughAppleAuthentication } from './utils/authenticate';
+import { finishOnboarding, setLocallyStoredVariable } from './utils/localStorage';
+import { constants } from './utils/styling/colors';
 import { hapticError, hapticImpactSoft } from './utils/haptics';
 
 export default function SignIn({ setSession, setIsOnboardComplete, ...props }) {
-  const { setCurrentScreen, onboardingData, setOnboardingData } = props
+  const { setCurrentScreen } = props
   const [name, setName] = useState('')
 
   const logInThroughExistingAppleAccount = async (credential) => {
@@ -74,7 +74,7 @@ export default function SignIn({ setSession, setIsOnboardComplete, ...props }) {
             activeOpacity={0.7}
           >
             <Text style={styles.authText}>
-              <Icon name='apple' size={20} color={gen.darkGray} /> Continue with Apple
+              <Icon name='apple' size={20} color={constants.darkGray} /> Continue with Apple
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -83,7 +83,7 @@ export default function SignIn({ setSession, setIsOnboardComplete, ...props }) {
             activeOpacity={0.4}
           >
             <Text style={styles.authText}>
-              <Icon name='google' size={16} color={gen.darkGray} /> Continue with Google
+              <Icon name='google' size={16} color={constants.darkGray} /> Continue with Google
             </Text>
           </TouchableOpacity>
         </View>
@@ -95,7 +95,7 @@ export default function SignIn({ setSession, setIsOnboardComplete, ...props }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: gen.blue,
+    backgroundColor: constants.blue,
     alignItems: 'center',
     paddingTop: 80,
   }, 
@@ -129,13 +129,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     color: '#fff',
     borderWidth: 3,
-    borderColor: gen.lightGray,
+    borderColor: constants.lightGray,
     justifyContent: 'center',
     alignItems: 'center',
   },
   authText: {
     fontSize: 16,
     fontFamily: 'nunito-bold',
-    color: gen.darkGray,
+    color: constants.darkGray,
   }
 })

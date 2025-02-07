@@ -3,7 +3,6 @@ import { Image, StyleSheet, Text, TouchableOpacity, View, ScrollView } from "rea
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from "../../utils/localStorage";
-import { gen } from "../../utils/styling/colors";
 import { getLocalUriForFile } from "../../utils/db-download";
 import { hapticSelect } from "../../utils/haptics";
 

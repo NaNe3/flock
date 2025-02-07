@@ -3,7 +3,7 @@ import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 // import Icon from 'react-native-vector-icons/FontAwesome';
 
 import FA6Icon from '../components/FA6Icon';
-import { gen } from '../utils/styling/colors';
+import { classic } from '../utils/styling/colors';
 import { hapticImpactSoft } from '../utils/haptics';
 import getColorVariety, { getColorVarietyAsync } from "../utils/getColorVariety";
 import { useFocusEffect } from "@react-navigation/native";
@@ -16,13 +16,13 @@ export default function BasicButton({
   disabled = false,
   icon,
   iconType="FA",
-  color = gen.primaryColor,
+  color = classic.primaryColor,
 }) {
   const [isPressed, setIsPressed] = useState(false)
-  const [primaryColor, setPrimaryColor] = useState(gen.primaryColor)
-  const [primaryColorShadow, setPrimaryColorShadow] = useState(gen.primaryColorShadow)
-  const [primaryColorDisabled, setPrimaryColorDisabled] = useState(gen.primaryColorDisabled)
-  const [primaryColorShadowDisabled, setPrimaryColorShadowDisabled] = useState(gen.primaryColorShadowDisabled)
+  const [primaryColor, setPrimaryColor] = useState(classic.primaryColor)
+  const [primaryColorShadow, setPrimaryColorShadow] = useState(classic.primaryColorShadow)
+  const [primaryColorDisabled, setPrimaryColorDisabled] = useState(classic.primaryColorDisabled)
+  const [primaryColorShadowDisabled, setPrimaryColorShadowDisabled] = useState(classic.primaryColorShadowDisabled)
   
   const init = async () => {
     const colors = await getColorVarietyAsync() 

@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { Animated, PanResponder, StyleSheet, TouchableOpacity, View } from "react-native"
+import { useCallback, useEffect, useState } from "react"
+import { StyleSheet, View } from "react-native"
 import { useFocusEffect } from '@react-navigation/native'
-import Icon from 'react-native-vector-icons/FontAwesome6'
 import { useEvent } from 'expo'
 import { useVideoPlayer, VideoView, } from 'expo-video'
 import { LinearGradient } from 'expo-linear-gradient'
 
-import { gen } from '../utils/styling/colors'
+import { constants } from '../utils/styling/colors'
 import hexToRgba from '../utils/hexToRgba'
 
 export default function VideoPreview({ 
@@ -15,7 +14,8 @@ export default function VideoPreview({
   includeBottomShadow = false,
   declareLoadingState = () => {},
   style = {},
-  playing=null
+  playing=null,
+  pausable=true,
  }) {
   const [percentage, setPercentage] = useState(0)
   const player = useVideoPlayer(source, player => {
@@ -26,25 +26,28 @@ export default function VideoPreview({
   }, error => {
     console.error('Error loading video:', error)
   })
-  
 
+
+  // This exists to ensure video is playing after video loads
+  //   This fixes a bug in Capture.js that previews a video just taken
+  useEffect(() => { if (pausable) { setTimeout(() => { if (player) player.play() }, 1000) } }, [])
+  
+  // Listens to muted setting of VideoImpressions
+  useEffect(() => { if (player) player.muted = muted }, [muted])
+
+  // Video progress bar
   useEffect(() => {
     const playback = setInterval(() => {
       if (player) {
-        const completion = (player.currentTime / player.duration) * 100;
-        if (!isNaN(completion)) setPercentage(completion);
+        const completion = (player.currentTime / player.duration) * 100
+        if (!isNaN(completion)) setPercentage(completion)
       }
-    }, 20);
+    }, 20)
 
-    return () => {
-      clearInterval(playback);
-    }
+    return () => clearInterval(playback)
   }, [player])
 
-  useEffect(() => {
-    if (player) player.muted = muted
-  }, [muted])
-
+  // listen to ViewImpressions play/pause state
   useEffect(() => {
     if (player) {
       if (playing === true) {
@@ -55,6 +58,7 @@ export default function VideoPreview({
     }
   }, [playing])
 
+  // listen to when video is ready to play
   useEffect(() => {
     if (status === 'readyToPlay') {
       declareLoadingState(false)
@@ -89,7 +93,7 @@ export default function VideoPreview({
       />
       {includeBottomShadow && (
         <LinearGradient
-          colors={['transparent', hexToRgba(gen.heckaGray, 0.8), gen.heckaGray]}
+          colors={['transparent', hexToRgba(constants.heckaGray, 0.8), constants.heckaGray]}
           style={{ height: 130, width: '100%', position: 'absolute', bottom: 0, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 }}
         />
       )}

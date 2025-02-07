@@ -6,13 +6,12 @@ import Icon from 'react-native-vector-icons/FontAwesome5'
 
 import Avatar from "./Avatar"
 
-import { gen, currentTheme } from "../utils/styling/colors"
-import { getAttributeFromObjectInLocalStorage } from "../utils/localStorage"
-import { getLocalUriForFile } from "../utils/db-download"
+// import { gen, currentTheme } from "../utils/styling/colors"
 import { hapticImpactHeavy } from "../utils/haptics"
 import { getColorLight } from "../utils/getColorVariety"
 import { BlurView } from "expo-blur"
 import hexToRgba from "../utils/hexToRgba"
+import { useTheme } from "../hooks/ThemeProvider"
 
 const width = Dimensions.get('window').width
 const MAX_DRAG = 15
@@ -26,6 +25,10 @@ export default function NotificationBody({
   route,
   proceed
 }) {
+  const { theme, currentTheme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const navigation = useNavigation()
   const insets = useSafeAreaInsets()
   const translateY = useRef(new Animated.Value(-200)).current
@@ -121,61 +124,63 @@ export default function NotificationBody({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    zIndex: 1000,
-    position: 'absolute',
-    width: width-40,
-    marginLeft: 20,
-    marginHorizontal: 20,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  notification: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  notificationInner: {
-    flex: 1, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    padding: 15, 
-    borderRadius: 20 
-  },
-  shadow: {
-    shadowColor: gen.primaryBorder, // Black shadow color
-    shadowOffset: { width: 0, height: 2 }, // Offset for the shadow
-    shadowOpacity: 0.5, // Low opacity for a subtle shadow
-    shadowRadius: 4, // Blur radius for the shadow
-  },
-  avatarContainer: {
-    width: 50,
-    height: 50,
-    padding: 3,
-    borderColor: gen.primaryColor,
-    borderWidth: 3,
-    borderRadius: 100,
-    marginRight: 15
-  },
-  avatar: {
-    flex: 1,
-    borderRadius: 100,
-  },
-  informationContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  informationHeader: {
-    color: gen.primaryColor,
-    fontSize: 15,
-    fontWeight: 'bold',
-    fontFamily: 'nunito-bold',
-    marginBottom: -3
-  },
-  informationBody: {
-    color: gen.primaryColor,
-    // opacity: 0.8,
-    fontSize: 14,
-    fontFamily: 'nunito-regular',
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      zIndex: 1000,
+      position: 'absolute',
+      width: width-40,
+      marginLeft: 20,
+      marginHorizontal: 20,
+      borderRadius: 20,
+      overflow: 'hidden',
+    },
+    notification: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    notificationInner: {
+      flex: 1, 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      padding: 15, 
+      borderRadius: 20 
+    },
+    shadow: {
+      shadowColor: theme.primaryBorder, // Black shadow color
+      shadowOffset: { width: 0, height: 2 }, // Offset for the shadow
+      shadowOpacity: 0.5, // Low opacity for a subtle shadow
+      shadowRadius: 4, // Blur radius for the shadow
+    },
+    avatarContainer: {
+      width: 50,
+      height: 50,
+      padding: 3,
+      borderColor: theme.primaryColor,
+      borderWidth: 3,
+      borderRadius: 100,
+      marginRight: 15
+    },
+    avatar: {
+      flex: 1,
+      borderRadius: 100,
+    },
+    informationContainer: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    informationHeader: {
+      color: theme.primaryColor,
+      fontSize: 15,
+      fontWeight: 'bold',
+      fontFamily: 'nunito-bold',
+      marginBottom: -3
+    },
+    informationBody: {
+      color: theme.primaryColor,
+      // opacity: 0.8,
+      fontSize: 14,
+      fontFamily: 'nunito-regular',
+    },
+  })
+}

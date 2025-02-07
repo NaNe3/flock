@@ -7,16 +7,18 @@ import SimpleHeader from "../../../components/SimpleHeader"
 import Avatar from "../../../components/Avatar"
 import StrongContentBox from "../../../components/StrongContentBox"
 
-import { gen } from "../../../utils/styling/colors"
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from "../../../utils/localStorage"
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry"
-import BasicBottomSheet from "../../components/BasicBottomSheet"
-import { hapticError, hapticSelect } from "../../../utils/haptics"
+import { hapticSelect } from "../../../utils/haptics"
 import PersonBottomSheet from "../../../components/PersonBottomSheet"
 import { timeAgoGeneral } from "../../../utils/timeDiff"
+import { useTheme } from "../../../hooks/ThemeProvider"
 
 export default function GroupDetails({ navigation, route }) {
   const { group_id, group_name, group_avatar, group_plan, members } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const [groupName, setGroupName] = useState(group_name)
   const [userId, setUserId] = useState('')
   const [groupAvatar, setGroupAvatar] = useState(group_avatar)
@@ -140,7 +142,7 @@ export default function GroupDetails({ navigation, route }) {
             }
             <TouchableOpacity 
               key="add-group-members"
-              style={[styles.optionRow, { borderTopWidth: 2, borderColor: gen.primaryBorder }]}
+              style={[styles.optionRow, { borderTopWidth: 2, borderColor: theme.primaryBorder }]}
               activeOpacity={0.7}
               onPress={() => {
                 navigation.navigate("AddGroupMembers", { 
@@ -151,11 +153,11 @@ export default function GroupDetails({ navigation, route }) {
               }}
             >
               <Text style={styles.optionRowText}>invite friends</Text>
-              <Icon name="chevron-right" size={16} color={gen.secondaryText} />
+              <Icon name="chevron-right" size={16} color={theme.secondaryText} />
             </TouchableOpacity>
             <TouchableOpacity 
               key="see-full-list"
-              style={[styles.optionRow, { borderTopWidth: 2, borderColor: gen.primaryBorder }]}
+              style={[styles.optionRow, { borderTopWidth: 2, borderColor: theme.primaryBorder }]}
               activeOpacity={0.7}
               onPress={() => {
                 navigation.navigate("AllGroupMembers", { 
@@ -166,7 +168,7 @@ export default function GroupDetails({ navigation, route }) {
               }}
             >
               <Text style={styles.optionRowText}>see all members</Text>
-              <Icon name="chevron-right" size={16} color={gen.secondaryText} />
+              <Icon name="chevron-right" size={16} color={theme.secondaryText} />
             </TouchableOpacity>
           </StrongContentBox>
 
@@ -197,10 +199,10 @@ export default function GroupDetails({ navigation, route }) {
                             })
                           }}
                         >
-                          <Text style={[styles.optionRowText, { color: row.danger ? gen.red : gen.primaryText }]}>
-                            <Icon name={row.actionIcon} size={16} color={row.danger ? gen.red : gen.secondaryText} /> {row.name}
+                          <Text style={[styles.optionRowText, { color: row.danger ? theme.red : theme.primaryText }]}>
+                            <Icon name={row.actionIcon} size={16} color={row.danger ? theme.red : theme.secondaryText} /> {row.name}
                           </Text>
-                          { row.icon ? <Icon name={row.icon} size={16} color={row.danger ? gen.red : gen.secondaryText} /> : null }
+                          { row.icon ? <Icon name={row.icon} size={16} color={row.danger ? theme.red : theme.secondaryText} /> : null }
                         </TouchableOpacity>
                       )
                     })
@@ -219,7 +221,7 @@ export default function GroupDetails({ navigation, route }) {
               activeOpacity={0.7}
             >
               <Text style={styles.optionRowText}>Block a member</Text>
-              <Icon name="chevron-right" size={16} color={gen.secondaryText} />
+              <Icon name="chevron-right" size={16} color={theme.secondaryText} />
             </TouchableOpacity>
           </StrongContentBox> */}
         </View>
@@ -237,96 +239,98 @@ export default function GroupDetails({ navigation, route }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-  },
-  landingContainer: {
-    flex: 1,
-    width: '100%',
-    paddingTop: 600,
-    marginTop: -600,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
-    backgroundColor: gen.primaryBackground,
-  },
-  landingContainerContent: {
-    margin: 20,
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contentContainer: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: gen.secondaryBackground,
-  },
-  contentContainerFormatting: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    flex: 1,
-    width: '100%',
-    padding: 20,
-    paddingBottom: 100
-  },
-  groupPhoto: {
-    borderRadius: 10,
-    flex: 1,
-    width: '100%',
-  },
-  groupPhotoContainer: {
-    width: 150,
-    height: 200,
-    padding: 5,
-    marginVertical: 20,
-    borderWidth: 5,
-    borderColor: gen.primaryBorder,
-    borderRadius: 20,
-  }, 
-  groupNameText: {
-    fontFamily: 'nunito-bold',
-    fontSize: 30,
-    color: gen.primaryText,
-    textAlign: 'center',
-  },
-  optionRow: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  optionRowText: {
-    fontFamily: 'nunito-bold',
-    fontSize: 16,
-    color: gen.primaryText
-  },
-  optionRowTextSecondary: {
-    fontFamily: 'nunito-bold',
-    fontSize: 14,
-    marginTop: -3,
-    color: gen.secondaryText
-  },
-  avatarImageContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 50,
-    borderWidth: 2,
-    borderColor: gen.gray,
-    padding: 2,
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
-  },
-  userNameLeft: {
-    marginLeft: 10,
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+    },
+    landingContainer: {
+      flex: 1,
+      width: '100%',
+      paddingTop: 600,
+      marginTop: -600,
+      borderBottomLeftRadius: 50,
+      borderBottomRightRadius: 50,
+      backgroundColor: theme.primaryBackground,
+    },
+    landingContainerContent: {
+      margin: 20,
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    contentContainer: {
+      flex: 1,
+      width: '100%',
+      backgroundColor: theme.secondaryBackground,
+    },
+    contentContainerFormatting: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    content: {
+      flex: 1,
+      width: '100%',
+      padding: 20,
+      paddingBottom: 100
+    },
+    groupPhoto: {
+      borderRadius: 10,
+      flex: 1,
+      width: '100%',
+    },
+    groupPhotoContainer: {
+      width: 150,
+      height: 200,
+      padding: 5,
+      marginVertical: 20,
+      borderWidth: 5,
+      borderColor: theme.primaryBorder,
+      borderRadius: 20,
+    }, 
+    groupNameText: {
+      fontFamily: 'nunito-bold',
+      fontSize: 30,
+      color: theme.primaryText,
+      textAlign: 'center',
+    },
+    optionRow: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    optionRowText: {
+      fontFamily: 'nunito-bold',
+      fontSize: 16,
+      color: theme.primaryText
+    },
+    optionRowTextSecondary: {
+      fontFamily: 'nunito-bold',
+      fontSize: 14,
+      marginTop: -3,
+      color: theme.secondaryText
+    },
+    avatarImageContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 50,
+      borderWidth: 2,
+      borderColor: theme.gray,
+      padding: 2,
+      overflow: 'hidden',
+    },
+    avatarImage: {
+      flex: 1,
+      width: '100%',
+      height: '100%',
+      borderRadius: 50,
+    },
+    userNameLeft: {
+      marginLeft: 10,
+    },
+  })
+}

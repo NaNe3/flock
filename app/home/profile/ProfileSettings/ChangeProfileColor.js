@@ -7,12 +7,14 @@ import SelectColor from "../../../components/SelectColor"
 import BasicButton from "../../../components/BasicButton"
 
 import { hapticSelect } from "../../../utils/haptics"
-import { gen } from "../../../utils/styling/colors"
 import { getAttributeFromObjectInLocalStorage, getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../../../utils/localStorage"
 import { updateUserColorById } from "../../../utils/db-users"
-import { LinearGradient } from "expo-linear-gradient"
+import { useTheme } from "../../../hooks/ThemeProvider"
 
 export default function ChangeProfileColor({ navigation }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const insets = useSafeAreaInsets()  
 
   const [formerColor, setFormerColor] = useState(null)
@@ -87,16 +89,18 @@ export default function ChangeProfileColor({ navigation }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-  },
-  contentContainer: {
-    padding: 20
-  },
-  button: {
-    position: 'absolute',
-    alignSelf: 'center',
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+    },
+    contentContainer: {
+      padding: 20
+    },
+    button: {
+      position: 'absolute',
+      alignSelf: 'center',
+    }
+  })
+}

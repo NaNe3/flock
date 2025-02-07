@@ -5,10 +5,14 @@ import SimpleHeader from '../components/SimpleHeader'
 import FadeInView from '../components/FadeInView'
 
 import { getChaptersFromBook } from '../utils/read'
-import { gen } from '../utils/styling/colors'
+import { useTheme } from '../hooks/ThemeProvider'
 
 export default function Chapters({ navigation, route}) {
   const { work, book } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const [chapters, setChapters] = useState([])
 
   useEffect(() => {
@@ -66,27 +70,29 @@ export default function Chapters({ navigation, route}) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.secondaryBackground,
-  },
-  contentContainer: {
-    flex: 1,
-    paddingVertical: 20,
-  },
-  chaptersContainer: {
-    width: '100%',
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  chapter: {
-    textAlign: 'center',
-    fontSize: 22,
-    fontFamily: 'nunito-bold',
-    color: gen.primaryText,
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.secondaryBackground,
+    },
+    contentContainer: {
+      flex: 1,
+      paddingVertical: 20,
+    },
+    chaptersContainer: {
+      width: '100%',
+      paddingHorizontal: 20,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+    },
+    chapter: {
+      textAlign: 'center',
+      fontSize: 22,
+      fontFamily: 'nunito-bold',
+      color: theme.primaryText,
+    }
+  })
+}

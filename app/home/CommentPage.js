@@ -5,13 +5,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CommentBar from "../components/CommentBar";
 import BasicComment from "../components/BasicComment";
 
-import { gen } from "../utils/styling/colors";
 import { hapticImpactHeavy } from "../utils/haptics";
 import { getComments, getReplies } from "../utils/db-comment";
 import BasicCommentSkeleton from "./components/BasicCommentSkeleton";
+import { useTheme } from "../hooks/ThemeProvider";
 
 export default function CommentPage({ navigation, route }) {
   const { media_id, media_type } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const insets = useSafeAreaInsets()
   const pan = useRef(new Animated.ValueXY()).current;
   const alreadySwiped = useRef(false)
@@ -127,50 +131,52 @@ export default function CommentPage({ navigation, route }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.secondaryBackground,
-  },
-  swipeContainer: { width: '100%', },
-  dragContainer: {
-    flex: 1,
-    backgroundColor: gen.primaryBackground,
-    borderTopRightRadius: 40,
-    borderTopLeftRadius: 40,
-  },
-  actionContainer: {
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 15,
-  },
-  actionBar: {
-    width: 35,
-    height: 6,
-    backgroundColor: gen.actionText,
-    borderRadius: 20
-  },
-  headerText: {
-    fontFamily: 'nunito-bold',
-    color: gen.actionText,
-    fontSize: 16,
-    marginVertical: 10
-  },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 5,
-    paddingTop: 5
-  },
-  noCommentsDisclaimer: {
-    color: gen.actionText,
-    fontSize: 24,
-    marginTop: 120,
-    fontFamily: 'nunito-bold',
-    textAlign: 'center'
-  },
-  footer: {
-    width: '100%',
-    paddingHorizontal: 20
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.secondaryBackground,
+    },
+    swipeContainer: { width: '100%', },
+    dragContainer: {
+      flex: 1,
+      backgroundColor: theme.primaryBackground,
+      borderTopRightRadius: 40,
+      borderTopLeftRadius: 40,
+    },
+    actionContainer: {
+      width: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: 15,
+    },
+    actionBar: {
+      width: 35,
+      height: 6,
+      backgroundColor: theme.actionText,
+      borderRadius: 20
+    },
+    headerText: {
+      fontFamily: 'nunito-bold',
+      color: theme.actionText,
+      fontSize: 16,
+      marginVertical: 10
+    },
+    contentContainer: {
+      flex: 1,
+      paddingHorizontal: 5,
+      paddingTop: 5
+    },
+    noCommentsDisclaimer: {
+      color: theme.actionText,
+      fontSize: 24,
+      marginTop: 120,
+      fontFamily: 'nunito-bold',
+      textAlign: 'center'
+    },
+    footer: {
+      width: '100%',
+      paddingHorizontal: 20
+    }
+  })
+}

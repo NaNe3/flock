@@ -3,7 +3,7 @@ import { Text, View, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 
 import BasicButton from '../components/BasicButton';
 import { hapticSelect } from '../utils/haptics';
-import { gen } from '../utils/styling/colors';
+import { constants } from '../utils/styling/colors';
 
 export default function Goals({ setCurrentScreen, planData, setPlanData }) {
   const [goal, setGoal] = useState(null)
@@ -92,13 +92,13 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 20,
     borderWidth: 3,
-    borderColor: gen.lightGray,
+    borderColor: constants.lightGray,
     borderRadius: 10,
     marginBottom: 13,
   },
   boxSelected: {
-    borderColor: gen.primaryColor,
-    color: gen.primaryColor,
+    borderColor: constants.blue,
+    color: constants.blue,
   },
   medium: {
     fontSize: 18,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
-    color: gen.darkGray,
+    color: constants.darkGray,
     fontFamily: 'nunito-bold',
   }
 })

@@ -1,17 +1,20 @@
+import { useEffect, useState } from 'react';
 import { View, StyleSheet, Text, Touchable, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
-import { gen } from '../utils/styling/colors';
-import { useEffect, useState } from 'react';
+import { useTheme } from '../hooks/ThemeProvider';
 
 export default function BorderBoxWithHeaderText({ 
   children, 
   recommended=false,
   innunciated=false,
   onPress=null,
-  backgroundColor=gen.primaryBackground,
+  backgroundColor,
   title=null
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [main, setMain] = useState({})
 
   useEffect(() => {
@@ -53,33 +56,35 @@ export default function BorderBoxWithHeaderText({
   )
 }
 
-const styles = StyleSheet.create({
-  planBox: {
-    width: '100%',
-    borderColor: gen.primaryBorder,
-    borderWidth: 5,
-    borderRadius: 15,
-    marginBottom: 20,
-  }, 
-  boxHeader: {
-    paddingHorizontal: 10,
-    marginTop: -13,
-    marginLeft: 15,
-    alignSelf: 'flex-start',
-  },
-  boxHeaderText: {
-    fontSize: 15,
-    fontFamily: 'nunito-bold',
-    color: '#000',
-  },
-  recommended: {
-    borderColor: gen.primaryColor,
-    color: gen.primaryColor,
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    planBox: {
+      width: '100%',
+      borderColor: theme.primaryBorder,
+      borderWidth: 5,
+      borderRadius: 15,
+      marginBottom: 20,
+    }, 
+    boxHeader: {
+      paddingHorizontal: 10,
+      marginTop: -13,
+      marginLeft: 15,
+      alignSelf: 'flex-start',
+    },
+    boxHeaderText: {
+      fontSize: 15,
+      fontFamily: 'nunito-bold',
+      color: '#000',
+    },
+    recommended: {
+      borderColor: theme.primaryColor,
+      color: theme.primaryColor,
+    },
+    contentContainer: {
+      flex: 1,
+      padding: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }
+  })
+}

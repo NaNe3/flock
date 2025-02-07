@@ -3,13 +3,11 @@ import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import { createRelationship, getRelationships, removeRelationship } from '../utils/db-relationship'
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from '../utils/localStorage'
-import { useEffect, useState } from 'react'
-import { gen } from '../utils/styling/colors'
+import { useEffect, useRef, useState } from 'react'
 
 import SearchBar from './components/SearchBar'
 import Avatar from '../components/Avatar'
 import FadeInView from '../components/FadeInView'
-import SimpleHeader from '../components/SimpleHeader'
 import { searchForUsersByText } from '../utils/authenticate'
 import { hapticSelect } from '../utils/haptics'
 import FriendRequestContainer from './components/FriendRequestContainer'
@@ -18,8 +16,13 @@ import { useRealtime } from '../hooks/RealtimeProvider'
 import { timeAgoGeneral } from '../utils/timeDiff'
 import PersonBottomSheet from '../components/PersonBottomSheet'
 import { getColorLight } from '../utils/getColorVariety'
+import { useTheme } from '../hooks/ThemeProvider'
+import SimpleHeader from '../components/SimpleHeader'
 
 export default function AddFriend({ navigation }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const { incoming, requested } = useRealtime()
 
   const [disabled, setDisabled] = useState(true)
@@ -180,19 +183,26 @@ export default function AddFriend({ navigation }) {
   //   Linking.openURL(url).catch(err => console.error('An error occurred', err))
   // }
 
+  const personRowProps = {
+    setPersonBottomSheetVisible,
+    setSelectedPerson,
+    theme,
+    styles,
+  }
+
   return (
     <View style={styles.container}>
       <SimpleHeader
         navigation={navigation}
         title='Manage friends'
-        // rightIcon={
-        //   <Icon name='inbox' size={20} color={gen.primaryText} />
-        // }
+        rightIcon={
+          <Icon name='inbox' size={20} color={theme.primaryText} />
+        }
       />
       <View style={styles.headerContainer}>
         <View style={styles.searchBarContainer}>
           <SearchBar 
-            placeholder='Search for friends...'
+            placeholder='Search by name'
             query={query}
             setQuery={setQuery}
           />
@@ -208,13 +218,13 @@ export default function AddFriend({ navigation }) {
                 activeOpacity={0.7}
                 onPress={requestContactsPermission}
               >
-                <Icon name='address-book' size={30} color={gen.secondaryText} />
+                <Icon name='address-book' size={30} color={theme.secondaryText} />
                 <Text 
                   style={styles.contactOptionBoxText}
                   numberOfLines={1}
                   ellipsizeMode='tail'
                 >Enable contacts</Text>
-                <Icon name='chevron-right' size={20} color={gen.secondaryText} />
+                <Icon name='chevron-right' size={20} color={theme.secondaryText} />
               </TouchableOpacity>
             )} */}
 
@@ -234,8 +244,7 @@ export default function AddFriend({ navigation }) {
                       }}
                       invitationStatus={friend.status}
                       key={index}
-                      setPersonBottomSheetVisible={setPersonBottomSheetVisible}
-                      setSelectedPerson={setSelectedPerson}
+                      {...personRowProps}
                     />
                   )
                 })}
@@ -254,8 +263,7 @@ export default function AddFriend({ navigation }) {
                       buffering={resultsBuffering.includes(friend.id)}
                       invitationStatus={friend.status}
                       key={index}
-                      setPersonBottomSheetVisible={setPersonBottomSheetVisible}
-                      setSelectedPerson={setSelectedPerson}
+                      {...personRowProps}
                     />
                   )
                 })}
@@ -280,8 +288,7 @@ export default function AddFriend({ navigation }) {
                   buffering={resultsBuffering.includes(person.id)}
                   invitationStatus={invitationStatus}
                   key={index}
-                  setPersonBottomSheetVisible={setPersonBottomSheetVisible}
-                  setSelectedPerson={setSelectedPerson}
+                  {...personRowProps}
                 />
               )
             })}
@@ -336,10 +343,12 @@ export default function AddFriend({ navigation }) {
 }
 
 const PersonRow = ({ 
-  person, 
-  onPress, 
+  person,
+  onPress,
   invitationStatus,
   buffering,
+  theme,
+  styles,
   ...props
 }) => {
   let displayText = ''
@@ -355,7 +364,7 @@ const PersonRow = ({
       style={[styles.personRow, person.type === 'contact' && { paddingHorizontal: 10 }]}
     >
       <View style={styles.personInformation}>
-        <View style={[styles.avatarContainer, { borderColor: invitationStatus === 'accepted' ? person.color : gen.primaryBorder }]}>
+        <View style={[styles.avatarContainer, { borderColor: invitationStatus === 'accepted' ? person.color : theme.primaryBorder }]}>
           {
             person.type !== 'contact' 
               ? <Avatar 
@@ -418,142 +427,144 @@ const PersonRow = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: gen.secondaryBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerContainer: {
-    width: '100%',
-    padding: 20,
-    paddingTop: 5,
-    paddingBottom: 10,
-    backgroundColor: gen.primaryBackground,
-  },
-  contentContainer: {
-    flex: 1,
-    width: '100%',
-    paddingVertical: 20,
-    backgroundColor: gen.secondaryBackground,
-  },
-  searchBarContainer: {
-    width: '100%',
-    height: 50, 
-    flexDirection: 'row',
-    marginBottom: 10 
-  },
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      width: '100%',
+      backgroundColor: theme.secondaryBackground,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerContainer: {
+      width: '100%',
+      padding: 20,
+      paddingTop: 5,
+      paddingBottom: 10,
+      backgroundColor: theme.primaryBackground,
+    },
+    contentContainer: {
+      flex: 1,
+      width: '100%',
+      paddingVertical: 20,
+      backgroundColor: theme.secondaryBackground,
+    },
+    searchBarContainer: {
+      width: '100%',
+      height: 50, 
+      flexDirection: 'row',
+      marginBottom: 10 
+    },
 
-  personRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 5,
-    paddingHorizontal: 20,
-  },
-  personInformation: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    padding: 2,
-    borderWidth: 3,
-    borderColor: gen.primaryBorder,
-    width: 50,
-    height: 50,
-    borderRadius: 50,
-    overflow: 'hidden',
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
-  },
-  contactAvatar: {
-    backgroundColor: gen.primaryBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontFamily: 'nunito-bold',
-    fontSize: 16,
-    color: gen.primaryText,
-  },
-  personNameBox: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  personName: {
-    fontFamily: 'nunito-bold',
-    fontSize: 18,
-    color: gen.primaryText,
-  },
-  personLastStudied: {
-    fontFamily: 'nunito-bold',
-    fontSize: 14,
-    color: gen.gray,
-  },
+    personRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 5,
+      paddingHorizontal: 20,
+    },
+    personInformation: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    avatarContainer: {
+      padding: 2,
+      borderWidth: 3,
+      borderColor: theme.primaryBorder,
+      width: 50,
+      height: 50,
+      borderRadius: 50,
+      overflow: 'hidden',
+    },
+    avatar: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 50,
+    },
+    contactAvatar: {
+      backgroundColor: theme.primaryBackground,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    avatarText: {
+      fontFamily: 'nunito-bold',
+      fontSize: 16,
+      color: theme.primaryText,
+    },
+    personNameBox: {
+      flex: 1,
+      marginLeft: 10,
+    },
+    personName: {
+      fontFamily: 'nunito-bold',
+      fontSize: 18,
+      color: theme.primaryText,
+    },
+    personLastStudied: {
+      fontFamily: 'nunito-bold',
+      fontSize: 14,
+      color: theme.gray,
+    },
 
-  interactButton: {
-    minWidth: 70,
-    borderRadius: 30,
-    // backgroundColor: gen.primaryColor,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontFamily: 'nunito-bold',
-    fontSize: 14,
-    color: '#fff',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-  },
-  invited: { backgroundColor: gen.primaryColorLight },
-  contactBackground: { backgroundColor: gen.primaryColor },
+    interactButton: {
+      minWidth: 70,
+      borderRadius: 30,
+      // backgroundColor: theme.primaryColor,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    buttonText: {
+      fontFamily: 'nunito-bold',
+      fontSize: 14,
+      color: '#fff',
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+    },
+    invited: { backgroundColor: theme.primaryColorLight },
+    contactBackground: { backgroundColor: theme.primaryColor },
 
-  contactOptionBox: {
-    marginHorizontal: 20,
-    marginVertical: 15,
-    padding: 20,
-    backgroundColor: gen.primaryBackground,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  contactOptionBoxText: {
-    flex: 1,
-    fontFamily: 'nunito-bold',
-    fontSize: 18,
-    color: gen.secondaryText,
-    marginHorizontal: 15,
-  },
-  section: {
-    marginVertical: 20,
-  },
-  sectionHeaderText: {
-    fontFamily: 'nunito-bold',
-    fontSize: 18,
-    color: gen.secondaryText,
-    paddingHorizontal: 20,
-    marginBottom: 10,
-    marginTop: 20,
-    textAlign: 'center',
-  },
-  contactSection: {
-    marginHorizontal: 15,
-    paddingVertical: 10,
-    backgroundColor: gen.primaryBackground,
-    borderRadius: 15,
-  },
-  ellipsisContainer: {
-    width: 35,
-    height: 28,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-  }
-})
+    contactOptionBox: {
+      marginHorizontal: 20,
+      marginVertical: 15,
+      padding: 20,
+      backgroundColor: theme.primaryBackground,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'row',
+    },
+    contactOptionBoxText: {
+      flex: 1,
+      fontFamily: 'nunito-bold',
+      fontSize: 18,
+      color: theme.secondaryText,
+      marginHorizontal: 15,
+    },
+    section: {
+      marginVertical: 20,
+    },
+    sectionHeaderText: {
+      fontFamily: 'nunito-bold',
+      fontSize: 18,
+      color: theme.secondaryText,
+      paddingHorizontal: 20,
+      marginBottom: 10,
+      marginTop: 20,
+      textAlign: 'center',
+    },
+    contactSection: {
+      marginHorizontal: 15,
+      paddingVertical: 10,
+      backgroundColor: theme.primaryBackground,
+      borderRadius: 15,
+    },
+    ellipsisContainer: {
+      width: 35,
+      height: 28,
+      borderRadius: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }
+  })
+}

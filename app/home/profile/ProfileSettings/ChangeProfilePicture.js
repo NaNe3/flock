@@ -1,24 +1,27 @@
 import { useEffect, useState } from "react"
-import { View, StyleSheet, Text, Dimensions } from "react-native"
+import { View, StyleSheet, Dimensions } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import * as ImagePicker from 'expo-image-picker'
 
 import SimpleHeader from "../../../components/SimpleHeader"
 
 import { hapticError, hapticImpactSoft, hapticSelect } from "../../../utils/haptics"
-import { gen } from "../../../utils/styling/colors"
 import SelectPhoto from "../../../components/SelectPhoto"
 import { getPrimaryColor } from "../../../utils/getColorVariety"
 import BasicButton from "../../../components/BasicButton"
 import { getUserIdFromLocalStorage, setAttributeForObjectInLocalStorage } from "../../../utils/localStorage"
 import { uploadAvatar } from "../../../utils/db-image"
 import { downloadFileWithPath } from "../../../utils/db-download"
+import { useTheme } from "../../../hooks/ThemeProvider"
 
 const { width } = Dimensions.get('window')
 
 export default function ChangeProfilePicture({ navigation }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const insets = useSafeAreaInsets()
-  const [color, setColor] = useState(gen.gray)
+  const [color, setColor] = useState(theme.gray)
   const [image, setImage] = useState(null)
   const [disabled, setDisabled] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -26,7 +29,8 @@ export default function ChangeProfilePicture({ navigation }) {
 
   useEffect(() => {
     const init = async () => {
-      const color = getPrimaryColor()
+      const color = await getPrimaryColor()
+      setColor(color)
     }
     init()
   }, [])
@@ -86,17 +90,6 @@ export default function ChangeProfilePicture({ navigation }) {
           }
         }}
       />
-      {/* <GetPhoto
-        onboardingData={{
-          color: {
-            color_hex: '#000000',
-            color_name: 'black',
-          }
-        }}
-        uploadCleanup={handlePhotoChange}
-        buttonTitle="update"
-        removeHeader={true}
-      /> */}
       <View style={styles.contentContainer}>
         <SelectPhoto
           image={image}
@@ -119,32 +112,34 @@ export default function ChangeProfilePicture({ navigation }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: gen.secondaryBackground,
-  },
-  contentContainer: { 
-    flex: 1,
-    backgroundColor: gen.secondaryBackground,
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    borderWidth: 7,
-    borderColor: gen.primaryBorder,
-    borderRadius: 1000,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 7,
-    marginTop: 50
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 1000,
-  },
-  nextButton: {
-    position: 'absolute',
-    alignSelf: 'center',
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.secondaryBackground,
+    },
+    contentContainer: { 
+      flex: 1,
+      backgroundColor: theme.secondaryBackground,
+      alignItems: 'center',
+    },
+    avatarContainer: {
+      borderWidth: 7,
+      borderColor: theme.primaryBorder,
+      borderRadius: 1000,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 7,
+      marginTop: 50
+    },
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 1000,
+    },
+    nextButton: {
+      position: 'absolute',
+      alignSelf: 'center',
+    },
+  })
+}

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome'
 
-import { gen } from "../utils/styling/colors";
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../utils/localStorage";
 import { createRelationship, removeRelationship } from "../utils/db-relationship";
 
@@ -10,6 +9,7 @@ import Avatar from "./Avatar";
 import BasicBottomSheet from "../home/components/BasicBottomSheet";
 import { removeGroupMember } from "../utils/db-image";
 import { hapticSelect } from "../utils/haptics";
+import { useTheme } from "../hooks/ThemeProvider";
 
 export default function PersonBottomSheet({ 
   person,
@@ -17,6 +17,9 @@ export default function PersonBottomSheet({
   isGroupLeader=false,
   ...props
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [userId, setUserId] = useState(null)
   const [friends, setFriends] = useState([])
   const [state, setState] = useState(null)
@@ -93,12 +96,12 @@ export default function PersonBottomSheet({
 
   return (
     <BasicBottomSheet
-      titleColor={gen.primaryText}
+      titleColor={theme.primaryText}
       setVisibility={setVisibility}
       height={400}
-      backgroundColor={gen.primaryBackground}
+      backgroundColor={theme.primaryBackground}
     >
-      <View style={[styles.personInfoContainer, isGroupLeader && { borderBottomWidth: 2, borderBottomColor: gen.primaryBorder }]}>
+      <View style={[styles.personInfoContainer, isGroupLeader && { borderBottomWidth: 2, borderBottomColor: theme.primaryBorder }]}>
         {/* <View style={styles.avatarContainer}>
           <Avatar 
             imagePath={person.avatar_path}
@@ -107,8 +110,8 @@ export default function PersonBottomSheet({
           />
         </View> */}
         <View style={styles.personTextContainer}>
-          <Text style={{ color: gen.primaryText, fontSize: 20, fontFamily: 'nunito-bold' }}>{person.fname} {person.lname}</Text>
-          <Text style={{ color: gen.secondaryText, fontSize: 14, fontFamily: 'nunito-bold', marginBottom: 25 }}>
+          <Text style={{ color: theme.primaryText, fontSize: 20, fontFamily: 'nunito-bold' }}>{person.fname} {person.lname}</Text>
+          <Text style={{ color: theme.secondaryText, fontSize: 14, fontFamily: 'nunito-bold', marginBottom: 25 }}>
             {
               state === 'friend' ? 'you are friends' : 
               state === 'pending' ? 'friend request sent' :
@@ -119,8 +122,8 @@ export default function PersonBottomSheet({
             activeOpacity={0.7}
             style={[
               styles.actionRow, 
-              (state === 'friend' || state === 'pending') && { backgroundColor: gen.red },
-              state === null && { backgroundColor: gen.blue }
+              (state === 'friend' || state === 'pending') && { backgroundColor: theme.red },
+              state === null && { backgroundColor: theme.blue }
             ]}
             onPress={handlePersonAction}
           >
@@ -142,8 +145,8 @@ export default function PersonBottomSheet({
             activeOpacity={0.7}
             onPress={handleRemoveFromGroup}
           >
-            <Text style={[styles.actionText, { color: gen.red }]}>
-              <Icon name="sign-out" size={16} color={gen.red} /> Remove from Group
+            <Text style={[styles.actionText, { color: theme.red }]}>
+              <Icon name="sign-out" size={16} color={theme.red} /> Remove from Group
             </Text>
           </TouchableOpacity>
         </View>
@@ -152,44 +155,46 @@ export default function PersonBottomSheet({
   )
 }
 
-const styles = StyleSheet.create({
-  actionRowContainer: {
-    width: '100%',
-    flexDirection: 'row',
-  },
-  personInfoContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-  },
-  avatarContainer: {
-    width: 90,
-    height: 125,
-    borderRadius: 15,
-    overflow: 'hidden',
-    padding: 4,
-    borderWidth: 4,
-    borderColor: gen.primaryBorder,
-  },
-  personTextContainer: {
-    flex: 1,
-    marginLeft: 10,
-    justifyContent: 'center',
-  },
-  actionRow: {
-    width: '100%',
-    height: 45,
-    borderRadius: 15,
-    padding: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionText: {
-    color: '#fff',
-    fontSize: 16,
-    fontFamily: 'nunito-bold',
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    actionRowContainer: {
+      width: '100%',
+      flexDirection: 'row',
+    },
+    personInfoContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+    },
+    avatarContainer: {
+      width: 90,
+      height: 125,
+      borderRadius: 15,
+      overflow: 'hidden',
+      padding: 4,
+      borderWidth: 4,
+      borderColor: theme.primaryBorder,
+    },
+    personTextContainer: {
+      flex: 1,
+      marginLeft: 10,
+      justifyContent: 'center',
+    },
+    actionRow: {
+      width: '100%',
+      height: 45,
+      borderRadius: 15,
+      padding: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    actionText: {
+      color: '#fff',
+      fontSize: 16,
+      fontFamily: 'nunito-bold',
+    }
+  })
+}

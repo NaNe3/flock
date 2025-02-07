@@ -1,16 +1,20 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Animated, Image, StyleSheet, View } from "react-native"
 
 import FadeInView from "./FadeInView"
 
-import { gen } from "../utils/styling/colors"
 import { checkIfFileExistsWithPath, downloadFileWithPath, getLocalUriForFile } from "../utils/db-download"
+import { useTheme } from "../hooks/ThemeProvider"
 
 export default function Avatar({
   imagePath,
   type = "profile",
   style
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(getStyle(theme))
+  useEffect(() => { setStyles(getStyle(theme)) }, [theme])
+
   const [avatarPath, setAvatarPath] = useState(getLocalUriForFile(imagePath))
   const [avatarDownloaded, setAvatarDownloaded] = useState(null)
   const [downloadRequired, setDownloadRequired] = useState(false)
@@ -101,12 +105,14 @@ export default function Avatar({
   )
 }
 
-const styles = StyleSheet.create({
-  avatarBox: {
-    backgroundColor: gen.tertiaryBackground,
-    overflow: 'hidden',
-  },
-  avatar: {
+function getStyle(theme) {
+  return StyleSheet.create({
+    avatarBox: {
+      backgroundColor: theme.tertiaryBackground,
+      overflow: 'hidden',
+    },
+    avatar: {
 
-  }
-})
+    }
+  })
+}

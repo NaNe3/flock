@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Text, View, StyleSheet, ScrollView, Modal, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-import { setLocallyStoredVariable } from '../utils/localStorage'
 import BasicButton from '../components/BasicButton';
 import BorderBoxWithHeaderText from '../components/BorderBoxWithHeaderText';
 import { gen } from '../utils/styling/colors';

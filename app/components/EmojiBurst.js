@@ -43,7 +43,7 @@ export default function EmojiBurst({ emoji, callback }) {
 
   useEffect(() => {
     Animated.timing(locValue, {
-      toValue: height+500,
+      toValue: -(height+500),
       duration: 2000,
       useNativeDriver: false
     }).start(() => callback())
@@ -51,9 +51,9 @@ export default function EmojiBurst({ emoji, callback }) {
 
   return (
     <Animated.View 
-      style={{ position: 'absolute', left: offset[0]-40, bottom: locValue }}
+      style={[styles.container, { left: offset[0]-40, transform: [{ translateY: locValue }] }]}
     >
-      <Text style={[styles.emoji, { transform: [{ rotate: `${rotation}deg` }], fontSize: size }]}>
+      <Text style={{ transform: [{ rotate: `${rotation}deg` }], fontSize: size }}>
         {emoji}
       </Text>
     </Animated.View>
@@ -63,7 +63,6 @@ export default function EmojiBurst({ emoji, callback }) {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    width: '100%',
-    height: '100%',
+    bottom: -300,
   },
 })

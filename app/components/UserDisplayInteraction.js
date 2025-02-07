@@ -1,11 +1,10 @@
-import { StyleSheet } from "react-native"
 import FadeInView from "./FadeInView"
-import Avatar from "./Avatar"
 import Icon from 'react-native-vector-icons/FontAwesome'
-import { gen } from "../utils/styling/colors"
+import { useTheme } from "../hooks/ThemeProvider"
 
 
 export default function UserDisplayInteraction({ top }) {
+  const { theme } = useTheme()
   return (
     <FadeInView
       style={{
@@ -17,11 +16,7 @@ export default function UserDisplayInteraction({ top }) {
       }}
       time={100}
     >
-      <Icon name="bookmark" size={26} color={gen.tertiaryText} />
+      <Icon name="bookmark" size={26} color={theme.tertiaryText} />
     </FadeInView>
   )
 }
-
-const styles = StyleSheet.create({
-
-})

@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react"
 import { StyleSheet, Text, View } from "react-native"
-import { gen } from "../../utils/styling/colors"
 import Avatar from "../../components/Avatar"
 import AcceptReject from "./AcceptReject"
 import { timeAgo } from "../../utils/timeDiff"
 import { hapticSelect } from "../../utils/haptics"
 import { resolveFriendRequest } from "../../utils/db-relationship"
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../../utils/localStorage"
+import { useTheme } from "../../hooks/ThemeProvider"
 
 export default function FriendRequestContainer({ navigation, requests, setRequests }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   const [userId, setUserId] = useState(null)
 
   useEffect(() => {
@@ -49,20 +52,6 @@ export default function FriendRequestContainer({ navigation, requests, setReques
     }
   }
 
-  // const reject = async (friend_id) => {
-  //   hapticSelect()
-
-  //   const { error } = await rejectFriendRequest(userId, friend_id)
-  //   if (!error) {
-  //     // remove request from requests via setRequests
-  //     const updatedRequests = requests.filter(request => request.id !== friend_id)
-  //     setRequests(updatedRequests)
-
-  //     // localStorage friendRequests change to reflect new state
-  //     await setLocallyStoredVariable('user_friend_requests', JSON.stringify(updatedRequests))
-  //   }
-  // }
-
   return (
     <View style={styles.container}>
       <View style={styles.row}>
@@ -74,7 +63,7 @@ export default function FriendRequestContainer({ navigation, requests, setReques
           return (
             <View style={[styles.row, index === requests.length-1 && { borderBottomWidth: 0 }]} key={index}>
               <View style={styles.rowContent}>
-                <View style={[styles.avatar, { borderColor: 1 ? gen.primaryBorder : request.color }]}>
+                <View style={[styles.avatar, { borderColor: 1 ? theme.primaryBorder : request.color }]}>
                   <Avatar 
                     style={{ flex: 1, borderRadius: 30 }}
                     imagePath={request.avatar_path} 
@@ -102,50 +91,52 @@ export default function FriendRequestContainer({ navigation, requests, setReques
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 10,
-    marginHorizontal: 20,
-    backgroundColor: gen.primaryBackground,
-    borderRadius: 15,
-  },
-  headerText: {
-    color: gen.primaryText,
-    fontSize: 16,
-    fontFamily: 'nunito-bold',
-  },
-  row: {
-    padding: 15,
-    borderBottomWidth: 2,
-    borderBottomColor: gen.primaryBorder,
-    flexDirection: 'column',
-  },
-  rowContent: {
-    flexDirection: 'row', 
-    marginBottom: 10
-  },
-  avatar: {
-    width: 60, 
-    height: 60, 
-    borderRadius: 30,
-    overflow: 'hidden',
-    padding: 3,
-    borderWidth: 3,
-    borderColor: gen.primaryBorder,
-  },
-  requestInfo: {
-    flex: 1,
-    marginLeft: 15,
-    justifyContent: 'center',
-  },
-  requestName: {
-    fontFamily: 'nunito-bold',
-    fontSize: 18,
-    color: gen.primaryText
-  },
-  requestTime: {
-    fontFamily: 'nunito-regular',
-    fontSize: 14,
-    color: gen.tertiaryText
-  }
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      marginTop: 10,
+      marginHorizontal: 20,
+      backgroundColor: theme.primaryBackground,
+      borderRadius: 15,
+    },
+    headerText: {
+      color: theme.primaryText,
+      fontSize: 16,
+      fontFamily: 'nunito-bold',
+    },
+    row: {
+      padding: 15,
+      borderBottomWidth: 2,
+      borderBottomColor: theme.primaryBorder,
+      flexDirection: 'column',
+    },
+    rowContent: {
+      flexDirection: 'row', 
+      marginBottom: 10
+    },
+    avatar: {
+      width: 60, 
+      height: 60, 
+      borderRadius: 30,
+      overflow: 'hidden',
+      padding: 3,
+      borderWidth: 3,
+      borderColor: theme.primaryBorder,
+    },
+    requestInfo: {
+      flex: 1,
+      marginLeft: 15,
+      justifyContent: 'center',
+    },
+    requestName: {
+      fontFamily: 'nunito-bold',
+      fontSize: 18,
+      color: theme.primaryText
+    },
+    requestTime: {
+      fontFamily: 'nunito-regular',
+      fontSize: 14,
+      color: theme.tertiaryText
+    }
+  })
+}

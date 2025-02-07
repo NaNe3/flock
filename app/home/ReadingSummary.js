@@ -1,27 +1,30 @@
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Animated, Dimensions } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, Animated, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import LottieView from "lottie-react-native";
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import BasicButton from "../components/BasicButton";
-import { gen, currentTheme } from "../utils/styling/colors";
 import { hapticImpactRigid } from "../utils/haptics";
-import { checkIfUserHasStudiedPlanToday, setLocallyStoredVariable, getLocallyStoredVariable, getUserIdFromLocalStorage } from "../utils/localStorage"
-import { createReadingLog, userHasStudiedToday } from "../utils/authenticate"
-import { manageStreakNotifications } from "../utils/notify";
-import { getPrimaryColor } from "../utils/getColorVariety";
-import FAIcon from "../components/FAIcon";
+import { setLocallyStoredVariable, getLocallyStoredVariable, getUserIdFromLocalStorage } from "../utils/localStorage"
+import { createPlanReadingLogFromChapter, createPlanReadingLogWithPlanItem, userHasStudiedPlanItem, userHasStudiedToday } from "../utils/authenticate"
+import { manageStreakNotifications } from "../utils/notify"
+import { getPrimaryColor } from "../utils/getColorVariety"
+import FAIcon from "../components/FAIcon"
+import { useTheme } from "../hooks/ThemeProvider"
 
 const getFormattedDate = () => {
-  const options = { weekday: 'long', day: 'numeric' };
-  return new Date().toLocaleDateString('en-US', options);
+  const options = { weekday: 'long', day: 'numeric' }
+  return new Date().toLocaleDateString('en-US', options)
 }
 
-export default function DailyReadingSummary({ navigation, route }) {
-  const { verses, location } = route.params
+export default function ReadingSummary({ navigation, route }) {
+  const { location, plan, verses } = route.params
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const insets = useSafeAreaInsets()
-  const [color, setColor] = useState(gen.secondaryBackground)
+  const [color, setColor] = useState(theme.secondaryBackground)
   const [date, setDate] = useState(getFormattedDate())
   const [book, setBook] = useState(location.book.replace("Joseph Smith", "JS").replace("Doctrine And Covenants", "D&C"))
   const animationOpacity = useRef(new Animated.Value(1)).current
@@ -33,7 +36,6 @@ export default function DailyReadingSummary({ navigation, route }) {
   const [logging, setLogging] = useState(false)
 
   const [alreadyStudied, setAlreadyStudied] = useState(false)
-  const [userLogs, setUserLogs] = useState([])
   const [versesInStudy, setVersesInStudy] = useState(0)
   const [versesRead, setVersesRead] = useState(0)
   const [totalVerses, setTotalVerses] = useState(34)
@@ -105,27 +107,29 @@ export default function DailyReadingSummary({ navigation, route }) {
   const logReading = async () => {
     if (logging) return
     setLogging(true)
+
     const userLogs = JSON.parse(await getLocallyStoredVariable('user_logs'))
-    setUserLogs(userLogs)
+    const userId = await getUserIdFromLocalStorage()
 
-    const hasAlreadyStudied = await checkIfUserHasStudiedPlanToday()
-    if (!hasAlreadyStudied) {
-      const userId = await getUserIdFromLocalStorage()
-      const { data, error } = await createReadingLog(userId, 1)
-      if (!error) {
-        // create streak notifications for user
-        await manageStreakNotifications()
-
-        // update local logs
-        await setLocallyStoredVariable('user_logs', JSON.stringify([...userLogs, data]))
-
-        // update last_read and current_streak for user
-        const user = JSON.parse(await getLocallyStoredVariable('user_information'))
-        const updatedUser = { ...user, last_read: data.log_id, current_streak: user.current_streak + 1 }
-        await setLocallyStoredVariable('user_information', JSON.stringify(updatedUser))
-
+    let log_id
+    if (plan.plan_info !== undefined && plan.plan_item_id !== undefined) {
+      const planItemAlreadyStudied = await userHasStudiedPlanItem(userId, plan.plan_item_id)
+      if (!planItemAlreadyStudied) {
+        const { data, error } = await createPlanReadingLogWithPlanItem(userId, plan.plan_info.plan_id, plan.plan_item_id)
+        if (!error) await setLocallyStoredVariable('user_logs', JSON.stringify([...userLogs, data]))
+        log_id = data.log_id
       }
+    } else {
+      const { data, error } = await createPlanReadingLogFromChapter(userId, location.work, location.book, location.chapter)
+      if (!error) await setLocallyStoredVariable('user_logs', JSON.stringify([...userLogs, data]))
+      log_id = data.log_id
     }
+    // create streak notifications for user
+    await manageStreakNotifications()
+    // update last_read and current_streak for user
+    const user = JSON.parse(await getLocallyStoredVariable('user_information'))
+    const updatedUser = { ...user, last_read: log_id, current_streak: user.current_streak + 1 }
+    await setLocallyStoredVariable('user_information', JSON.stringify(updatedUser))
   }
 
   return (
@@ -134,7 +138,7 @@ export default function DailyReadingSummary({ navigation, route }) {
         <Text style={styles.subHeader}>{date.toUpperCase()}</Text>
         <Text style={styles.header}>today's reading</Text>
       </View>
-      <View style={styles.taskContainer}>
+      <ScrollView style={styles.taskContainer}>
         <Animated.View style={[styles.task, { opacity: readingFadeAnim, transform: [{ translateY: readingTranslateY }] }]}>
           <View style={styles.book}>
             <Text style={styles.bookText}>Come</Text>
@@ -143,13 +147,13 @@ export default function DailyReadingSummary({ navigation, route }) {
           </View>
           <View style={styles.taskContent}>
             <Text 
-              style={{ color: gen.primaryText, fontSize: 22, fontFamily: 'nunito-bold' }}
+              style={{ color: theme.primaryText, fontSize: 22, fontFamily: 'nunito-bold' }}
               numberOfLines={1}
               ellipsizeMode="tail"
             >{book} {location.chapter}</Text>
-            <Text style={{ color: gen.secondaryText, fontSize: 16, fontFamily: 'nunito-bold' }}>verses {verses[0]} - {verses[1]}</Text>
+            <Text style={{ color: theme.secondaryText, fontSize: 16, fontFamily: 'nunito-bold' }}>verses {verses[0]} - {verses[1]}</Text>
           </View>
-          <Icon name='check' size={22} color={gen.actionText} style={{ marginRight: 10 }} />
+          <Icon name='check' size={22} color={theme.actionText} style={{ marginRight: 10 }} />
         </Animated.View>
         <Animated.View style={[styles.itemContainer, { opacity: borderOpacity }]}>
           <Animated.View style={[styles.item, { opacity: fadeAnims[0], borderColor: color }]}>
@@ -165,7 +169,7 @@ export default function DailyReadingSummary({ navigation, route }) {
             <Text style={styles.itemText}>2 impressions</Text>
           </Animated.View>
         </Animated.View>
-      </View>
+      </ScrollView>
       <Animated.View style={[styles.actionContainer, { marginBottom: insets.bottom + 20 }]}>
         <TouchableOpacity
           activeOpacity={0.7}
@@ -181,11 +185,11 @@ export default function DailyReadingSummary({ navigation, route }) {
           style={styles.button}
           onPress={() => {
             hapticImpactRigid()
-            // if (alreadyStudied) {
-            //   navigation.navigate('Landing')
-            // } else {
+            if (alreadyStudied) {
+              navigation.navigate('Landing')
+            } else {
               navigation.navigate('StreakView')
-            // }
+            }
           }}
         />
       </Animated.View>
@@ -193,104 +197,106 @@ export default function DailyReadingSummary({ navigation, route }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: gen.secondaryBackground,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  headerContainer: {
-    width: '100%',
-  },
-  header: {
-    fontFamily: 'nunito-bold', 
-    fontSize: 36,
-    textAlign: 'center',
-    color: gen.primaryText
-  },
-  subHeader: {
-    fontFamily: 'nunito-bold',
-    textAlign: 'center',
-    fontSize: 18,
-    color: gen.gray,
-  },
-  actionText: {
-    width: '100%',
-    color: gen.gray,
-    fontSize: 22,
-    fontFamily: 'nunito-bold',
-    textAlign: 'center',
-    marginBottom: 10
-  },
-  actionContainer: {
-    width: '100%',
-    height: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  taskContainer: {
-    flex: 1,
-    width: '100%',
-    padding: 20,
-    paddingTop: 40,
-  },
-  task: {
-    zIndex: 2,
-    width: '100%',
-    marginVertical: 10,
-    padding: 20,
-    borderRadius: 15,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: gen.primaryBackground,
-  },
-  taskContent: {
-    flex: 1,
-    marginHorizontal: 10,
-  },
-  book: {
-    width: 65,
-    height: 75,
-    backgroundColor: gen.maroon,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bookText: {
-    color: gen.orange,
-    fontSize: 12,
-    fontFamily: 'nunito-bold',
-  },
-  itemContainer: {
-    zIndex: 1,
-    paddingLeft: 25,
-    paddingTop: 30,
-    paddingBottom: 20,
-    marginTop: -40,
-    width: '100%',
-    backgroundColor: gen.primaryBackground,
-    borderRadius: 15,
-  },
-  item: {
-    marginVertical: 8,
-    paddingLeft: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderLeftWidth: 6,
-    borderRadius: 8,
-  },
-  itemText: {
-    color: gen.actionText,
-    fontSize: 18,
-    fontFamily: 'nunito-bold',
-    textAlign: 'left',
-  },
-  itemIcon: {
-    color: gen.actionText,
-    marginRight: 10,
-  },
-})
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      width: '100%',
+      backgroundColor: theme.secondaryBackground,
+      justifyContent: 'space-around',
+      alignItems: 'center',
+    },
+    headerContainer: {
+      width: '100%',
+    },
+    header: {
+      fontFamily: 'nunito-bold', 
+      fontSize: 36,
+      textAlign: 'center',
+      color: theme.primaryText
+    },
+    subHeader: {
+      fontFamily: 'nunito-bold',
+      textAlign: 'center',
+      fontSize: 18,
+      color: theme.gray,
+    },
+    actionText: {
+      width: '100%',
+      color: theme.gray,
+      fontSize: 22,
+      fontFamily: 'nunito-bold',
+      textAlign: 'center',
+      marginBottom: 10
+    },
+    actionContainer: {
+      width: '100%',
+      height: 100,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 30,
+    },
+    taskContainer: {
+      flex: 1,
+      width: '100%',
+      padding: 20,
+      paddingTop: 40,
+    },
+    task: {
+      zIndex: 2,
+      width: '100%',
+      marginVertical: 10,
+      padding: 20,
+      borderRadius: 15,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.primaryBackground,
+    },
+    taskContent: {
+      flex: 1,
+      marginHorizontal: 10,
+    },
+    book: {
+      width: 65,
+      height: 75,
+      backgroundColor: theme.maroon,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    bookText: {
+      color: theme.orange,
+      fontSize: 12,
+      fontFamily: 'nunito-bold',
+    },
+    itemContainer: {
+      zIndex: 1,
+      paddingLeft: 25,
+      paddingTop: 30,
+      paddingBottom: 20,
+      marginTop: -40,
+      width: '100%',
+      backgroundColor: theme.primaryBackground,
+      borderRadius: 15,
+    },
+    item: {
+      marginVertical: 8,
+      paddingLeft: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderLeftWidth: 6,
+      borderRadius: 8,
+    },
+    itemText: {
+      color: theme.actionText,
+      fontSize: 18,
+      fontFamily: 'nunito-bold',
+      textAlign: 'left',
+    },
+    itemIcon: {
+      color: theme.actionText,
+      marginRight: 10,
+    },
+  })
+}

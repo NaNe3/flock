@@ -1,5 +1,5 @@
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { gen } from "../../utils/styling/colors";
+import { constants } from "../../utils/styling/colors";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { hapticImpactSoft, hapticSelect } from "../../utils/haptics";
 import { useFocusEffect } from "@react-navigation/native";
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontFamily: 'nunito-bold',
-    color: gen.darkGray,
+    color: constants.darkGray,
     marginHorizontal: 8
   }
 })

@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Animated, Image, StyleSheet, TouchableOpacity, View } from "react-native"
 import VideoPreview from "./VideoPreview"
 
-import { gen } from "../utils/styling/colors"
 import { checkIfFileExistsWithPath, downloadFileWithPath, getLocalUriForFile } from "../utils/db-download"
 import LoadingOverlay from "../home/components/LoadingOverlay"
+import { useTheme } from "../hooks/ThemeProvider"
 
 export default function Media({
   path,
@@ -14,6 +14,10 @@ export default function Media({
   declareLoadingState,
   style
 }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(getStyle(theme))
+  useEffect(() => { setStyles(getStyle(theme)) }, [theme])
+
   const [mediaPath, setMediaPath] = useState(getLocalUriForFile(path))
   const [mediaType, setMediaType] = useState(type)
   const [mediaDownloaded, setMediaDownloaded] = useState(null)
@@ -133,12 +137,14 @@ export default function Media({
   )
 }
 
-const styles = StyleSheet.create({
-  mediaBox: {
-    backgroundColor: gen.lightGray,
-    overflow: 'hidden',
-  },
-  media: {
-    borderRadius: 10,
-  }
-})
+function getStyle(theme) {
+  return StyleSheet.create({
+    mediaBox: {
+      backgroundColor: theme.lightGray,
+      overflow: 'hidden',
+    },
+    media: {
+      borderRadius: 10,
+    }
+  })
+}
