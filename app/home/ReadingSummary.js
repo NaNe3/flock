@@ -118,18 +118,19 @@ export default function ReadingSummary({ navigation, route }) {
         const { data, error } = await createPlanReadingLogWithPlanItem(userId, plan.plan_info.plan_id, plan.plan_item_id)
         if (!error) await setLocallyStoredVariable('user_logs', JSON.stringify([...userLogs, data]))
         log_id = data.log_id
+
+        // create streak notifications for user
+        await manageStreakNotifications()
+        // update last_read and current_streak for user
+        const user = JSON.parse(await getLocallyStoredVariable('user_information'))
+        const updatedUser = { ...user, last_read: log_id, current_streak: user.current_streak + 1 }
+        await setLocallyStoredVariable('user_information', JSON.stringify(updatedUser))
       }
     } else {
       const { data, error } = await createPlanReadingLogFromChapter(userId, location.work, location.book, location.chapter)
       if (!error) await setLocallyStoredVariable('user_logs', JSON.stringify([...userLogs, data]))
       log_id = data.log_id
     }
-    // create streak notifications for user
-    await manageStreakNotifications()
-    // update last_read and current_streak for user
-    const user = JSON.parse(await getLocallyStoredVariable('user_information'))
-    const updatedUser = { ...user, last_read: log_id, current_streak: user.current_streak + 1 }
-    await setLocallyStoredVariable('user_information', JSON.stringify(updatedUser))
   }
 
   return (

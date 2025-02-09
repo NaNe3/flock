@@ -11,13 +11,15 @@ import WeekActivityTracker from "./components/WeekActivityTracker";
 import { getAttributeFromObjectInLocalStorage, getLocallyStoredVariable, getLogsFromToday, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../utils/localStorage";
 import { hapticImpactSoft, hapticSelect } from "../utils/haptics";
 import { getCurrentWeekNumber, getWeekFromTimestamp } from "../utils/plan";
-import { useRealtime } from "../hooks/RealtimeProvider";
 import { getColorLight, getPrimaryColor } from "../utils/getColorVariety";
 import { useTheme } from "../hooks/ThemeProvider";
-import { getGroupsForUser } from "../utils/db-relationship";
-import MapBlock from "./components/MapBlock";
+import MapBlock from "./components/MapBlock"
+import WeekMapBlock from "./components/WeekMapBlock"
 
-const LandingDisplay = ({ navigation }) => {
+const LandingDisplay = ({
+  navigation,
+  currentPlanItem
+}) => {
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
@@ -26,8 +28,6 @@ const LandingDisplay = ({ navigation }) => {
   const [chapter, setChapter] = useState('')
   const [location, setLocation] = useState({})
   const [plan, setPlan] = useState({ plan_info: {}, plan_item_id: null, })
-  const [primaryColor, setPrimaryColor] = useState('')
-  const [primaryColorLight, setPrimaryColorLight] = useState('')
   const [time, setTime] = useState('')
   const [planButtonState, setPlanButtonState] = useState({
     disabled: false
@@ -35,17 +35,10 @@ const LandingDisplay = ({ navigation }) => {
   const [hasStudied, setHasStudied] = useState(false)
 
   const init = async () => {
-    const primaryColor = await getPrimaryColor()
-    setPrimaryColor(primaryColor)
-    setPrimaryColorLight(getColorLight(primaryColor))
-
-    const week = getCurrentWeekNumber()
-    const currentDay = new Date().getDay()
-    
-    console.log("week: ", week, " day: ", currentDay)
+    // const week = getCurrentWeekNumber()
+    // const currentDay = new Date().getDay()
+    // console.log("week: ", week, " day: ", currentDay)
     const currentPlan = JSON.parse(await getLocallyStoredVariable('user_plans'))[0]
-    const planItems = JSON.parse(await getLocallyStoredVariable(`plan_${currentPlan.plan_id}_items`))
-    const currentPlanItem = planItems.find(item => item.week === week && item.day === currentDay)
     const chapter = currentPlanItem.book === "" || currentPlanItem.book === null
       ? `${currentPlanItem.work.replace("Doctrine And Covenants", "D&C").toUpperCase()} ${currentPlanItem.chapter}`
       : `${currentPlanItem.book.replace("Joseph Smith", "JS").replace("Doctrine And Covenants", "D&C").toUpperCase()} ${currentPlanItem.chapter}`
@@ -77,11 +70,16 @@ const LandingDisplay = ({ navigation }) => {
   //   setHasStudied(hasStudiedToday)
   // }
 
-  useFocusEffect(
-    useCallback(() => {
-      init()
-    }, [])
-  )
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     init()
+  //   }, [])
+  // )
+
+  useEffect(() => {
+    const trigger = async () => { await init() }
+    if (currentPlanItem !== null) trigger()
+  }, [currentPlanItem])
 
   return (
     <View style={styles.landingContainer}>
@@ -126,7 +124,6 @@ const LandingDisplay = ({ navigation }) => {
           disabled={planButtonState.disabled}
           style={{ width: '100%' }}
         />
-
       </View>
     </View>
   )
@@ -137,12 +134,11 @@ export default function HomePage({ navigation }) {
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
-  const { groupInvites } = useRealtime()
   const [goal, setGoal] = useState('')
 
-  // const [friends, setFriends] = useState([])
-  const [groupCount, setGroupCount] = useState(0)
-  const [requestCount, setRequestCount] = useState(0)
+  const [logs, setLogs] = useState([])
+  const [planItems, setPlanItems] = useState([])
+  const [currentPlanItem, setCurrentPlanItem] = useState(null)
 
   const getGoalText = async () => {
     const goal = await getAttributeFromObjectInLocalStorage("userInformation", "goal")
@@ -150,24 +146,28 @@ export default function HomePage({ navigation }) {
   }
 
   const init = async () => {
-    const userId = await getUserIdFromLocalStorage()
-    const { data } = await getGroupsForUser(userId)
-    await setLocallyStoredVariable('user_groups', JSON.stringify(data))
-    const groupCount = data.filter(g => {
-        const isGroupAccepted = g.members.some(m => m.id === userId && m.status === 'accepted')
-        return isGroupAccepted
-      }).length
-    setGroupCount(groupCount)
+    const currentPlan = JSON.parse(await getLocallyStoredVariable('user_plans'))[0]
+    const planItems = JSON.parse(await getLocallyStoredVariable(`plan_${currentPlan.plan_id}_items`))
+    const piIds = planItems.map(pi => pi.plan_item_id)
+    setPlanItems(planItems)
 
-    const invitationCount = data.filter(g => {
-        const isGroupPending = g.members.some(m => m.id === userId && m.status === 'pending')
-        return isGroupPending
-      }).length
+    const logs = JSON.parse(await getLocallyStoredVariable('user_logs'))
+    const logsOfPlanItems = logs.filter(log => log.plan_id === currentPlan.plan_id && piIds.includes(log.plan_item_id))
+    const latestLog = logsOfPlanItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
 
-    setRequestCount(invitationCount)
-
-    const result = await getLogsFromToday()
-    console.log("result: ", result)
+    if (latestLog === undefined) {
+      // if no logs exist, then it is monday
+      if (logsOfPlanItems.length === 0) {
+        const firstPlanItem = planItems[0]
+        setCurrentPlanItem(firstPlanItem)
+      } else {
+        // if logs exist, then it is sunday
+        console.log("week study finished")
+      }
+    } else {
+      const nextPlanItem = planItems.find(pi => pi.plan_item_id === latestLog.plan_item_id + 1)
+      setCurrentPlanItem(nextPlanItem)
+    }
   }
 
   useFocusEffect(
@@ -176,11 +176,6 @@ export default function HomePage({ navigation }) {
       getGoalText()
     }, [])
   )
-
-  useEffect(() => {
-    const trigger = async () => { await init() }
-    if (groupInvites !== null) trigger()
-  }, [groupInvites])
 
   const props = {
     navigation,
@@ -195,7 +190,10 @@ export default function HomePage({ navigation }) {
         style={{ width: '100%', backgroundColor: theme.secondaryBackground }}
         contentContainerStyle={{ alignItems: 'center' }}
       >
-        <LandingDisplay {...props} />
+        <LandingDisplay 
+          {...props} 
+          currentPlanItem={currentPlanItem} 
+        />
         <View style={styles.homeContent}>
           {/* <TouchableOpacity
             style={styles.addFriendsButton}
@@ -210,10 +208,19 @@ export default function HomePage({ navigation }) {
               <Icon name="users" size={16} color={theme.actionText} /> {groupCount > 0 ? `${groupCount} group${groupCount > 1 ? 's' : ''}` : 'create group'}
             </Text>
           </TouchableOpacity> */}
-          <MapBlock navigation={navigation} />
-          <MapBlock navigation={navigation} />
-          <MapBlock navigation={navigation} />
-          <MapBlock navigation={navigation} />
+          {currentPlanItem !== null && planItems.map((item, i) => {
+            if (item.plan_item_id > currentPlanItem.plan_item_id) {
+              return (
+                <MapBlock
+                  key={`map-block-${i}`}
+                  item={item}
+                  status="locked"
+                  navigation={navigation}
+                />
+              )
+            }
+          })}
+          <WeekMapBlock navigation={navigation} />
         </View>
       </ScrollView>
     </View>
@@ -245,7 +252,7 @@ function style(theme) {
     },
     homeContent: {
       width: '100%',
-      paddingHorizontal: 20,
+      paddingHorizontal: 30,
       paddingBottom: 40,
     },
     actionContainer: {

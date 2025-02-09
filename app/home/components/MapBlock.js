@@ -8,6 +8,7 @@ import BasicButton from "../../components/BasicButton";
 
 export default function MapBlock({ 
   navigation,
+  item,
   status='locked',
 }) {
   const { theme } = useTheme()
@@ -27,8 +28,8 @@ export default function MapBlock({
           <Icon name="lock" size={24} color={theme.secondaryText} />
         )}
         <View style={{ marginVertical: 10 }}>
-          <Text style={styles.planItemHeader}>ALMA 5</Text>
-          <Text style={styles.planItemVerses}>verses 13-24</Text>
+          <Text style={styles.planItemHeader}>{item.book} {item.chapter}</Text>
+          <Text style={styles.planItemVerses}>verses {item.verses}</Text>
         </View>
 
         {status === "active" && (
@@ -41,7 +42,7 @@ export default function MapBlock({
         )}
       </View>
     </>
-  );
+  )
 }
 
 function style(theme) {

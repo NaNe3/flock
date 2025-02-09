@@ -128,7 +128,6 @@ function Chapter({ navigation, route }) {
           }).start()
           setTimeout(() => {
             didGoToReadingSummary.current = true
-            console.log("plan: ", plan)
             navigation.navigate('ReadingSummary', {
               location: {
                 work: work,

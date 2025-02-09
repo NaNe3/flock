@@ -6,6 +6,12 @@
       "ios": {
         "simulator": true
       }
+    },
+    "development": {
+      "distribution": "internal",
+      "android": {
+        "gradleCommand": ":app:assembleDebug"
+      }
     }
   }
 }

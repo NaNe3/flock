@@ -24,15 +24,16 @@ import GroupDetailsRouter from './home/group/GroupDetailsRouter';
 import NavigationBar from "./components/NavigationBar";
 import FadeInView from "./components/FadeInView";
 
-import { getAttributeFromObjectInLocalStorage, getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "./utils/localStorage"
+import { getUserIdFromLocalStorage, setLocallyStoredVariable } from "./utils/localStorage"
 import { getFriendRequestsByUserId, getGroupsForUser, getRelationships } from "./utils/db-relationship"
-import { checkUserStreak, getLogsByUserId, getPlanByUserId, getPlanItemsByPlanId, } from "./utils/authenticate"
+import { checkUserStreak, getLogsByUserId, getPlanByUserId, getPlanItemsForWeekByPlanId, } from "./utils/authenticate"
 import LoadingScreen from "./home/ LoadingScreen"
 import { checkRequiredDailyNotifications } from "./utils/notify"
 import { RealtimeProvider } from "./hooks/RealtimeProvider"
 import { forPushFromBottom } from "./utils/interpolations/forPushFromBottom";
 import { useTheme } from "./hooks/ThemeProvider";
 import GroupPage from "./home/GroupPage";
+import { getCurrentWeekNumber } from "./utils/plan";
 
 const Stack = createStackNavigator()
 
@@ -66,7 +67,7 @@ export default function Router() {
       // FUTURE - get user plans by user_id
       //        - create table user_plans
       const { plan_id, plan_name } = await getPlanByUserId(userId)
-      const { plan_items } = await getPlanItemsByPlanId(plan_id)
+      const { plan_items } = await getPlanItemsForWeekByPlanId(plan_id, getCurrentWeekNumber())
 
       await setLocallyStoredVariable('user_plans', JSON.stringify([ { plan_id, plan_name } ]))
       await setLocallyStoredVariable(`plan_${plan_id}_items`, JSON.stringify(plan_items))

@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Keyboard, TouchableWithoutFeedback, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5'
+
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { GoogleSignin, GoogleSigninButton, statusCodes } from '@react-native-google-signin/google-signin'
 
 import { signInUserThroughAppleAuthentication } from './utils/authenticate';
 import { finishOnboarding, setLocallyStoredVariable } from './utils/localStorage';
@@ -11,6 +13,7 @@ import { hapticError, hapticImpactSoft } from './utils/haptics';
 export default function SignIn({ setSession, setIsOnboardComplete, ...props }) {
   const { setCurrentScreen } = props
   const [name, setName] = useState('')
+  const [platform] = useState(Platform.OS)
 
   const logInThroughExistingAppleAccount = async (credential) => {
     // 1 - authenticate user, this will access an account or create one
@@ -59,6 +62,10 @@ export default function SignIn({ setSession, setIsOnboardComplete, ...props }) {
     }
   }
 
+  const authenticateUserThroughGoogle = async () => {
+
+  }
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
@@ -69,18 +76,24 @@ export default function SignIn({ setSession, setIsOnboardComplete, ...props }) {
 
         <View style={styles.authContainer}>
           <TouchableOpacity
-            style={[styles.authButton, styles.accessButton]}
-            onPress={() => authenticateUserThroughApple()}
-            activeOpacity={0.7}
+            style={[styles.authButton, styles.accessButton, platform !== "ios" && { opacity: 0.4 }]}
+            activeOpacity={platform === "ios" ? 0.7 : 0.4}
+            onPress={() => {
+              if (platform === "ios") {
+                authenticateUserThroughApple()
+              } else {
+                hapticError()
+              }
+            }}
           >
             <Text style={styles.authText}>
               <Icon name='apple' size={20} color={constants.darkGray} /> Continue with Apple
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.authButton, styles.accessButton, { opacity: 0.4 }]}
+            style={[styles.authButton, styles.accessButton]}
             onPress={() => hapticError()}
-            activeOpacity={0.4}
+            activeOpacity={0.7}
           >
             <Text style={styles.authText}>
               <Icon name='google' size={16} color={constants.darkGray} /> Continue with Google

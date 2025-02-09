@@ -428,12 +428,13 @@ export const getPlanByUserId = async (userId) => {
   }
 }
 
-export const getPlanItemsByPlanId = async (planId) => {
+export const getPlanItemsForWeekByPlanId = async (planId, week) => {
   try {
     const { data, error } = await supabase
       .from('plan_item')
       .select()
       .eq('plan_id', planId)
+      .eq('week', week)
     if (error) { console.error(error) }
     return { plan_items: data }
   } catch (error) {

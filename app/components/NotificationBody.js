@@ -9,7 +9,7 @@ import Avatar from "./Avatar"
 // import { gen, currentTheme } from "../utils/styling/colors"
 import { hapticImpactHeavy } from "../utils/haptics"
 import { getColorLight } from "../utils/getColorVariety"
-import { BlurView } from "expo-blur"
+// import { BlurView } from "expo-blur"
 import hexToRgba from "../utils/hexToRgba"
 import { useTheme } from "../hooks/ThemeProvider"
 
@@ -96,7 +96,8 @@ export default function NotificationBody({
       style={[ styles.container, styles.shadow, additional, ]}
       {...panResponder.panHandlers}
     >
-      <BlurView intensity={50} style={styles.notification} tint={currentTheme}>
+      {/* <BlurView intensity={50} style={styles.notification} tint={currentTheme}> */}
+      <View style={styles.notification}>
         <TouchableOpacity 
           activeOpacity={0.2}
           onPress={() => {
@@ -104,7 +105,7 @@ export default function NotificationBody({
             dismiss(-200)
             navigation.navigate(route.name, { ...route.params })
           }}
-          style={[ styles.notificationInner, { backgroundColor: hexToRgba(color, 0.4) } ]} 
+          style={[ styles.notificationInner, { backgroundColor: hexToRgba(color, 0.9) } ]} 
         >
           <View style={[styles.avatarContainer, { borderColor: color }]}>
             <Avatar
@@ -119,7 +120,8 @@ export default function NotificationBody({
           </View>
           <Icon name='angle-down' size={20} color={color} />
         </TouchableOpacity>
-      </BlurView>
+      </View>
+      {/* </BlurView> */}
     </Animated.View>
   )
 }
