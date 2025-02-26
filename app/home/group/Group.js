@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
-import Icon from 'react-native-vector-icons/FontAwesome'
+import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import SimpleHeader from '../../components/SimpleHeader'
 import Avatar from '../../components/Avatar'
 
 import { getLocalUriForFile } from '../../utils/db-download'
 import { hapticSelect } from '../../utils/haptics'
-import { getLocallyStoredVariable } from '../../utils/localStorage'
+import { getLocallyStoredVariable, getUserIdFromLocalStorage } from '../../utils/localStorage'
 import InviteRow from '../components/InviteRow'
 import { useTheme } from '../../hooks/ThemeProvider'
 
@@ -16,14 +16,27 @@ export default function Group({ navigation, route }) {
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
-  const { groups, group_id, group_name, group_image, group_plan, members, status, userId } = route.params
+  // const { groups, group_id, group_name, group_image, group_plan, members, status, userId } = route.params
+  const { group } = route.params
+  const { group_id, group_name, group_image, group_plan, members, status } = group
   const group_avatar = getLocalUriForFile(group_image)
+  
+  const [userId, setUserId] = useState(null)
+  const [groups, setGroups] = useState([])
 
   const [groupName, setGroupName] = useState(group_name)
   const [groupAvatar, setGroupAvatar] = useState(group_avatar)
   const [groupPlan, setGroupPlan] = useState(group_plan)
   const [groupMembers, setGroupMembers] = useState(members)
   const [groupStatus, setGroupStatus] = useState(status)
+
+  const init = async () => {
+    const userGroups = JSON.parse(await getLocallyStoredVariable('user_groups'))
+    setGroups(userGroups)
+
+    const userId = await getUserIdFromLocalStorage()
+    setUserId(userId)
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -36,6 +49,7 @@ export default function Group({ navigation, route }) {
         setGroupMembers(result.members)
       }
 
+      init()
       getUserGroupsFromLocalStorage()
     }, [])
   )
@@ -90,29 +104,6 @@ export default function Group({ navigation, route }) {
           </View>
         )
       }
-
-      {/* ACTIVITY BARRRRRRR */}
-      {/* <ScrollView 
-        style={styles.activityBar}
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-      >
-        {
-          members.map((member, index) => {
-            const member_avatar = getLocalUriForFile(member.avatar_path)
-            return (
-              <TouchableOpacity
-                style={styles.memberPhoto}
-                activeOpacity={0.7}
-                key={index}
-              >
-                <Image key={index} source={{ uri: member_avatar }} style={{ width: '100%', height: '100%', borderRadius: 100 }} />   
-              </TouchableOpacity>
-            )
-          })
-        }
-      </ScrollView> */}
-
       <ScrollView style={styles.contentContainer}>
         <View style={styles.announcementContainer}>
           

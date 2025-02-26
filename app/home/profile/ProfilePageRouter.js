@@ -1,12 +1,13 @@
-import { createStackNavigator } from '@react-navigation/stack';
+import { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { useTheme } from '../../hooks/ThemeProvider';
 
 import ProfilePage from './ProfilePage'
+import ProfileSettings from './ProfileSettings';
 import ChangeProfileName from './ProfileSettings/ChangeProfileName';
 import ChangeProfilePicture from './ProfileSettings/ChangeProfilePicture';
 import ChangeProfileColor from './ProfileSettings/ChangeProfileColor';
-import { useTheme } from '../../hooks/ThemeProvider';
-import { useEffect, useState } from 'react';
 
 const Stack = createStackNavigator()
 
@@ -21,6 +22,11 @@ export default function GroupDetailsRouter() {
         <Stack.Screen
           name="ProfilePage"
           component={ProfilePage}
+          options={{ headerShown: false, animationEnabled: true}}
+        />
+        <Stack.Screen
+          name="ProfileSettings"
+          component={ProfileSettings}
           options={{ headerShown: false, animationEnabled: true}}
         />
         <Stack.Screen

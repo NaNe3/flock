@@ -47,22 +47,10 @@ export const getUserInformationFromUUID = async (uuid) => {
 }
 
 export const createUserThroughAppleAuthentication = async (credential, uui) => {
-  // const {
-  //   error,
-  //   data: { user },
-  // } = await supabase.auth.signInWithIdToken({
-  //   provider: 'apple',
-  //   token: credential.identityToken,
-  // })
-
-  // if (!error) {
   const { givenName, familyName } = credential.fullName
   const { email } = credential
   
   return await upsertUser(uui, givenName, familyName, email)
-  // } else {
-  //   return { error: error }
-  // }
 }
 
 export const signInUserThroughAppleAuthentication = async (credential) => {
@@ -88,7 +76,33 @@ export const signInUserThroughAppleAuthentication = async (credential) => {
   }
 }
 
-export const upsertUser = async (uui, fname, lname, email) => {
+export const authenticateUserThroughEmail = async (email, password) => {
+
+}
+
+export const createUserThroughEmail = async (email, password, fname, lname) => {
+  const { count, error: queryError } = await supabase
+    .from('user')
+    .select('*', { count: 'exact', head: true })
+    .eq('email', email)
+
+  if (count === 0 && queryError === null) {
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    })
+    if (error) {
+      console.error(error)
+      return { error: error }
+    }
+    const user = await upsertUser(data.session.user.id, fname, lname, email, password)
+    return { data: user }
+  } else {
+    return { error: 'Email already exists' }
+  }
+}
+
+export const upsertUser = async (uui, fname, lname, email, password=null) => {
   const { data: userData, error } = await supabase
     .from('user')
     .upsert({
@@ -97,6 +111,7 @@ export const upsertUser = async (uui, fname, lname, email) => {
       "lname": lname,
       "full_name": `${fname} ${lname}`,
       "email": email,
+      "password": password,
       "goal": null,
       "plan_id": 1,
       "color_id": 1,
@@ -298,6 +313,31 @@ async function getGroupIds() {
     .map(group => parseInt(group.group_id))
 }
 
+export const getActivityByListOfIds = async (ids) => {
+  const { data, error } = await supabase
+    .from('activity')
+    .select(`
+      activity_id,
+      work, book, chapter, verse,
+      user(id, fname, lname, avatar_path, color_id(color_hex)),
+      media(created_at, media_id, media_type, media_path),
+      comment(comment_id, created_at, comment, color_scheme),
+      group(group_image, group_name)
+    `)
+    .in('activity_id', ids)
+
+  if (error) {
+    console.error(error)
+    return { error: error }
+  }
+  
+  return data.map(media => {
+    const { user, ...newMedia} = media
+    const { color_id, ...newUser } = user
+    return { ...newMedia, user: { ...newUser, color: color_id.color_hex, } }
+  })
+}
+
 export const getMediaFromVerse = async (work, book, chapter, verse, userId) => {
   const friendIds = await getFriendIds()
   const groupIds = await getGroupIds()
@@ -410,6 +450,29 @@ export const getMediaFromChapter = async (work, book, chapter) => {
     console.error(error)
     return error
   }
+}
+
+
+export const getImpressionsVisibleToUser = async () => {
+  const friendIds = await getFriendIds()
+  const groupIds = await getGroupIds()
+
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+
+  const { data, error } = await supabase
+    .from('activity')
+    .select(`activity_id, user_id, group_id, media_id, comment_id`)
+    .or(`user_id.in.(${friendIds.join(',')}),group_id.in.(${groupIds.join(',')})`)
+    .gte('created_at', startOfToday.toISOString())
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error(error)
+    return { error: error }
+  }
+
+  return { data }
 }
 
 export const getPlanByUserId = async (userId) => {
@@ -531,6 +594,13 @@ const isTodayOrYesterday = (targetDate) => {
   const isYesterday = yesterday.toDateString() === target.toDateString()
 
   return isToday || isYesterday
+}
+
+export const dateIsToday = (targetDate) => {
+  const today = new Date()
+  const target = new Date(targetDate)
+
+  return today.toDateString() === target.toDateString()
 }
 
 export const checkUserStreak = async (logs) => {

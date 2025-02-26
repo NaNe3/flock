@@ -9,7 +9,7 @@ import Router from './app/Router'
 import SignIn from './app/SignIn'
 import { getInitialSystemVariables } from './app/utils/localStorage'
 import { StatusBar } from 'expo-status-bar'
-import { initSession, setUserInformationFromUUID } from './app/utils/authenticate'
+import { initSession, removeUserSession, setUserInformationFromUUID } from './app/utils/authenticate'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import ThemeProvider, { useTheme } from './app/hooks/ThemeProvider'
 
@@ -32,7 +32,6 @@ function AppContent() {
 
   useEffect(() => {
     const getSession = async () => {
-      // await setLocallyStoredVariable('onboarding_complete', 'true')
       const { onboarded } = await getInitialSystemVariables()
       setIsOnboardComplete(onboarded)
 

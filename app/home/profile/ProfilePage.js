@@ -1,37 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native"
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { useFocusEffect } from "@react-navigation/native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { ScrollView } from "react-native-gesture-handler"
 import Icon from 'react-native-vector-icons/FontAwesome6'
-import * as Updates from 'expo-updates'
 
 import FAIcon from '../../components/FAIcon'
 import Avatar from "../../components/Avatar"
 import SimpleHeader from "../../components/SimpleHeader"
-import StrongContentBox from "../../components/StrongContentBox"
 
 import { getLocallyStoredVariable } from "../../utils/localStorage"
-import { hapticImpactHeavy, hapticSelect } from "../../utils/haptics"
 import { getColorLight } from "../../utils/getColorVariety"
 import { getBookmarkCount, getImpressionCount } from "../../utils/db-users"
-import { removeUserSession } from "../../utils/authenticate"
 import { useTheme } from "../../hooks/ThemeProvider"
+import { hapticSelect } from "../../utils/haptics"
 
-export default function ProfilePage({ navigation }) {
-  const { theme, currentTheme, changeTheme } = useTheme()
+export default function ProfilePage({ navigation, route }) {
+  const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
-  const insets = useSafeAreaInsets()
   const [userName, setUserName] = useState('')
   const [userAvatar, setUserAvatar] = useState('')
   const [color, setColor] = useState({ color_hex: 'transparent' })
   const [lightColor, setLightColor] = useState('')
 
   const [streak, setStreak] = useState(0)
-  const [impressionCount, setImpressionCount] = useState(0)
-  const [bookmarkCount, setBookmarkCount] = useState(0)
+  const [impressionCount, setImpressionCount] = useState(null)
+  const [bookmarkCount, setBookmarkCount] = useState(null)
 
   const init = async () => {
     const userInformation = JSON.parse(await getLocallyStoredVariable('user_information'))
@@ -54,30 +49,40 @@ export default function ProfilePage({ navigation }) {
     }, [])
   )
 
-  const handleSignOut = async () => {
-    hapticImpactHeavy()
-    await removeUserSession()
-    await Updates.reloadAsync()
-  }
+  const icOpacity = useRef(new Animated.Value(0)).current
+  const bcOpacity = useRef(new Animated.Value(0)).current
+  useEffect(() => {
+    if (impressionCount !== null) {
+      Animated.timing(icOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true
+      }).start()
+    }
+    if (bookmarkCount !== null) {
+      Animated.timing(bcOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true
+      }).start()
+    }
+  }, [impressionCount, bookmarkCount])
 
   return (
     <View style={styles.container}>
       <SimpleHeader
         navigation={navigation}
-        title="Profile"
+        title={userName}
         rightIcon={
-          // <TouchableOpacity>
-          //   <Icon name="gear" size={24} color={theme.primaryText} />
-          // </TouchableOpacity>
-          <Switch
-            trackColor={{false: '#616161', true: '#DDD'}}
-            thumbColor={currentTheme === 'light' ? '#fff' : '#bbb'}
-            ios_backgroundColor="#616161"
-            onChange={() => {
-              changeTheme(currentTheme === 'light' ? 'dark' : 'light')
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              hapticSelect()
+              navigation.navigate('ProfileSettings')
             }}
-            value={currentTheme === 'light'}
-          />
+          >
+            <Icon name="gear" size={22} color={theme.primaryText} />
+          </TouchableOpacity>
         }
       />
       <ScrollView 
@@ -96,67 +101,21 @@ export default function ProfilePage({ navigation }) {
           </View>
           <Text style={styles.userNameText}>{userName}</Text>
           <View style={styles.profileInformationContainer}>
-            <Text style={styles.infoText}>
+            <Animated.Text style={[styles.infoText, { opacity: icOpacity }]}>
               <Icon name="paperclip" size={18} /> {impressionCount}
-            </Text>
+            </Animated.Text>
             <View style={[styles.infoBox, { backgroundColor: getColorLight(color.color_hex) }]}>
               <Text style={[styles.infoText, { fontSize: 28, color: color.color_hex }]}>
                 <Icon name="fire" size={24} color={color.color_hex} /> {streak}
               </Text>
             </View>
-            <Text style={styles.infoText}>
+            <Animated.Text style={[styles.infoText, { opacity: bcOpacity }]}>
               <FAIcon name="bookmark" size={18} /> {bookmarkCount}
-            </Text>
+            </Animated.Text>
           </View>
         </View>
 
         <View style={styles.contentContainer}>
-          <StrongContentBox 
-            title={'ACCOUNT'}
-            navigation={navigation}
-          >
-            <View style={styles.optionRow}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  hapticSelect()
-                  navigation.navigate('ChangeProfileName')
-                }}
-              >
-                <Text style={styles.optionRowText}>change name</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.optionRow}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  hapticSelect()
-                  navigation.navigate('ChangeProfilePicture')
-                }}
-              >
-                <Text style={styles.optionRowText}>change profile picture</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.optionRow}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  hapticSelect()
-                  navigation.navigate('ChangeProfileColor')
-                }}
-              >
-                <Text style={[styles.optionRowText, { color: color.color_hex }]}>change color 🎨</Text>
-              </TouchableOpacity>
-            </View>
-          </StrongContentBox>
-
-          <TouchableOpacity
-            onPress={handleSignOut}
-          >
-            <Text style={styles.danger}>
-              <Icon name="delete-left" size={16} color={theme.red} /> Sign out of your account
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -231,26 +190,5 @@ function style(theme) {
       fontWeight: 'bold',
       fontFamily: 'nunito-bold',
     },
-
-    optionRow: {
-      flex: 1,
-      paddingHorizontal: 20,
-      paddingVertical: 15,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    optionRowText: {
-      fontFamily: 'nunito-bold',
-      fontSize: 16,
-      color: theme.primaryText
-    },
-    danger: {
-      fontFamily: 'nunito-bold',
-      fontSize: 16,
-      color: theme.red,
-      marginVertical: 35,
-      marginLeft: 10,
-    }
   })
 }

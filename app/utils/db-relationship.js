@@ -64,8 +64,8 @@ export const getRelationships = async (user_id) => {
       .select(`
         status,
         invited_by,
-        user_two (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex)),
-        user_one (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex))
+        user_two (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex), last_impression),
+        user_one (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex), last_impression)
       `)
       .or(`user_one.eq.${user_id},user_two.eq.${user_id}`)
 
@@ -179,7 +179,7 @@ export const getGroupsForUser = async (user_id) => {
         user_id,
         is_leader,
         status,
-        group (group_name, group_image, plan_id),
+        group (group_name, group_image, last_impression, plan_id),
         user (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex))
       `)
       .in('group_id', groupIds)

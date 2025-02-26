@@ -24,16 +24,19 @@ import GroupDetailsRouter from './home/group/GroupDetailsRouter';
 import NavigationBar from "./components/NavigationBar";
 import FadeInView from "./components/FadeInView";
 
-import { getUserIdFromLocalStorage, setLocallyStoredVariable } from "./utils/localStorage"
+import { dictateImpressionsSeen, getUserIdFromLocalStorage, setLocallyStoredVariable } from "./utils/localStorage"
 import { getFriendRequestsByUserId, getGroupsForUser, getRelationships } from "./utils/db-relationship"
-import { checkUserStreak, getLogsByUserId, getPlanByUserId, getPlanItemsForWeekByPlanId, } from "./utils/authenticate"
+import { checkUserStreak, getImpressionsVisibleToUser, getLogsByUserId, getPlanByUserId, getPlanItemsForWeekByPlanId, } from "./utils/authenticate"
 import LoadingScreen from "./home/ LoadingScreen"
 import { checkRequiredDailyNotifications } from "./utils/notify"
-import { RealtimeProvider } from "./hooks/RealtimeProvider"
 import { forPushFromBottom } from "./utils/interpolations/forPushFromBottom";
 import { useTheme } from "./hooks/ThemeProvider";
 import GroupPage from "./home/GroupPage";
 import { getCurrentWeekNumber } from "./utils/plan";
+import { RealtimeProvider } from "./hooks/RealtimeProvider"
+import UniversalModalProvider from "./hooks/UniversalModalProvider";
+import Person from "./home/profile/Person";
+import PersonProfile from "./home/PersonProfile";
 
 const Stack = createStackNavigator()
 
@@ -42,7 +45,8 @@ export default function Router() {
   const [currentRoute, setCurrentRoute] = useState('Home')
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState(0)
-  const withoutBar = ['PremiumOffer', 'Group', 'CreateGroup', 'Chapter', 'Capture', 'ReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers', 'ViewImpressions', 'ProfilePageRouter', 'CommentPage', 'StreakView']
+  const withoutBar = ['PremiumOffer', 'CreateGroup', 'Chapter', 'Capture', 'ReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers', 'ViewImpressions', 'ProfilePageRouter', 'CommentPage', 'StreakView']
+  // const withoutBar = []
 
   const [realtimeData, setRealtimeData] = useState({})
 
@@ -90,6 +94,13 @@ export default function Router() {
       await checkUserStreak(data)
       setProgress(prev => prev + 1)
     }
+    const getImpressions = async (userId) => {
+      const { data } = await getImpressionsVisibleToUser(userId)
+      await setLocallyStoredVariable('daily_impressions', JSON.stringify(data))
+      await dictateImpressionsSeen()
+
+      setProgress(prev => prev + 1)
+    }
     const checkNotifications = async () => {
       await checkRequiredDailyNotifications()
       setProgress(prev => prev + 1)
@@ -104,6 +115,7 @@ export default function Router() {
       await getUserFriends(userId)
       await getUserFriendRequests(userId)
       await getUserLogs(userId)
+      await getImpressions(userId)
       await checkNotifications()
     }
 
@@ -113,7 +125,7 @@ export default function Router() {
   return loading ? (
     <LoadingScreen 
       progress={progress} 
-      steps={6} 
+      steps={7} 
       setLoading={setLoading}
     />
   ) : (
@@ -123,124 +135,136 @@ export default function Router() {
         onStateChange={handleStateChange}
       >
         <RealtimeProvider realtimeData={realtimeData}>
-          <Stack.Navigator 
-            initialRouteName='Landing'
-            screenOptions={{
-              cardStyle: { backgroundColor: theme.primaryBackground },
-              headerShown: false,
-            }}
-          >
-            <Stack.Screen
-              name='Landing'
-              component={Home}
-              options={{ animationEnabled: false }}
-            />
+          <UniversalModalProvider>
+            <Stack.Navigator 
+              initialRouteName='Landing'
+              screenOptions={{
+                cardStyle: { backgroundColor: theme.primaryBackground },
+                headerShown: false,
+              }}
+            >
+              <Stack.Screen
+                name='Landing'
+                component={Home}
+                options={{ animationEnabled: false }}
+              />
 
-            <Stack.Screen
-              name='Book'
-              component={Book}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen
-              name='Chapters'
-              component={Chapters}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen
-              name='Chapter'
-              component={Chapter}
-              options={{ animationEnabled: true, gestureEnabled: false }}
-            />
-            <Stack.Screen
-              name='Notifications'
-              component={NotificationsPage}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen
-              name='ProfilePageRouter'
-              component={ProfilePageRouter}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen
-              name='CreateGroup'
-              component={CreateGroup}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen
-              name='AddFriend'
-              component={AddFriend}
-              options={{ animationEnabled: false }}
-            />
-            <Stack.Screen
-              name='GroupPage'
-              component={GroupPage}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen
-              name='AddPeopleToGroup'
-              component={AddPeopleToGroup}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen 
-              name='Group'
-              component={Group}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen
-              name='GroupDetailsRouter'
-              component={GroupDetailsRouter}
-              options={{ animationEnabled: true }}
-            />
-            <Stack.Screen
-              name='PremiumOffer'
-              component={PremiumOffer}
-              options={{
-                animationEnabled: true,
-                ...TransitionPresets.ScaleFromCenterAndroid,
-              }}
-            />
-            <Stack.Screen
-              name='Capture'
-              component={Capture}
-              options={{
-                animationEnabled: true,
-                ...TransitionPresets.ScaleFromCenterAndroid,
-              }}
-            />
-            <Stack.Screen
-              name='ViewImpressions'
-              component={ViewImpressions}
-              options={{ 
-                animationEnabled: true, gestureEnabled: false,
-                ...TransitionPresets.ScaleFromCenterAndroid,
-              }}
-            />
-            <Stack.Screen 
-              name='ReadingSummary' component={ReadingSummary} options={{ 
-                animationEnabled: true,
-                ...TransitionPresets.ScaleFromCenterAndroid
-              }}
-            />
-            <Stack.Screen 
-              name='StreakView' component={StreakView} options={{ 
-                animationEnabled: true, 
-                ...TransitionPresets.ScaleFromCenterAndroid
-              }}
-            />
-            <Stack.Screen
-              name='CommentPage' component={CommentPage} options={{
-                animationEnabled: true,
-                gestureEnabled: false,
-                cardStyleInterpolator: forPushFromBottom
-              }}
-            />
-          </Stack.Navigator>
-          {!withoutBar.includes(currentRoute) && (
-            <NavigationBar
-              currentRoute={currentRoute}
-              setCurrentRoute={setCurrentRoute}
-            />
-          )}
+              <Stack.Screen
+                name='Book'
+                component={Book}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen
+                name='Chapters'
+                component={Chapters}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen
+                name='Chapter'
+                component={Chapter}
+                options={{ animationEnabled: true, gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name='Notifications'
+                component={NotificationsPage}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen
+                name='ProfilePageRouter'
+                component={ProfilePageRouter}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen
+                name='CreateGroup'
+                component={CreateGroup}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen
+                name='AddFriend'
+                component={AddFriend}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen
+                name='GroupPage'
+                component={GroupPage}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen
+                name='AddPeopleToGroup'
+                component={AddPeopleToGroup}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen 
+                name='Person'
+                component={Person}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen 
+                name='PersonProfile'
+                component={PersonProfile}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen 
+                name='Group'
+                component={Group}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen
+                name='GroupDetailsRouter'
+                component={GroupDetailsRouter}
+                options={{ animationEnabled: true }}
+              />
+              <Stack.Screen
+                name='PremiumOffer'
+                component={PremiumOffer}
+                options={{
+                  animationEnabled: true,
+                  ...TransitionPresets.ScaleFromCenterAndroid,
+                }}
+              />
+              <Stack.Screen
+                name='Capture'
+                component={Capture}
+                options={{
+                  animationEnabled: true,
+                  ...TransitionPresets.ScaleFromCenterAndroid,
+                }}
+              />
+              <Stack.Screen
+                name='ViewImpressions'
+                component={ViewImpressions}
+                options={{ 
+                  animationEnabled: true, gestureEnabled: false,
+                  ...TransitionPresets.ScaleFromCenterAndroid,
+                }}
+              />
+              <Stack.Screen 
+                name='ReadingSummary' component={ReadingSummary} options={{ 
+                  animationEnabled: true,
+                  ...TransitionPresets.ScaleFromCenterAndroid
+                }}
+              />
+              <Stack.Screen 
+                name='StreakView' component={StreakView} options={{ 
+                  animationEnabled: true, 
+                  ...TransitionPresets.ScaleFromCenterAndroid
+                }}
+              />
+              <Stack.Screen
+                name='CommentPage' component={CommentPage} options={{
+                  animationEnabled: true,
+                  gestureEnabled: false,
+                  cardStyleInterpolator: forPushFromBottom
+                }}
+              />
+            </Stack.Navigator>
+            {!withoutBar.includes(currentRoute) && (
+              <NavigationBar
+                currentRoute={currentRoute}
+                setCurrentRoute={setCurrentRoute}
+              />
+            )}
+          </UniversalModalProvider>
         </RealtimeProvider>
       </NavigationContainer>
     </FadeInView>

@@ -51,7 +51,6 @@ export default function Onboard({ setSession, setIsOnboardComplete}) {
     <UserMotivation {...props} />,
 
     <Permissions {...props} />,
-    // FUTURE: help us grow?
 
     // <GetPhone {...props} />,
     // <GetStarted {...props} setSession={setSession} setIsFirstLaunch={setIsFirstLaunch} />,
@@ -78,29 +77,29 @@ export default function Onboard({ setSession, setIsOnboardComplete}) {
 
   return (
     <View style={styles.container}>
-      {currentScreen > 1 && (
-        <OnboardingProgressBar 
-          setCurrentScreen={setCurrentScreen}
-          currentScreen={currentScreen}
-          totalScreens={screens.length}
-        />
-      )}
-      { screens[currentScreen - 1] }
-      {currentScreen > 1 && currentScreen !== screens.length && (
-        <View style={styles.bottomContainer}>
-          <LinearGradient 
-            colors={[ 'rgba(255, 255, 255, 0.10)', 'rgba(255, 255, 255, 0.90)', 'rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 1)', 'rgba(255, 255, 255, 1)', 'rgba(255, 255, 255, 1)', 'rgba(255, 255, 255, 1)', ]}
-            style={[styles.gradientBottom, { height: insets.bottom + 100 }]}
-          />
-          <OnboardButton
-            title="next"
-            color={onboardingData.color.color_hex}
-            onPress={() => setCurrentScreen(prev => prev + 1)}
-            style={[styles.nextButton, { marginBottom: insets.bottom + 15 }]}
-            disabled={disabled}
-          />
-        </View>
-      )}
+          {currentScreen > 1 && (
+            <OnboardingProgressBar 
+              setCurrentScreen={setCurrentScreen}
+              currentScreen={currentScreen}
+              totalScreens={screens.length}
+            />
+          )}
+          { screens[currentScreen - 1] }
+          {currentScreen > 1 && currentScreen !== screens.length && (
+            <View style={styles.bottomContainer}>
+              <LinearGradient 
+                colors={[ 'rgba(255, 255, 255, 0.10)', 'rgba(255, 255, 255, 0.90)', 'rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 1)', 'rgba(255, 255, 255, 1)', 'rgba(255, 255, 255, 1)', 'rgba(255, 255, 255, 1)', ]}
+                style={[styles.gradientBottom, { height: insets.bottom + 100 }]}
+              />
+              <OnboardButton
+                title="next"
+                color={onboardingData.color.color_hex}
+                onPress={() => setCurrentScreen(prev => prev + 1)}
+                style={[styles.nextButton, { marginBottom: insets.bottom + 15 }]}
+                disabled={disabled}
+              />
+            </View>
+          )}
     </View>
   )
 }

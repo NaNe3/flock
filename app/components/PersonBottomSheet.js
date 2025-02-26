@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from 'react-native-vector-icons/FontAwesome'
 
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../utils/localStorage";
 import { createRelationship, removeRelationship } from "../utils/db-relationship";
 
-import Avatar from "./Avatar";
 import BasicBottomSheet from "../home/components/BasicBottomSheet";
 import { removeGroupMember } from "../utils/db-image";
 import { hapticSelect } from "../utils/haptics";
 import { useTheme } from "../hooks/ThemeProvider";
 
-export default function PersonBottomSheet({ 
+export default function PersonBottomSheet({
   person,
   setVisibility,
   isGroupLeader=false,
@@ -20,6 +20,7 @@ export default function PersonBottomSheet({
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
+  const insets = useSafeAreaInsets()
   const [userId, setUserId] = useState(null)
   const [friends, setFriends] = useState([])
   const [state, setState] = useState(null)
@@ -101,7 +102,11 @@ export default function PersonBottomSheet({
       height={400}
       backgroundColor={theme.primaryBackground}
     >
-      <View style={[styles.personInfoContainer, isGroupLeader && { borderBottomWidth: 2, borderBottomColor: theme.primaryBorder }]}>
+      <View style={[
+        styles.personInfoContainer, 
+        isGroupLeader && { borderBottomWidth: 2, borderBottomColor: theme.primaryBorder },
+        { paddingBottom: insets.bottom + 10 }
+      ]}>
         {/* <View style={styles.avatarContainer}>
           <Avatar 
             imagePath={person.avatar_path}

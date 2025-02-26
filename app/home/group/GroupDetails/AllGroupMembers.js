@@ -10,6 +10,7 @@ import { getLocallyStoredVariable, getUserIdFromLocalStorage } from "../../../ut
 import { timeAgoGeneral } from "../../../utils/timeDiff"
 import { getColorLight } from "../../../utils/getColorVariety"
 import { useTheme } from "../../../hooks/ThemeProvider"
+import PersonRow from "../../components/PersonRow"
 
 export default function AllGroupMembers({ navigation, route }) {
   const { group_id, members, isGroupLeader } = route.params
@@ -54,26 +55,7 @@ export default function AllGroupMembers({ navigation, route }) {
               key={index}
               style={styles.optionRow}
             >
-              <TouchableOpacity 
-                style={styles.personContentContainer}
-                activeOpacity={1}
-                onPress={() => {
-                  // navigation.navigate(row.location)}
-                  // console.log('navigate to', member)
-                }}
-              >
-                  <View style={[styles.avatarImageContainer, { borderColor: member.color }]}>
-                    <Avatar
-                      imagePath={member.avatar_path}
-                      type="user"
-                      style={styles.avatarImage}
-                    />
-                  </View>
-                  <View style={styles.userNameLeft}>
-                    <Text style={styles.optionRowText}>{member.fname} {member.lname}</Text>
-                    <Text style={styles.optionRowTextSecondary}>studied {timeAgoGeneral(member.last_studied)}</Text>
-                  </View>
-              </TouchableOpacity>
+              <PersonRow person={member} />
               {userId !== member.id && (
                 <TouchableOpacity
                   activeOpacity={0.7}
@@ -112,12 +94,12 @@ function style(theme) {
       backgroundColor: theme.secondaryBackground,
     },
     contentContainer: {
-      flex: 1
+      flex: 1,
+      paddingVertical: 20,
     },
     optionRow: {
       flex: 1,
       paddingHorizontal: 20,
-      paddingVertical: 15,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',

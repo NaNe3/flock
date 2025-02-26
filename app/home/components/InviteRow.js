@@ -7,6 +7,8 @@ import { hapticSelect } from "../../utils/haptics"
 import AcceptReject from "./AcceptReject"
 
 export default InviteRow = ({ navigation, groups, setGroups, setGroupStatus, userId, groupId }) => {
+  console.log("groups: ", groups)
+  console.log("userId: ", userId) 
 
   const accept = () => {
     hapticSelect()

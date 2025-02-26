@@ -395,13 +395,16 @@ function Capture({ navigation, route }) {
         <BasicBottomSheet
           title="sending to"
           setVisibility={setSelectingGroup}
+          backgroundColor={constants.heckaGray2}
+          titleColor={constants.lightestGray}
         >
           <GroupSelection
             userAvatar={userAvatar}
-            setRecipientAvatar={setRecipientAvatar}
             selectedRecipient={selectedRecipient}
             setSelectedRecipient={setSelectedRecipient}
+            setRecipientAvatar={setRecipientAvatar}
             setSelectingGroup={setSelectingGroup}
+            theme='dark'
           />
         </BasicBottomSheet>
       }

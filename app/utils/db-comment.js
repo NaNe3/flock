@@ -1,3 +1,4 @@
+import { updateLastImpression } from "./db-media";
 import supabase from "./supabase";
 
 export function getTimeSincePosted(date) {
@@ -142,6 +143,8 @@ export async function publishMainComment({ comment, color_scheme, user_id, group
           comment_id: data[0].comment_id
         }
       ])
+
+    await updateLastImpression({ user_id, recipient_id: group_id })
   
     if (activityError) {
       console.error('activityError', activityError)

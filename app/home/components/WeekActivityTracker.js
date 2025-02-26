@@ -90,6 +90,7 @@ function style(theme) {
       flexDirection: 'row',
       paddingBottom: 30,
       paddingHorizontal: 10,
+      zIndex: 2,
     },
     dayContainer: {
       paddingVertical: 5,

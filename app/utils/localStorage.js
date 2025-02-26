@@ -128,3 +128,15 @@ export const setEmojiHistory = async (emoji) => {
     : [emoji]
   await setLocallyStoredVariable('emoji_history', JSON.stringify(newHistory))
 }
+
+export const dictateImpressionsSeen = async () => {
+  const seen = JSON.parse(await getLocallyStoredVariable('impressions_seen'))
+  console.log("seen: ", seen)
+  if (!seen || seen.day !== new Date().getDate()) {
+    console.log("setting impressions_seen")
+    await setLocallyStoredVariable('impressions_seen', JSON.stringify({
+      'day': new Date().getDate(),
+      'impressions': []
+    }))
+  }
+}

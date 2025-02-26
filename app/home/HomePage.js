@@ -1,133 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import { useFocusEffect } from "@react-navigation/native";
 
-import BasicButton from "../components/BasicButton";
-import FA6Icon from "../components/FA6Icon"
-import NotificationIndicator from "../components/NotificationIndicator";
 import WeekActivityTracker from "./components/WeekActivityTracker";
 
 import { getAttributeFromObjectInLocalStorage, getLocallyStoredVariable, getLogsFromToday, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../utils/localStorage";
-import { hapticImpactSoft, hapticSelect } from "../utils/haptics";
-import { getCurrentWeekNumber, getWeekFromTimestamp } from "../utils/plan";
-import { getColorLight, getPrimaryColor } from "../utils/getColorVariety";
 import { useTheme } from "../hooks/ThemeProvider";
 import MapBlock from "./components/MapBlock"
 import WeekMapBlock from "./components/WeekMapBlock"
-
-const LandingDisplay = ({
-  navigation,
-  currentPlanItem
-}) => {
-  const { theme } = useTheme()
-  const [styles, setStyles] = useState(style(theme))
-  useEffect(() => { setStyles(style(theme)) }, [theme])
-
-  const [versesInStudy, setVersesInStudy] = useState(0)
-  const [chapter, setChapter] = useState('')
-  const [location, setLocation] = useState({})
-  const [plan, setPlan] = useState({ plan_info: {}, plan_item_id: null, })
-  const [time, setTime] = useState('')
-  const [planButtonState, setPlanButtonState] = useState({
-    disabled: false
-  })
-  const [hasStudied, setHasStudied] = useState(false)
-
-  const init = async () => {
-    // const week = getCurrentWeekNumber()
-    // const currentDay = new Date().getDay()
-    // console.log("week: ", week, " day: ", currentDay)
-    const currentPlan = JSON.parse(await getLocallyStoredVariable('user_plans'))[0]
-    const chapter = currentPlanItem.book === "" || currentPlanItem.book === null
-      ? `${currentPlanItem.work.replace("Doctrine And Covenants", "D&C").toUpperCase()} ${currentPlanItem.chapter}`
-      : `${currentPlanItem.book.replace("Joseph Smith", "JS").replace("Doctrine And Covenants", "D&C").toUpperCase()} ${currentPlanItem.chapter}`
-    setPlan({ plan_info: currentPlan, plan_item_id: currentPlanItem.plan_item_id })
-    setChapter(chapter)
-    setVersesInStudy(currentPlanItem.verses.split('-').map(verse => parseInt(verse)))
-    setTime(currentPlanItem.time)
-    setLocation({
-      work: currentPlanItem.work,
-      book: currentPlanItem.work === "Doctrine And Covenants" ? "Doctrine And Covenants" : currentPlanItem.book,
-      chapter: currentPlanItem.chapter,
-    })
-  }
-
-  // const getStudyCompletion = async (week, currentDay) => {
-  //   const logs = JSON.parse(await getLocallyStoredVariable('user_logs'))
-
-  //   const year = new Date().getFullYear()
-  //   const hasStudiedToday = logs.some(log => {
-  //     const time = log.created_at
-
-  //     const date = new Date(time)
-  //     const yearOfLog = date.getFullYear()
-  //     const weekOfLog = getWeekFromTimestamp(time)
-  //     const dayOfLog = date.getDay()
-
-  //     return yearOfLog === year && weekOfLog === week && dayOfLog === currentDay && log.plan_item_id === plan.plan_item_id
-  //   })
-  //   setHasStudied(hasStudiedToday)
-  // }
-
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     init()
-  //   }, [])
-  // )
-
-  useEffect(() => {
-    const trigger = async () => { await init() }
-    if (currentPlanItem !== null) trigger()
-  }, [currentPlanItem])
-
-  return (
-    <View style={styles.landingContainer}>
-      <View style={styles.landingContentContainer}>
-        <TouchableOpacity
-          style={styles.planContainer}
-          activeOpacity={0.7}
-          onPress={() => {
-            hapticSelect()
-          }}
-        >
-          <View style={styles.planContentContainer}>
-            <View style={styles.planBox}>
-              <Text style={styles.planArt}>Come</Text>
-              <Text style={styles.planArt}>Follow</Text>
-              <Text style={styles.planArt}>Me</Text>
-            </View>
-            <Text style={styles.planText}>
-              Come Follow Me &nbsp;<Icon name="chevron-down" size={12} color={theme.actionText} />
-            </Text>
-          </View>
-        </TouchableOpacity>
-        <Text style={[styles.header, chapter.length < 10 && { fontSize: 60}]}>{chapter}</Text>
-        <Text style={styles.verses}>verses {versesInStudy[0]} - {versesInStudy[1]}</Text>
-      </View>
-      <View style={styles.actionContainer}>
-        <BasicButton
-          title={`${time} minutes`}
-          icon='clock-o'
-          onPress={() => {
-            hapticImpactSoft()
-            navigation.navigate('Chapter', {
-              work: location.work,
-              book: location.book,
-              chapter: location.chapter,
-              plan: {
-                verses: versesInStudy,
-                ...plan
-              }
-            })
-          }}
-          disabled={planButtonState.disabled}
-          style={{ width: '100%' }}
-        />
-      </View>
-    </View>
-  )
-}
+import LandingDisplay from "./components/LandingDisplay";
 
 export default function HomePage({ navigation }) {
   const { theme } = useTheme()
@@ -139,6 +21,7 @@ export default function HomePage({ navigation }) {
   const [logs, setLogs] = useState([])
   const [planItems, setPlanItems] = useState([])
   const [currentPlanItem, setCurrentPlanItem] = useState(null)
+  const [scrollingState, setScrollingState] = useState(false)
 
   const getGoalText = async () => {
     const goal = await getAttributeFromObjectInLocalStorage("userInformation", "goal")
@@ -165,7 +48,7 @@ export default function HomePage({ navigation }) {
         console.log("week study finished")
       }
     } else {
-      const nextPlanItem = planItems.find(pi => pi.plan_item_id === latestLog.plan_item_id + 1)
+      const nextPlanItem = planItems.find(pi => pi.plan_item_id === latestLog.plan_item_id + 2)
       setCurrentPlanItem(nextPlanItem)
     }
   }
@@ -185,15 +68,19 @@ export default function HomePage({ navigation }) {
   return (
     <View style={styles.container}>
       <WeekActivityTracker />
+      <LandingDisplay
+        {...props}
+        currentPlanItem={currentPlanItem}
+        scrollingState={scrollingState}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        style={{ width: '100%', backgroundColor: theme.secondaryBackground }}
+        style={{ width: '100%', backgroundColor: theme.secondaryBackground, marginTop: -280, }}
         contentContainerStyle={{ alignItems: 'center' }}
+        onScrollBeginDrag={() => setScrollingState(true)}
+        onScrollEndDrag={() => setScrollingState(false)}
+        scrollEventThrottle={16}
       >
-        <LandingDisplay 
-          {...props} 
-          currentPlanItem={currentPlanItem} 
-        />
         <View style={styles.homeContent}>
           {/* <TouchableOpacity
             style={styles.addFriendsButton}
@@ -209,16 +96,14 @@ export default function HomePage({ navigation }) {
             </Text>
           </TouchableOpacity> */}
           {currentPlanItem !== null && planItems.map((item, i) => {
-            if (item.plan_item_id > currentPlanItem.plan_item_id) {
-              return (
-                <MapBlock
-                  key={`map-block-${i}`}
-                  item={item}
-                  status="locked"
-                  navigation={navigation}
-                />
-              )
-            }
+            return (
+              <MapBlock
+                key={`map-block-${i}`}
+                item={item}
+                status={item.plan_item_id === currentPlanItem.plan_item_id ? 'active' : item.plan_item_id > currentPlanItem.plan_item_id ? 'locked': 'complete'}
+                navigation={navigation}
+              />
+            )
           })}
           <WeekMapBlock navigation={navigation} />
         </View>
@@ -235,53 +120,16 @@ function style(theme) {
       backgroundColor: theme.secondaryBackground,
       alignItems: 'center',
     },
-    landingContainer: {
-      width: '100%',
-      backgroundColor: theme.primaryBackground,
-      borderBottomLeftRadius: 30,
-      borderBottomRightRadius: 30,
-      alignItems: 'center',
-      paddingBottom: 30,
-      paddingTop: 600,
-      marginTop: -600,
-    },
-    landingContentContainer: {
-      marginVertical: 30, 
-      flex: 1, 
-      alignItems: 'center' 
-    },
     homeContent: {
       width: '100%',
       paddingHorizontal: 30,
       paddingBottom: 40,
-    },
-    actionContainer: {
-      width: '100%',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-    },
-    header: {
-      fontFamily: 'nunito-bold', 
-      fontSize: 40, 
-      marginVertical: 0,
-      color: theme.primaryText,
-      textAlign: 'center'
-    },
-    subHeaderContainer: {
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 10,
     },
     // subHeader: {
     //   fontFamily: 'nunito-bold', 
     //   fontSize: 16, 
     //   color: theme.darkishGray,
     // },
-    verses: {
-      fontFamily: 'nunito-bold', 
-      fontSize: 26, 
-      color: theme.darkishGray,
-    },
     addFriendsButton: {
       width: 180,
       paddingVertical: 10,
@@ -296,41 +144,5 @@ function style(theme) {
       color: theme.actionText,
       textAlign: 'center',
     },
-    planContainer: {
-      paddingVertical: 5,
-      paddingHorizontal: 5,
-      borderRadius: 100,
-      height: 41,
-
-      borderWidth: 3,
-      borderColor: theme.primaryBorder,
-    },
-    planContentContainer: {
-      flex: 1,
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    planText: {
-      fontSize: 15,
-      fontFamily: 'nunito-bold',
-      color: theme.actionText,
-    },
-    planBox: {
-      backgroundColor: theme.maroon,
-      width: 25,
-      height: 25,
-      borderRadius: 100,
-      marginRight: 5,
-      overflow: 'hidden',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    planArt: {
-      color: theme.orange,
-      fontSize: 5,
-      fontFamily: 'nunito-bold',
-      textAlign: 'center',
-    }
   })
 }

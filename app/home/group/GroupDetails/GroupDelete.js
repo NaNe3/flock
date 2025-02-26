@@ -10,7 +10,7 @@ import { deleteGroupByGroupId } from "../../../utils/db-image"
 import { useTheme } from "../../../hooks/ThemeProvider"
 
 export default function GroupDelete({ navigation, route }) {
-  const { group_id, group_name, group_avatar } = route.params
+  const { group_id, group_name, group_image } = route.params
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
@@ -30,9 +30,9 @@ export default function GroupDelete({ navigation, route }) {
 
   const handleDeleteGroup = async () => {
     setDeleteButtonDisabled(true) 
-    const { error } = await deleteGroupByGroupId(group_id, group_avatar)
+    const { error } = await deleteGroupByGroupId(group_id, group_image)
     // TODO - handle error in group delete
-    navigation.navigate('GroupPage')
+    navigation.navigate('FriendsPage')
   }
 
   return (

@@ -66,7 +66,7 @@ export const uploadMedia = async ({ location, media, media_type, duration, recip
 
     const config = {
       headers: {
-          'Content-Type': media_type === 'picture' ? 'image/jpeg' : 'video/quicktime',
+        'Content-Type': media_type === 'picture' ? 'image/jpeg' : 'video/quicktime',
       },
     };
 
@@ -88,8 +88,9 @@ export const uploadMedia = async ({ location, media, media_type, duration, recip
         const { error: createActivityError } = await createActivityRow(location, media_id, user_id, recipient_id)
 
         if (!createActivityError) {
+          await updateLastImpression({ user_id, recipient_id })
           return { status: 200 }
-        } else { 
+        } else {
           console.error('Error creating activity row:', createActivityError)
           return { error: createActivityError } 
         }
@@ -104,7 +105,36 @@ export const uploadMedia = async ({ location, media, media_type, duration, recip
     console.error('Error uploading image:', error)
     return { error: error }
   }
-} 
+}
+
+export const updateLastImpression = async ({ user_id, recipient_id }) => {
+  try {
+    console.log('updating last impression: ', user_id, recipient_id)
+    if (recipient_id !== null) {
+      const { data, error } = await supabase
+        .from('group')
+        .update({ last_impression: new Date() })
+        .eq('group_id', recipient_id)
+
+      if (error) {
+        console.error('Error updating last impression:', error)
+        return { error: error}
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('user')
+        .update({ last_impression: new Date() })
+        .eq('id', user_id)
+
+      if (error) {
+        console.error('Error updating last impression:', error)
+        return { error: error}
+      }
+    }
+  } catch (error) {
+    console.error('Error updating last impression:', error)
+  }
+}
 
 // export const uploadVideoAsMedia = async (video) => {
 //   if (!video) return null

@@ -86,3 +86,9 @@ export const getVersesFromChapter = async (work, book, chapter) => {
   const verses = bookInQuestion[book][chapter]
   return verses
 }
+
+export const getVerseByLocation = async (location) => {
+  const { work, book, chapter, verse } = location
+  const verses = await getVersesFromChapter(work, book, chapter)
+  return verses[verse]
+}

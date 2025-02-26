@@ -95,7 +95,10 @@ export default function AddPeopleToGroup({
           />
         </View>
 
-        <ScrollView style={styles.friendContainer}>
+        <ScrollView 
+          style={styles.friendContainer}
+          showsVerticalScrollIndicator={false}
+        >
           {
             peopleVisible.length > 0
             ? peopleVisible.map((friend, index) => {

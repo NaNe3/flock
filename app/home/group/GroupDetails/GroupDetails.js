@@ -12,16 +12,17 @@ import { hapticSelect } from "../../../utils/haptics"
 import PersonBottomSheet from "../../../components/PersonBottomSheet"
 import { timeAgoGeneral } from "../../../utils/timeDiff"
 import { useTheme } from "../../../hooks/ThemeProvider"
+import PersonRow from "../../components/PersonRow"
 
 export default function GroupDetails({ navigation, route }) {
-  const { group_id, group_name, group_avatar, group_plan, members } = route.params
+  const { group_id, group_name, group_image, group_plan, members } = route.params.group
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
   const [groupName, setGroupName] = useState(group_name)
   const [userId, setUserId] = useState('')
-  const [groupAvatar, setGroupAvatar] = useState(group_avatar)
+  const [groupAvatar, setGroupAvatar] = useState(group_image)
   const [groupPlan, setGroupPlan] = useState(group_plan)
   const [groupMembers, setGroupMembers] = useState(members)
 
@@ -64,7 +65,7 @@ export default function GroupDetails({ navigation, route }) {
     useCallback(() => {
       getUserGroupsFromLocalStorage()
     }, [])
-  );
+  )
 
   return (
     <View style={styles.container}>
@@ -95,51 +96,18 @@ export default function GroupDetails({ navigation, route }) {
             navigation={navigation}
             title={`MEMBERS (${groupMembers.length})`}
           >
-            {
-              groupMembers.slice(0, 3).map((member, index) => {
-                return (
-                  <View 
-                    key={index}
-                    style={styles.optionRow}
-                  >
-                    <TouchableOpacity 
-                      style={{ flexDirection: 'row', alignItems: 'center' }}
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        // navigation.navigate(row.location)}
-                        // console.log('navigate to', member)
-                      }}
-                    >
-                      <View style={[styles.avatarImageContainer, { borderColor: member.color }]}>
-                        <Avatar
-                          imagePath={member.avatar_path}
-                          type="user"
-                          style={styles.avatarImage}
-                        />
-                      </View>
-                      <View style={styles.userNameLeft}>
-                        <Text style={styles.optionRowText}>{member.fname} {member.lname}</Text>
-                        <Text style={styles.optionRowTextSecondary}>studied {timeAgoGeneral(member.last_studied)}</Text>
-                      </View>
-                    </TouchableOpacity>
-                    {
-                      member.id !== userId && (
-                        <TouchableOpacity 
-                          activeOpacity={0.7}
-                          onPress={() => {
-                            hapticSelect()
-                            setPersonSelected(member)
-                            setUserModalVisibility(true)
-                          }}
-                        >
-                          <Icon name="ellipsis-h" size={16} color={member.color} />
-                        </TouchableOpacity>
-                      )
-                    }
-                  </View>
-                )
-              })
-            }
+            <View style={styles.peopleContainer}>
+              {
+                groupMembers.slice(0, 3).map((member, index) => {
+                  return (
+                    <PersonRow
+                      person={member}
+                      key={`group-member-${index}`}
+                    />
+                  )
+                })
+              }
+            </View>
             <TouchableOpacity 
               key="add-group-members"
               style={[styles.optionRow, { borderTopWidth: 2, borderColor: theme.primaryBorder }]}
@@ -161,7 +129,7 @@ export default function GroupDetails({ navigation, route }) {
               activeOpacity={0.7}
               onPress={() => {
                 navigation.navigate("AllGroupMembers", { 
-                  members: groupMembers, 
+                  members: groupMembers,
                   group_id: group_id,
                   isGroupLeader: userIsLeader,
                 })
@@ -191,11 +159,11 @@ export default function GroupDetails({ navigation, route }) {
                           activeOpacity={0.7}
                           onPress={() => {
                             navigation.navigate(row.location, {
-                              group_name: groupName,
-                              group_avatar: groupAvatar,
-                              group_plan: groupPlan,
+                              userId: userId,
+                              group_id: route.params.group.group_id,
                               members: groupMembers,
-                              ...route.params,
+                              group_image: groupAvatar,
+                              group_name: groupName,
                             })
                           }}
                         >
@@ -294,6 +262,9 @@ function style(theme) {
       fontSize: 30,
       color: theme.primaryText,
       textAlign: 'center',
+    },
+    peopleContainer: {
+      padding: 10
     },
     optionRow: {
       flex: 1,

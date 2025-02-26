@@ -1,23 +1,20 @@
-import { View, Text, StyleSheet, Button, ScrollView, TouchableOpacity, ActivityIndicator, Linking, } from 'react-native'
+import { View, Text, StyleSheet, ScrollView } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
-import { createRelationship, getRelationships, removeRelationship } from '../utils/db-relationship'
+import { createRelationship, removeRelationship } from '../utils/db-relationship'
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from '../utils/localStorage'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import SearchBar from './components/SearchBar'
-import Avatar from '../components/Avatar'
-import FadeInView from '../components/FadeInView'
 import { searchForUsersByText } from '../utils/authenticate'
 import { hapticSelect } from '../utils/haptics'
 import FriendRequestContainer from './components/FriendRequestContainer'
 
 import { useRealtime } from '../hooks/RealtimeProvider'
-import { timeAgoGeneral } from '../utils/timeDiff'
-import PersonBottomSheet from '../components/PersonBottomSheet'
-import { getColorLight } from '../utils/getColorVariety'
 import { useTheme } from '../hooks/ThemeProvider'
 import SimpleHeader from '../components/SimpleHeader'
+import InvitePersonRow from './components/InvitePersonRow'
+import PersonRow from './components/PersonRow'
 
 export default function AddFriend({ navigation }) {
   const { theme } = useTheme()
@@ -25,10 +22,6 @@ export default function AddFriend({ navigation }) {
   useEffect(() => { setStyles(style(theme)) }, [theme])
   const { incoming, requested } = useRealtime()
 
-  const [disabled, setDisabled] = useState(true)
-  const [contacts, setContacts] = useState([])
-  const [contactsThatAreUsers, setContactsThatAreUsers] = useState([])
-  const [contactsEnabled, setContactsEnabled] = useState(false)
   const [userId, setUserId] = useState(null)
   const [query, setQuery] = useState('')
 
@@ -39,11 +32,7 @@ export default function AddFriend({ navigation }) {
   const [friendRequests, setFriendRequests] = useState([])
 
   const [searchResults, setSearchResults] = useState([])
-  // const [contactsResults, setContactsResults] = useState([])
   const [resultsBuffering, setResultsBuffering] = useState([])
-
-  const [personBottomSheetVisible, setPersonBottomSheetVisible] = useState(false)
-  const [selectedPerson, setSelectedPerson] = useState(null)
 
   const getUserFriends = async () => {
     const result = JSON.parse(await getLocallyStoredVariable('user_friends'))
@@ -73,26 +62,7 @@ export default function AddFriend({ navigation }) {
   }, [incoming, requested])
 
   useEffect(() => {
-
-    // const getContactsPermission = async () => {
-    //   const { status } = await Contacts.getPermissionsAsync()
-    //   if (status === 'granted') {
-    //     setContactsEnabled(true)
-    //     const { data } = await Contacts.getContactsAsync()
-    //     setContacts(data)
-
-    //     // see if contacts results are users
-    //     const peopleWithPhoneNumbers = data.filter(contact => {
-    //       if (contact.phoneNumbers) return contact
-    //     })
-    //     const phoneNumbers = peopleWithPhoneNumbers.map(contact => contact.phoneNumbers[0].number.replace(/\D/g, ''))
-    //     const users = await getUsersFromListOfPhoneNumbers(phoneNumbers)
-    //     setContactsThatAreUsers(users)
-    //   }
-    // }
-
     init()
-    // getContactsPermission()
   }, [])
 
   useEffect(() => {
@@ -100,30 +70,16 @@ export default function AddFriend({ navigation }) {
       const result = await searchForUsersByText(userId, query)
       setSearchResults(result)
     }
-    // const getContactMatches = () => {
-    //   const results = contacts.filter(contact => {
-    //     const name = `${contact.firstName ?? ''} ${contact.lastName ?? ''}`
-    //     return name.toLowerCase().includes(query.toLowerCase())
-    //   })
-    //   setContactsResults(results)
-    // }
-
     if (query !== '') {
       getSearchResults()
-      // getContactMatches()
     } else {
       setSearchResults([])
-      // setContactsResults([])
     }
   }, [query])
 
   useEffect(() => {
     if (readyForFriends) getUserFriends()
   }, [friendRequests])
-
-  // const changeTab = (tab) => {
-  //   setCurrentTab(tab)
-  // }
 
   const handleRequest = async (friendId) => {
     hapticSelect()
@@ -162,30 +118,7 @@ export default function AddFriend({ navigation }) {
     }
   }
 
-  // const requestContactsPermission = async () => {
-  //   hapticSelect()
-  //   const { status } = await Contacts.requestPermissionsAsync()
-  //   if (status === 'granted') {
-  //     setContactsEnabled(true)
-  //     const { data } = await Contacts.getContactsAsync()
-  //     setContacts(data)
-  //   }
-  //   if (status === 'denied') {
-  //     Linking.openSettings()
-  //   }
-  // }
-
-  // const sendPrescriptedMessage = (contact) => {
-  //   const message = `Hello ${contact.firstName}, we should study on flock!`
-  //   const phoneNumber = contact.phoneNumbers[0].digits
-  //   const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`
-  
-  //   Linking.openURL(url).catch(err => console.error('An error occurred', err))
-  // }
-
   const personRowProps = {
-    setPersonBottomSheetVisible,
-    setSelectedPerson,
     theme,
     styles,
   }
@@ -194,7 +127,7 @@ export default function AddFriend({ navigation }) {
     <View style={styles.container}>
       <SimpleHeader
         navigation={navigation}
-        title='Manage friends'
+        title='Add friends'
         rightIcon={
           <Icon name='inbox' size={20} color={theme.primaryText} />
         }
@@ -211,40 +144,18 @@ export default function AddFriend({ navigation }) {
       <ScrollView style={styles.contentContainer}>
         {query === '' && (
           <View style={{ flex: 1 }}>
-            {/* ENABLE CONTACTS BLOCK */}
-            {/* {!contactsEnabled && (
-              <TouchableOpacity 
-                style={styles.contactOptionBox}
-                activeOpacity={0.7}
-                onPress={requestContactsPermission}
-              >
-                <Icon name='address-book' size={30} color={theme.secondaryText} />
-                <Text 
-                  style={styles.contactOptionBoxText}
-                  numberOfLines={1}
-                  ellipsizeMode='tail'
-                >Enable contacts</Text>
-                <Icon name='chevron-right' size={20} color={theme.secondaryText} />
-              </TouchableOpacity>
-            )} */}
-
             {/* FRIEND REQUESTS HERE */}
             {friendRequests.length > 0 && (
               <FriendRequestContainer requests={friendRequests} setRequests={setFriendRequests} />
             )}
 
             {friends.length > 0 && (
-              <View style={styles.section}>
+              <View style={[styles.section, { marginHorizontal: 20 }]}>
                 {friends.filter(friend => friend.status === 'accepted').map((friend, index) => {
                   return (
-                    <PersonRow 
+                    <PersonRow
                       person={friend}
-                      onPress={() => {
-                        handleRequest(friend.id)
-                      }}
-                      invitationStatus={friend.status}
-                      key={index}
-                      {...personRowProps}
+                      key={`friend-${index}`}
                     />
                   )
                 })}
@@ -255,7 +166,7 @@ export default function AddFriend({ navigation }) {
                 <Text style={styles.sectionHeaderText}>outgoing requests</Text>
                 {outgoing.map((friend, index) => {
                   return (
-                    <PersonRow 
+                    <InvitePersonRow 
                       person={friend}
                       onPress={() => {
                         handleRequest(friend.id)
@@ -278,7 +189,7 @@ export default function AddFriend({ navigation }) {
               let invitationStatus = friend ? friend.status : null
 
               return (
-                <PersonRow 
+                <InvitePersonRow 
                   person={person}
                   onPress={() => {
                     if (!resultsBuffering.includes(person.id)) {
@@ -294,136 +205,8 @@ export default function AddFriend({ navigation }) {
             })}
           </View>
         }
-        {/* {contactsEnabled && contactsResults.length > 0 && (
-          <View style={[styles.section, styles.contactSection]} >
-            <Text style={styles.sectionHeaderText}>
-              <Icon name='phone' size={16} />  Contacts
-            </Text>
-            {
-              contactsResults
-                .slice(0, contactsResults.length >= 3 ? 3 : contactsResults.length)
-                .map((contact, index) => {
-                  const person = {
-                    id: contact.id,
-                    fname: contact.firstName,
-                    lname: contact.lastName,
-                    avatar_path: contact.imageAvailable ? contact.image.uri : null,
-                    type: 'contact',
-                  }
-                  // const contactNumber = contact.phoneNumbers[0].number.replace(/\D/g, '')
-                  // const isUser = contactsThatAreUsers.find(user => contactNumber === user.phone_number) ?? []
-
-                  // if (isUser.length > 0) return null
-                  return (
-                    <PersonRow 
-                      person={person}
-                      onPress={() => {
-                        sendPrescriptedMessage(contact)
-                      }}
-                      invitationStatus={'invite'}
-                      key={index}
-                      setPersonBottomSheetVisible={setPersonBottomSheetVisible}
-                      setSelectedPerson={setSelectedPerson}
-                    />
-                  )
-                })
-            }
-          </View>
-        )} */}
       </ScrollView>
-      {personBottomSheetVisible && (
-        <PersonBottomSheet
-          person={selectedPerson}
-          setVisibility={setPersonBottomSheetVisible}
-          onMemberKicked={getUserFriends}
-        />
-      )}
     </View>
-  )
-}
-
-const PersonRow = ({ 
-  person,
-  onPress,
-  invitationStatus,
-  buffering,
-  theme,
-  styles,
-  ...props
-}) => {
-  let displayText = ''
-  if (person.fname) displayText += person.fname[0]
-  if (person.lname) displayText += person.lname[0]
-  const notInvitable = invitationStatus === 'pending' || invitationStatus === 'accepted'
-  const inviteIcon = invitationStatus === null ? 'plus' : invitationStatus === 'invite' ? 'paper-plane' : null
-  const inviteText = invitationStatus === null ? 'ADD' : invitationStatus === 'invite' ? 'INVITE' : 'CANCEL'
-
-  return (
-    <FadeInView 
-      time={100}
-      style={[styles.personRow, person.type === 'contact' && { paddingHorizontal: 10 }]}
-    >
-      <View style={styles.personInformation}>
-        <View style={[styles.avatarContainer, { borderColor: invitationStatus === 'accepted' ? person.color : theme.primaryBorder }]}>
-          {
-            person.type !== 'contact' 
-              ? <Avatar 
-                  imagePath={person.avatar_path}
-                  type='profile'
-                  style={styles.avatar}
-                />
-              : <View style={[styles.avatar, styles.contactAvatar]}>
-                  <Text style={styles.avatarText}>{displayText}</Text>
-                </View>
-          }
-        </View>
-        <View style={styles.personNameBox}>
-          <Text 
-            style={styles.personName}
-            ellipsizeMode='tail'
-            numberOfLines={1}
-          >{`${person.fname ?? ''} ${person.lname ?? ''}`}</Text>
-          {person.type !== 'contact' && <Text style={styles.personLastStudied}>studied {timeAgoGeneral(person.last_studied)}</Text>}
-        </View>
-      </View>
-      {
-        invitationStatus !== "accepted" ? (
-          <TouchableOpacity
-            style={[
-              styles.interactButton, // primaryColor
-              { backgroundColor: person.color },
-              notInvitable && person.type !== 'contact' && { backgroundColor: getColorLight(person.color) }, // primaryColorLight
-              person.type === 'contact' && styles.contactBackground
-            ]}
-            activeOpacity={0.7}
-            onPress={onPress}
-          >
-            {
-              buffering 
-                ? <ActivityIndicator size='small' color={notInvitable ? person.color : '#fff'} style={styles.buttonText} />
-                : (
-                  <Text style={[styles.buttonText, notInvitable && { color: person.color }]}>
-                    <Icon name={!notInvitable && inviteIcon} />
-                    {` ${inviteText}`}
-                  </Text>
-                )
-            }
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity 
-            activeOpacity={0.7}
-            onPress={() => {
-              hapticSelect()
-              props.setSelectedPerson(person)
-              props.setPersonBottomSheetVisible(true)
-            }}
-            style={[styles.ellipsisContainer, { backgroundColor: getColorLight(person.color) }]}
-          >
-            <Icon name='ellipsis' size={20} color={person.color} />
-          </TouchableOpacity>
-        )
-      }
-    </FadeInView>
   )
 }
 

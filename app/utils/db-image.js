@@ -49,12 +49,13 @@ const deleteImage = async (path) => {
 
 export const uploadAvatar = async (image, user_id) => {
   if (!image) {
-    console.error('No image provided');
-    return;
+    console.error('No image provided')
+    return
   }
 
   try {
     const { fileName, arrayBuffer } = await prepImageForUpload(image, 200, 200);
+    console.log("HERE IS THE FILE NAME!!!!! ", fileName)
     const { data, error } = await uploadImage('public/profile/', fileName, arrayBuffer);
     await moveLocalFileToNewPath({ oldPath: image, newPath: fileName })
 

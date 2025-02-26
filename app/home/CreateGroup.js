@@ -13,11 +13,13 @@ import SelectPhoto from '../components/SelectPhoto';
 
 import { getLocalUriForFile } from '../utils/db-download';
 import { createGroup } from '../utils/db-image';
-import { hapticSelect } from '../utils/haptics';
+import { hapticImpactSoft, hapticSelect } from '../utils/haptics';
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from '../utils/localStorage';
 import Avatar from '../components/Avatar';
 import { getGroupsForUser } from '../utils/db-relationship';
 import { useTheme } from '../hooks/ThemeProvider';
+import PlanSelection from './components/PlanSelection';
+import { useModal } from '../hooks/UniversalModalProvider';
 
 const GroupDetails = ({
   image,
@@ -26,6 +28,7 @@ const GroupDetails = ({
   setGroupName
 }) => {
   const { theme } = useTheme()
+  const { setVisible, setModal, setTitle, closeBottomSheet } = useModal()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
@@ -40,6 +43,19 @@ const GroupDetails = ({
     if (!result.canceled && result.assets && result.assets.length > 0 && result.assets[0].uri) {
       setImage(result.assets[0].uri)
     }
+  }
+
+  const handleShowPlan = () => {
+    hapticImpactSoft()
+    setVisible(true)
+    setModal(
+      <PlanSelection
+        onSelect={(plan) => {
+          closeBottomSheet()
+        }}
+      />
+    )
+    setTitle('select plan')
   }
 
   return (
@@ -69,6 +85,7 @@ const GroupDetails = ({
       <TouchableOpacity 
         activeOpacity={0.7}
         style={styles.sectionContainer}
+        onPress={handleShowPlan}
       >
         <View style={styles.book}>
           <Text style={styles.innerBookText}>Come</Text>
@@ -301,18 +318,18 @@ function style(theme) {
       marginBottom: 20,
     },
     book: {
-      width: 70,
-      height: 90,
+      width: 60,
+      height: 75,
       padding: 5,
       borderRadius: 10,
-      backgroundColor: theme.navy,
+      backgroundColor: theme.maroon,
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: 20,
       overflow: 'hidden',
     },
     innerBookText: {
-      fontSize: 10,
+      fontSize: 12,
       color: theme.orange,
       textAlign: 'center',
       fontFamily: 'nunito-bold',

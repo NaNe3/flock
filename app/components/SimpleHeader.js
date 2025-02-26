@@ -42,7 +42,7 @@ export default function SimpleHeader({
               navigation.goBack()
             }
           }}
-          style={[{ flexDirection: 'row', alignItems: 'center' }, !title && { width: 40, height: 50}]}
+          style={[{ flexDirection: 'row', alignItems: 'center' }, !title && { width: 30, height: 50}]}
           activeOpacity={0.7}
         >
           <Icon 

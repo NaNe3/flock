@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View, ScrollView, Dimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from "../../utils/localStorage";
 import { getLocalUriForFile } from "../../utils/db-download";
 import { hapticSelect } from "../../utils/haptics";
+
+const height = Dimensions.get('window').height * 0.5
 
 export default function GroupSelection({ 
   userAvatar, 
@@ -12,7 +15,9 @@ export default function GroupSelection({
   selectedRecipient,
   setSelectedRecipient,
   setSelectingGroup,
+  theme,
 }) {
+  const insets = useSafeAreaInsets()
   const [userId, setUserId] = useState('')
   const [groups, setGroups] = useState([])
   const [friends, setFriends] = useState([])
@@ -59,7 +64,10 @@ export default function GroupSelection({
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={[styles.container, { minHeight: height, paddingBottom: 40+insets.bottom }]}
+      showsVerticalScrollIndicator={false}
+    >
       <GroupRow 
         group={{
           group_name: 'all friends',
@@ -68,17 +76,19 @@ export default function GroupSelection({
         }}
         selected={selected}
         onPress={() => handleChange(null, userAvatar, 'all friends')}
+        theme={theme}
       />
-      <View style={styles.separator} />
+      <View style={[styles.separator, { borderColor: theme === "dark" ? "#616161" : "#eee"}]} />
       {
         groups.length >= 0 && groups.map((group, index) => {
           return (
             <GroupRow 
-              key={index} 
-              group={group} 
+              key={index}
+              group={group}
               selected={selected}
               setSelected={setSelected}
               onPress={() => handleChange(group.group_id, group.group_image, group.group_name)}
+              theme={theme}
             />
           )
         })
@@ -87,12 +97,12 @@ export default function GroupSelection({
   )
 }
 
-const GroupRow = ({ group, selected, setSelected, onPress }) => {
+const GroupRow = ({ group, selected, setSelected, onPress, theme }) => {
   const isSelected = selected === group.group_name
   const groupImage = getLocalUriForFile(group.group_image)
 
   return (
-    <View style={[styles.selectableContainer, isSelected && { backgroundColor: '#616161' }]}>
+    <View style={[styles.selectableContainer, isSelected && { backgroundColor: theme === 'dark' ? '#616161' : '#eee' }]}>
       <TouchableOpacity
         activeOpacity={0.7}
         style={styles.selectable}
@@ -100,10 +110,10 @@ const GroupRow = ({ group, selected, setSelected, onPress }) => {
       >
         <Image source={{ uri: groupImage }} style={styles.selectableAvatar} />
         <View style={styles.selectableInfo}>
-          <Text style={styles.selectableText}>{group.group_name}</Text>
-          <Text style={styles.selectableSupportingText}>{group.members.length} people</Text>
+          <Text style={[styles.selectableText, { color: theme === "dark" ? '#eee' : '#616161' }]}>{group.group_name}</Text>
+          <Text style={[styles.selectableSupportingText, { color: theme === "dark" ? '#999' : '#999'}]}>{group.members.length} people</Text>
         </View>
-        <Icon name={selected === group.group_name ? 'circle-check' : 'circle'} size={25} color="#eee" />
+        {/* <Icon name={selected === group.group_name ? 'circle-check' : 'circle'} size={25} color="#eee" /> */}
       </TouchableOpacity>
     </View>
   )
@@ -114,6 +124,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     flex: 1,
     width: '100%',
+    height: 'auto',
   },
   separator: {
     marginHorizontal: 20,

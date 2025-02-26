@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { StyleSheet, View, ScrollView, Text, TouchableOpacity } from "react-native"
 import * as ImagePicker from 'expo-image-picker'
 
-
 import SelectPhoto from "../../../components/SelectPhoto"
 import BasicButton from "../../../components/BasicButton"
 import SimpleHeader from "../../../components/SimpleHeader"
@@ -14,12 +13,12 @@ import { getLocalUriForFile } from "../../../utils/db-download"
 import { useTheme } from "../../../hooks/ThemeProvider"
 
 export default function EditGroupInfo({ navigation, route }) {
-  const { group_id, group_name, group_avatar, group_plan, members } = route.params
+  const { group_id, group_name, group_image } = route.params
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
-  const avatarFormatted = getLocalUriForFile(group_avatar)
+  const [avatarFormatted] = useState(getLocalUriForFile(group_image))
   const [image, setImage] = useState(avatarFormatted)
   const [groupName, setGroupName] = useState(group_name)
   const [saveButtonDisabled, setSaveButtonDisabled] = useState(true)
@@ -49,12 +48,11 @@ export default function EditGroupInfo({ navigation, route }) {
   const handleSaveButtonPress = async () => {
     setSaveButtonDisabled(true)
     if (image !== avatarFormatted) {
-      const { error } = await updateGroupAvatar({ groupId: group_id, newImage: image, oldImage: group_avatar })
+      const { error } = await updateGroupAvatar({ groupId: group_id, newImage: image, oldImage: group_image })
     }
     if (groupName !== group_name) {
       const { error } = await updateGroupName({ groupId: group_id, groupName: groupName })
     }
-
     navigation.goBack()
   }
 
@@ -119,7 +117,7 @@ export default function EditGroupInfo({ navigation, route }) {
                     style={styles.clearButton}
                     onPress={() => {
                       hapticSelect()
-                      setImage(group_avatar)
+                      setImage(group_image)
                     }}
                   >
                     <Text style={styles.clearButtonText}>CLEAR</Text>

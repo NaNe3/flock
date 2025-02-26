@@ -1,21 +1,21 @@
-import { useCallback, useEffect, useRef } from "react";
-import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 
-import { constants } from "../../utils/styling/colors";
+import { useTheme } from "../../hooks/ThemeProvider";
 
-const height = Dimensions.get('window').height;
-const modalHeight = Math.floor(height * 0.7)
-
-export default function BasicBottomSheet({ 
+const BasicBottomSheet = forwardRef(({ 
   setVisibility,
   title,
-  backgroundColor = constants.heckaGray2,
+  backgroundColor = null,
   handleStyle = null,
-  titleColor = '#fff',
-  height = modalHeight,
+  titleColor = null,
   children
-}) {
+}, ref) => {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+
   const bottomSheetRef = useRef(null);
   const opacity = useRef(new Animated.Value(0)).current
   const foregroundTapped = useRef(false)
@@ -23,6 +23,12 @@ export default function BasicBottomSheet({
   const handleSheetChanges = useCallback((index) => {
     if (index === -1) setVisibility(false)
   }, []);
+
+  useImperativeHandle(ref, () => ({
+    closeBottomSheet: () => {
+      closeBottomSheet()
+    },
+  }));
 
   const closeBottomSheet = () => {
     foregroundTapped.current = true
@@ -33,6 +39,7 @@ export default function BasicBottomSheet({
     }).start(() => setVisibility(false))
     bottomSheetRef.current.close()
   }
+  ref = closeBottomSheet
 
   useEffect(() => {
     Animated.timing(opacity, {
@@ -65,19 +72,19 @@ export default function BasicBottomSheet({
         onChange={handleSheetChanges}
         onAnimate={handleAnimate}
         enablePanDownToClose={true}
-        backgroundStyle={{ backgroundColor }}
+        backgroundStyle={{ backgroundColor: backgroundColor || theme.primaryBackground }}
         handleStyle={handleStyle}
         handleIndicatorStyle={{ backgroundColor: '#aaa', width: 40, height: 6 }}
       >
         <BottomSheetView style={[
           styles.contentContainer,
-          backgroundColor && { backgroundColor },
-          height && { height },
+          { backgroundColor: backgroundColor || theme.primaryBackground },
+          { height: 'auto' },
         ]}>
           {title && (
             <Text style={[
               styles.sheetTitle,
-              titleColor && { color: titleColor }
+              { color: titleColor || theme.secondaryText },
             ]}>
               {title}
             </Text>
@@ -87,32 +94,36 @@ export default function BasicBottomSheet({
       </BottomSheet>
     </View>
   )
-}
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    height: '100%',
-    width: '100%',
-  },
-  shadowContainer: {
-    position: 'absolute',
-    height: '100%',
-    width: '100%',
-  },
-  shadow: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheetTitle: {
-    fontSize: 20,
-    fontFamily: 'nunito-bold',
-    color: '#fff',
-    marginBottom: 10,
-  },
-  contentContainer: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: constants.heckaGray2,
-  },
 })
+
+export default BasicBottomSheet
+
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      position: 'absolute',
+      height: '100%',
+      width: '100%',
+    },
+    shadowContainer: {
+      position: 'absolute',
+      height: '100%',
+      width: '100%',
+    },
+    shadow: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    sheetTitle: {
+      fontSize: 20,
+      fontFamily: 'nunito-bold',
+      color: '#fff',
+      marginBottom: 10,
+    },
+    contentContainer: {
+      flex: 1,
+      alignItems: 'center',
+      backgroundColor: theme.heckaGray2,
+    },
+  })
+}

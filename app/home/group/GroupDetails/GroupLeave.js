@@ -8,12 +8,13 @@ import BasicButton from "../../../components/BasicButton";
 import { Text } from "react-native";
 import { hapticSelect } from "../../../utils/haptics";
 import { leaveGroupByGroupId } from "../../../utils/db-image";
-import { setLocallyStoredVariable } from "../../../utils/localStorage";
+import { getLocallyStoredVariable, setLocallyStoredVariable } from "../../../utils/localStorage";
 import { getPrimaryColor } from "../../../utils/getColorVariety";
 import { useTheme } from "../../../hooks/ThemeProvider";
 
 export default function GroupLeave ({ navigation, route }) {
-  const { groups, group_name, group_id, members, userId } = route.params
+  const { group_name, group_id, members, userId } = route.params
+  console.log("GroupLeave: ", group_name, group_id, members, userId)
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
@@ -42,14 +43,16 @@ export default function GroupLeave ({ navigation, route }) {
   const handleGroupLeave = async () => {
     setLeaving(true)
     // leave group
+    console.log("I AM LEAVING THE GROUP: ", group_id, userId, newLeader)
     const { error } = await leaveGroupByGroupId(group_id, userId, newLeader)
 
     // remove group from user_groups in local storage
     if (error === null) {
+      const groups = JSON.parse(await getLocallyStoredVariable('user_groups'))
       const newGroups = groups.filter(group => group.group_id !== group_id)
       await setLocallyStoredVariable('user_groups', JSON.stringify(newGroups))
 
-      navigation.navigate('GroupPage')
+      navigation.navigate('FriendsPage')
     } else {
       // TODO - HANDLE ERROR
     }

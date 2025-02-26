@@ -23,6 +23,7 @@ function Chapter({ navigation, route }) {
 
   const [primaryColor, setPrimaryColor] = useState(theme.primaryColor)
   const [verses, setVerses] = useState([])
+  const [chapterTitle] = useState(book.replace("Doctrine And Covenants", "D&C") + " " + chapter)
   const [showChapterTitle, setShowChapterTitle] = useState(false)
   const [showSwipeBar, setShowSwipeBar] = useState(false)
   const [swipeOpacity, setSwipeOpacity] = useState(0)
@@ -176,7 +177,6 @@ function Chapter({ navigation, route }) {
     }, [])
   )
 
-
   return (
     <View style={styles.container}>
       <SimpleHeader
@@ -203,7 +203,7 @@ function Chapter({ navigation, route }) {
         {/* <Animated.View style={[styles.contentContainer, { marginBottom: swipeOffset }]}> */}
         <Animated.View style={ [ styles.contentContainer, { transform: [{ translateY: translateOffset }] } ]}>
           <View style={styles.landingContainer}>
-            <Text style={[styles.chapterHeading, { fontSize: book.length < 10 ? 48 : 35}]}>{book} {chapter}</Text>
+            <Text style={[styles.chapterHeading, { fontSize: chapterTitle.length < 10 ? 48 : 35}]}>{chapterTitle}</Text>
           </View>
           <VerseContainer 
             navigation={navigation} 

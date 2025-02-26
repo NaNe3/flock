@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome6'
 import { LinearGradient } from 'expo-linear-gradient';
 
 import hexToRgba from "../utils/hexToRgba"
-import { getMediaByMediaId, getMediaFromVerse } from "../utils/authenticate"
+import { getActivityByListOfIds, getMediaByMediaId, getMediaFromVerse } from "../utils/authenticate"
 import Media from "../components/Media"
 import Avatar from "../components/Avatar"
 import { hapticError, hapticImpactHeavy, hapticSelect } from "../utils/haptics"
@@ -22,7 +22,7 @@ import { getCommentCount } from "../utils/db-comment";
 import { useTheme } from "../hooks/ThemeProvider";
 
 export default function ViewImpressions({ navigation, route }) {
-  const { title, location, media_id } = route.params
+  const { title, location, media_id, activity_ids } = route.params
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
@@ -63,6 +63,8 @@ export default function ViewImpressions({ navigation, route }) {
           media = await getMediaFromVerse(work, book, chapter, verse, userId)
         } else if (media_id !== null && media_id !== undefined) {
           media = await getMediaByMediaId(media_id)
+        } else if (activity_ids !== null && activity_ids !== undefined) {
+          media = await getActivityByListOfIds(activity_ids, userId)
         }
         setUserId(userId)
         setMedia(media)
@@ -314,7 +316,7 @@ export default function ViewImpressions({ navigation, route }) {
             style={styles.actionButton}
           >
             <Animated.View style={shakeStyle}>
-              <Icon name="feather-pointed" size={22} color={theme.primaryText} />
+              <Icon name="camera" size={22} color={theme.primaryText} />
             </Animated.View>
           </TouchableOpacity>
         </View>

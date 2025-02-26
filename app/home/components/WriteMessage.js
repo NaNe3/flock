@@ -13,7 +13,6 @@ import { LinearGradient } from "expo-linear-gradient"
 import hexToRgba from "../../utils/hexToRgba"
 
 export function WriteMessage({ navigation, location, recipient }) {
-  console.log("WRIIIIIITE MESSAGE: ", location)
   const [color, setColor] = useState(constants.gray)
   const [userId, setUserId] = useState(null)
   const [colorLight, setColorLight] = useState(constants.grayLight)

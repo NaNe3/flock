@@ -55,6 +55,7 @@ function style(theme) {
   return StyleSheet.create({
     searchBar: {
       flex: 1,
+      height: '100%',
       backgroundColor: theme.secondaryBackground,
       borderRadius: 20,
       flexDirection: 'row',

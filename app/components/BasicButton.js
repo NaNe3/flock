@@ -10,12 +10,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import FAIcon from "./FAIcon";
 
 export default function BasicButton({ 
-  title,
+  title=null,
   onPress, 
   style: customStyling, 
   disabled = false,
   icon,
   iconType="FA",
+  iconSize=26,
   color = classic.primaryColor,
 }) {
   const [isPressed, setIsPressed] = useState(false)
@@ -77,11 +78,11 @@ export default function BasicButton({
         style={styles.buttonText}
       >
         {icon && iconType === "FA" ? (
-          <FAIcon name={icon} size={26} color="#fff" style={{ marginRight: 10 }} />
+          <FAIcon name={icon} size={iconSize} color="#fff" style={title !== null && { marginRight: 10 }} />
         ) : (
-          <FA6Icon name={icon} size={26} color="#fff" style={{ marginRight: 10 }} />
+          <FA6Icon name={icon} size={iconSize} color="#fff" style={title !== null && { marginRight: 10 }} />
         )}
-        { icon && ' ' }
+        { icon && (title !== null && ' ') }
         {title}
       </Text>
     </TouchableOpacity>
