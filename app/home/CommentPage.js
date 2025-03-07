@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { act, useEffect, useRef, useState } from "react";
 import { Animated, PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -9,6 +9,7 @@ import { hapticImpactHeavy } from "../utils/haptics";
 import { getComments, getReplies } from "../utils/db-comment";
 import BasicCommentSkeleton from "./components/BasicCommentSkeleton";
 import { useTheme } from "../hooks/ThemeProvider";
+import EmptySpace from "../components/EmptySpace";
 
 export default function CommentPage({ navigation, route }) {
   const { media_id, media_type } = route.params
@@ -19,17 +20,21 @@ export default function CommentPage({ navigation, route }) {
   const insets = useSafeAreaInsets()
   const pan = useRef(new Animated.ValueXY()).current;
   const alreadySwiped = useRef(false)
-  const [replyingTo, setReplyingTo] = useState(null)
+  const [replyingTo, setReplyingTo] = useState({
+    media_comment_id: null,
+    replying_to: null,
+    recipient_id: null,
+  })
 
   const [hasLoaded, setHasLoaded] = useState(false)
   const [comments, setComments] = useState([])
+  const [commentsWithReplies, setCommentsWithReplies] = useState([])
   const [replies, setReplies] = useState([])
 
   useEffect(() => {
     const init = async () => {
       const comments = await getComments(media_id, media_type === 'media' ? 'media_id' : 'comment_id')
       setComments(comments)
-      setHasLoaded(true)
 
       const commentIds = comments.reduce((acc, curr) => {
         if (!acc.includes(curr.media_comment_id)) {
@@ -38,12 +43,43 @@ export default function CommentPage({ navigation, route }) {
         return acc
       }, [])
 
-      // const replies = await getReplies(commentIds)
-      // setReplies(replies)
+      // hashmap with keys as comment ids and values as replies
+      const replies = await getReplies(commentIds)
+      setHasLoaded(true)
+      const repliesHashMap = {}
+      commentIds.forEach(id => {
+        repliesHashMap[id] = {
+          replies: replies.filter(reply => reply.replying_to === id)
+        }
+      })
+      setCommentsWithReplies(repliesHashMap)
     }
 
     init()
   }, [])
+
+  useEffect(() => {
+    if (comments.filter(comment => comment.replying_to !== null).length > 0) {
+      // filter through comments and update commentsWithReplies if a comment exists with replying_to
+      let replies = []
+      const cleanComments = comments.reduce((acc, curr) => {
+        if (curr.replying_to === null) {
+          acc.push(curr)
+        } else {
+          replies.push(curr)
+        }
+        return acc
+      }, [])
+      setComments(cleanComments)
+
+      setCommentsWithReplies(prev => {
+        replies.forEach(reply => {
+          prev[reply.replying_to].replies.push(reply)
+        })
+        return prev
+      })
+    }
+  }, [comments])
 
   const panResponder = useRef(
     PanResponder.create({
@@ -97,12 +133,27 @@ export default function CommentPage({ navigation, route }) {
             <>
               {comments.length > 0
                 ? comments.map((comment, index) => (
-                    <BasicComment
-                      key={index}
-                      comment={comment}
-                      replyingTo={replyingTo}
-                      setReplyingTo={setReplyingTo}
-                    />
+                    <View key={`comment-${index}`}>
+                      <BasicComment
+                        comment={comment}
+                        replyingTo={replyingTo}
+                        setReplyingTo={setReplyingTo}
+                      />
+                      {
+                        commentsWithReplies[comment.media_comment_id] &&
+                        commentsWithReplies[comment.media_comment_id].replies.length > 0 &&
+                        commentsWithReplies[comment.media_comment_id].replies.map((reply, index) => (
+                          <BasicComment
+                            key={`reply-${index}`}
+                            index={index}
+                            comment={reply}
+                            replyingTo={replyingTo}
+                            setReplyingTo={setReplyingTo}
+                            isReply={true}
+                          />
+                        ))
+                      }
+                    </View>
                   ))
                 : <Text style={styles.noCommentsDisclaimer}>no comments</Text>
               }
@@ -115,6 +166,7 @@ export default function CommentPage({ navigation, route }) {
               <BasicCommentSkeleton />
             </>
           )}
+          <EmptySpace size={400} />
         </ScrollView>
         <View style={[styles.footer, { marginBottom: insets.bottom + 10 }]}>
           <CommentBar
@@ -165,7 +217,7 @@ function style(theme) {
     contentContainer: {
       flex: 1,
       paddingHorizontal: 5,
-      paddingTop: 5
+      paddingTop: 5,
     },
     noCommentsDisclaimer: {
       color: theme.actionText,

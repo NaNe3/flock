@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, Text, Animated } from "react-native
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Icon from 'react-native-vector-icons/FontAwesome6'
+import HugeIcon from "./HugeIcon";
 
 import { hapticSelect } from "../utils/haptics";
 import { getLocallyStoredVariable } from "../utils/localStorage";
@@ -23,9 +24,9 @@ export default function NavigationBar({ currentRoute, setCurrentRoute }) {
 
   const routes = [
     {
-      icon: 'map-location',
+      icon: 'home',
       route: 'Home',
-      name: 'study',
+      name: 'home',
     },
     // {
     //   icon: 'users',
@@ -33,12 +34,12 @@ export default function NavigationBar({ currentRoute, setCurrentRoute }) {
     //   name: 'groups',
     // },
     {
-      icon: 'people-group',
+      icon: 'message-bubble',
       route: 'FriendsPage',
       name: 'friends',
     },
     {
-      icon: 'book',
+      icon: 'book-bookmark',
       route: 'LibraryPage',
       name: 'library',
     },
@@ -84,23 +85,29 @@ export default function NavigationBar({ currentRoute, setCurrentRoute }) {
 
   return (
     <View style={[styles.container, { height: 66 + insets.bottom }]}>
-      {routes.map((r, i) => (
-        <TouchableOpacity
-          key={`navigation-item-${i}`}
-          activeOpacity={1}
-          onPress={() => changePage(r.route)}
-          onPressIn={() => handleRoutePressIn(i)}
-          onPressOut={() => handleRoutePressOut(i)}
-        >
-          <Animated.View style={[styles.iconContainer, { transform: [{ scale: routeScale[i] }] }]}>
-            {r.route === 'FriendsPage' && invitationCount > 0 && !friendsOpened && (
-              <NotificationIndicator count={invitationCount} offset={-15} />
-            )}
-            <Icon name={r.icon} size={23} color={currentRoute === r.route ? theme.navigationSelected : theme.navigationUnselected} />
-            <Text style={[styles.iconText, currentRoute === r.route && styles.iconTextSelected]}>{r.name}</Text>
-          </Animated.View>
-        </TouchableOpacity>
-      ))}
+      <View style={styles.contentContainer}>
+        {routes.map((r, i) => (
+          <TouchableOpacity
+            key={`navigation-item-${i}`}
+            activeOpacity={1}
+            onPress={() => changePage(r.route)}
+            onPressIn={() => handleRoutePressIn(i)}
+            onPressOut={() => handleRoutePressOut(i)}
+          >
+            <Animated.View style={[styles.iconContainer, { transform: [{ scale: routeScale[i] }] }]}>
+              {r.route === 'FriendsPage' && invitationCount > 0 && !friendsOpened && (
+                <NotificationIndicator count={invitationCount} offset={-15} />
+              )}
+              <HugeIcon
+                icon={r.icon} 
+                size={28} 
+                color={currentRoute === r.route ? theme.navigationSelected : theme.navigationUnselected} 
+              />
+              <Text style={[styles.iconText, currentRoute === r.route && styles.iconTextSelected]}>{r.name}</Text>
+            </Animated.View>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   )
 }
@@ -109,13 +116,14 @@ function style(theme) {
   return StyleSheet.create({
     container: {
       width: '100%',
-      height: 90,
       maxHeight: 90,
       backgroundColor: theme.primaryBackground,
-      paddingTop: 15,
-      display: "flex",
+    },
+    contentContainer: {
+      height: 66,
       flexDirection: 'row',
       justifyContent: 'space-around',
+      alignItems: 'center',
     },
     iconContainer: {
       display: 'flex',

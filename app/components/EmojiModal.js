@@ -1,27 +1,47 @@
-import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View, Text, Dimensions } from "react-native";
-// import { getEmojis } from "unicode-emoji"
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, View, Dimensions, Animated } from "react-native"
+import { FlashList } from '@shopify/flash-list';
+import { getEmojis } from "unicode-emoji"
 
-import BasicBottomSheet from "../home/components/BasicBottomSheet";
-import hexToRgba from "../utils/hexToRgba";
 import EmojiReaction from "./EmojiReaction";
 import { useTheme } from "../hooks/ThemeProvider";
+import SearchBar from "../home/components/SearchBar";
 
-export default function EmojiModal({ setEmojiModalVisible, emojiOnPress }) {
+const screenHeight = Dimensions.get('screen').height
+
+export default function EmojiModal({ emojiOnPress }) {
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
-  // const [allEmojis, setAllEmojis] = useState([])
-  // const [displayedEmojis, setDisplayedEmojis] = useState([])
-  // const pageSize = 48
-  
-  // useEffect(() => {
-  //   const emojis = getEmojis()
-  //   setAllEmojis(emojis)
+  const [allEmojis, setAllEmojis] = useState([])
+  const [displayedEmojis, setDisplayedEmojis] = useState([])
+  const [query, setQuery] = useState('')
 
-  //   setDisplayedEmojis(emojis.slice(0, pageSize))
-  // }, [])
+  const modalHeight = screenHeight * 0.7
+
+  useEffect(() => {
+    const emojis = getEmojis()
+    setAllEmojis(emojis)
+
+    setDisplayedEmojis(emojis)
+  }, [])
+
+  useEffect(() => {
+    if (allEmojis.length === 0) return
+    if (!query) {
+      setDisplayedEmojis(allEmojis)
+      return
+    }
+
+    const filteredEmojis = allEmojis.filter(emoji => {
+      return emoji.keywords.some(keyword =>
+        keyword.toLowerCase().includes(query.toLowerCase())
+      )
+    })
+
+    setDisplayedEmojis(filteredEmojis)
+  }, [query])
 
   const props = {
     onPress: emojiOnPress,
@@ -29,68 +49,27 @@ export default function EmojiModal({ setEmojiModalVisible, emojiOnPress }) {
   }
 
   return (
-    <BasicBottomSheet
-      backgroundColor={theme.primaryBackground}
-      handleStyle={styles.handleStyle}
-      setVisibility={setEmojiModalVisible}
-      height={400}
-    >
-      <View style={styles.container}>
-        <ScrollView style={styles.contentContainer}>
-          <View style={styles.row}>
-            <Text style={styles.rowHeader}>frequently used</Text>
-            <View style={styles.rowContent}>
-              <EmojiReaction emoji={'🔥'} {...props} />
-              <EmojiReaction emoji={'😇'} {...props} />
-              <EmojiReaction emoji={'🎉'} {...props} />
-              <EmojiReaction emoji={'💛'} {...props} />
-              <EmojiReaction emoji={'🙏'} {...props} />
-            </View>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.rowHeader}>popular</Text>
-            <View style={styles.rowContent}>
-              <EmojiReaction emoji={'❤️'} {...props} />
-              <EmojiReaction emoji={'💙'} {...props} />
-              <EmojiReaction emoji={'💚'} {...props} />
-              <EmojiReaction emoji={'🧡'} {...props} />
-              <EmojiReaction emoji={'💜'} {...props} />
-              <EmojiReaction emoji={'🤎'} {...props} />
-              <EmojiReaction emoji={'🤍'} {...props} />
-              <EmojiReaction emoji={'🖤'} {...props} />
-              <EmojiReaction emoji={'💘'} {...props} />
-              <EmojiReaction emoji={'💝'} {...props} />
-              <EmojiReaction emoji={'💓'} {...props} />
-              <EmojiReaction emoji={'💖'} {...props} />
-              <EmojiReaction emoji={'✨'} {...props} />
-              <EmojiReaction emoji={'💫'} {...props} />
-              <EmojiReaction emoji={'⭐'} {...props} />
-              <EmojiReaction emoji={'✅'} {...props} />
-              <EmojiReaction emoji={'👀'} {...props} />
-              <EmojiReaction emoji={'💪'} {...props} />
-            </View>
-          </View>
-          {/* <View style={[styles.row, { marginBottom: -200 }]}>
-            <Text style={styles.rowHeader}>all</Text>
-            <View style={styles.rowContent}>
-              {displayedEmojis.map((emoji, index) => (
-                <EmojiReaction key={index} emoji={emoji.emoji} size={40} />
-              ))}
-            </View>
-          </View>
-          <View style={{ position: 'absolute', bottom: 0, width: '100%', height: 230 }}>
-            <LinearGradient
-              colors={['transparent', 
-                hexToRgba(theme.heckaGray, 0.85), 
-                hexToRgba(theme.heckaGray, 0.90), 
-                hexToRgba(theme.heckaGray, 0.98), 
-                theme.heckaGray]}
-              style={styles.gradient}
-            />
-          </View> */}
-        </ScrollView>
+    <View style={[styles.container, { height: modalHeight }]}>
+      <View style={styles.searchContainer}>
+        <SearchBar
+          placeholder="Search emojis"
+          query={query}
+          setQuery={setQuery}
+        />
       </View>
-    </BasicBottomSheet>
+      <FlashList
+        data={displayedEmojis}
+        renderItem={({ item }) => (
+          <View style={styles.emojiContainer}>
+            <EmojiReaction emoji={item.emoji} {...props} />
+          </View>
+        )}
+        keyExtractor={(item, index) => index.toString()}
+        estimatedItemSize={2000}
+        numColumns={5}
+        contentContainerStyle={{ paddingTop: 20 }}
+      />
+    </View>
   )
 }
 
@@ -100,16 +79,17 @@ function style(theme) {
       width: '100%',
       overflow: 'hidden',
     },
-    handleStyle: {
-      height: 50,
-      borderTopLeftRadius: 40,
-      borderTopRightRadius: 40,
-      backgroundColor: hexToRgba(theme.primaryBackground, 0.95),
-      justifyContent: 'center',
-    },
     contentContainer: {
       width: '100%',
       height: '100%',
+    },
+    searchContainer: {
+      height: 60,
+      paddingHorizontal: 10,
+      paddingBottom: 10,
+    
+      borderBottomWidth: 1,
+      borderBottomColor: theme.primaryBorder
     },
     row: {
       width: '100%',
@@ -138,6 +118,11 @@ function style(theme) {
       bottom: 0,
       borderBottomLeftRadius: 40,
       borderBottomRightRadius: 40
+    },
+    emojiContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
     }
   })
 }

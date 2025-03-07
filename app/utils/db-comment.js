@@ -84,7 +84,7 @@ export async function getCommentCount(media_id, column) {
   return count
 }
 
-export async function createComment({ media_id, comment_id, user_id, replying_to, comment }) {
+export async function createComment({ media_id, comment_id, user_id, replying_to, recipient_id, comment }) {
   const { data, error } = await supabase
     .from('media_comment')
     .insert([
@@ -93,6 +93,7 @@ export async function createComment({ media_id, comment_id, user_id, replying_to
         comment_id: comment_id,
         user_id: user_id,
         replying_to: replying_to,
+        recipient_id: recipient_id,
         comment: comment,
       }
     ])
@@ -154,4 +155,19 @@ export async function publishMainComment({ comment, color_scheme, user_id, group
     console.error('error in creating commetn: ', error)
     return { error: error }
   }
+}
+
+export const getCommentInformation = async (media_comment_id) => {
+  const { data, error } = await supabase
+    .from('media_comment')
+    .select(` user_id (id, full_name, avatar_path, color_id(color_hex)) `)
+    .eq('media_comment_id', media_comment_id)
+
+  if (error) {
+    console.error('error', error)
+    return { error: error }
+  }
+
+  const { color_id, ...user } = data[0].user_id
+  return { ...user, color: color_id.color_hex }
 }

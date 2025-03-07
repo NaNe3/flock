@@ -10,6 +10,7 @@ import { useTheme } from "../hooks/ThemeProvider";
 
 import Avatar from "./Avatar";
 import { getColorLight } from "../utils/getColorVariety";
+import HugeIcon from "./HugeIcon";
 
 export default function InteractiveHeaderBar() {
   const { theme } = useTheme()
@@ -50,9 +51,8 @@ export default function InteractiveHeaderBar() {
             navigation.navigate('PremiumOffer')
           }}
         >
-          <Text style={[styles.text, { color: "#fff", fontSize: 14 }]}>
-            <Icon name="bolt" size={12} color="#fff" /> PLUS
-          </Text>
+          <HugeIcon icon="zap" size={15} color="#fff" /> 
+          <Text style={[styles.text, { color: "#fff", fontSize: 14 }]}>PLUS</Text>
         </TouchableOpacity>
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -68,9 +68,8 @@ export default function InteractiveHeaderBar() {
             <View style={[styles.newNotificationIndicator, { backgroundColor: 'test' === 'test' ? theme.red : theme.primaryBackground}]} />
           </TouchableOpacity> */}
           <View style={[styles.profileInfoContainer, { backgroundColor: colorLight }]}>
-            <Text style={[styles.text, styles.streakText, { color: color }]}>
-              <Icon name="burn" size={12} color={color} /> {streak}
-            </Text>
+            <HugeIcon icon="fire" size={16} color={color} style={{ marginLeft: 10 }} />
+            <Text style={[styles.text, styles.streakText, { color: color }]}>{streak}</Text>
             <TouchableOpacity
               activeOpacity={0.7}
               style={[styles.profilePictureContainer, { borderColor: color }]}
@@ -119,9 +118,11 @@ function style(theme) {
     },
     premiumButton: {
       backgroundColor: theme.secondaryColor,
-      paddingVertical: 5,
+      paddingVertical: 8,
       paddingHorizontal: 10,
       borderRadius: 20,
+      alignItems: 'center',
+      flexDirection: 'row',
     },
     profilePictureContainer: {
       width: 33,
@@ -154,8 +155,7 @@ function style(theme) {
       marginLeft: 10,
     },
     streakText: {
-      marginLeft: 10,
-      marginRight: 5,
+      marginHorizontal: 5,
       fontSize: 14,
       color: '#fff',
     },

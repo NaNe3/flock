@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
@@ -11,12 +11,13 @@ import { hapticSelect } from '../../utils/haptics'
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from '../../utils/localStorage'
 import InviteRow from '../components/InviteRow'
 import { useTheme } from '../../hooks/ThemeProvider'
+import ChatView from '../components/ChatView'
+import { getMessagesInGroupChat } from '../../utils/db-message'
 
 export default function Group({ navigation, route }) {
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
-  // const { groups, group_id, group_name, group_image, group_plan, members, status, userId } = route.params
   const { group } = route.params
   const { group_id, group_name, group_image, group_plan, members, status } = group
   const group_avatar = getLocalUriForFile(group_image)
@@ -30,12 +31,17 @@ export default function Group({ navigation, route }) {
   const [groupMembers, setGroupMembers] = useState(members)
   const [groupStatus, setGroupStatus] = useState(status)
 
+  const [messages, setMessages] = useState([])
+
   const init = async () => {
     const userGroups = JSON.parse(await getLocallyStoredVariable('user_groups'))
     setGroups(userGroups)
 
     const userId = await getUserIdFromLocalStorage()
     setUserId(userId)
+
+    const messages = await getMessagesInGroupChat({ group_id })
+    setMessages(messages)
   }
 
   useFocusEffect(
@@ -104,15 +110,11 @@ export default function Group({ navigation, route }) {
           </View>
         )
       }
-      <ScrollView style={styles.contentContainer}>
-        <View style={styles.announcementContainer}>
-          
-        </View>
-        <Text style={styles.disclaimerText}>
-          { groupStatus === 'pending' ? 'join group to see activity' : 'no activity' }
-        </Text>
-
-      </ScrollView>
+      <ChatView
+        group={group}
+        messages={messages}
+        setMessages={setMessages}
+      />
     </View>
   )
 }

@@ -27,6 +27,10 @@ export const incomingRequestListener = (channel, user_id, callback) => {
   }
 }
 
+export const incomingCommentListener = (channel, user_id, callback) => {
+  createListener(channel, 'INSERT', 'media_comment', `recipient_id=eq.${user_id}`, (payload) => { callback(payload) })
+}
+
 const createListener = (channel, event, table, filter, callback) => {
   channel.on('postgres_changes', {
     event: event, schema: 'public', table: table, filter: filter

@@ -42,7 +42,7 @@ export default function SimpleHeader({
               navigation.goBack()
             }
           }}
-          style={[{ flexDirection: 'row', alignItems: 'center' }, !title && { width: 30, height: 50}]}
+          style={[{ flexDirection: 'row', alignItems: 'center' }, !title && { width: 30, height: 50}, title && { flex: 1 }]}
           activeOpacity={0.7}
         >
           <Icon 
@@ -51,7 +51,7 @@ export default function SimpleHeader({
             color={theme.primaryText}
           />
           { title && (
-            <Text style={styles.headerTitle}>{title}</Text>
+            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode='tail'>{title}</Text>
           )}
         </TouchableOpacity>
         { component !== null && component }
@@ -85,6 +85,8 @@ function style(theme) {
       backgroundColor: theme.primaryBackground
     },
     headerContent: {
+      flex: 1,
+      width: '100%',
       height: 60,
       flexDirection: 'row',
       alignItems: 'center',
@@ -92,6 +94,7 @@ function style(theme) {
       paddingHorizontal: 20,
     },
     headerTitle: {
+      flex: 1,
       fontFamily: 'nunito-bold',
       fontSize: 23,
       marginLeft: 10,

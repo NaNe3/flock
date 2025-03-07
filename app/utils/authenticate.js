@@ -345,6 +345,7 @@ export const getMediaFromVerse = async (work, book, chapter, verse, userId) => {
   const { data, error } = await supabase
     .from('activity')
     .select(`
+      activity_id,
       verse,
       user(id, fname, lname, avatar_path, color_id(color_hex)),
       media(created_at, media_id, media_type, media_path),
@@ -375,6 +376,7 @@ export const getMediaByMediaId = async (mediaId) => {
   const { data, error } = await supabase
     .from('activity')
     .select(`
+      activity_id,
       verse,
       user(id, fname, lname, avatar_path, color_id(color_hex)),
       media(created_at, media_id, media_type, media_path),

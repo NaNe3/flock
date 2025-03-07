@@ -39,7 +39,7 @@ export default function EmojiReaction({ emoji, size, setEmojis, onPress, ...prop
         activeOpacity={1}
         onPress={handlePressIn}
       >
-        <Text style={[styles.emoji, { fontSize: size }, !isEmoji && { marginTop: 15 }]}>{emoji}</Text>
+        <Text style={[styles.emoji, { fontSize: size }]}>{emoji}</Text>
       </TouchableOpacity>
     </Animated.View>
   )
@@ -47,8 +47,8 @@ export default function EmojiReaction({ emoji, size, setEmojis, onPress, ...prop
 
 const styles = StyleSheet.create({
   emoji: {
-    marginHorizontal: 0,
-    marginVertical: 2,
+    marginHorizontal: 5,
+    // marginVertical: 2,
     opacity: 1,
   },
 })

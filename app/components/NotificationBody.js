@@ -6,11 +6,8 @@ import Icon from 'react-native-vector-icons/FontAwesome5'
 
 import Avatar from "./Avatar"
 
-// import { gen, currentTheme } from "../utils/styling/colors"
 import { hapticImpactHeavy } from "../utils/haptics"
 import { getColorLight } from "../utils/getColorVariety"
-// import { BlurView } from "expo-blur"
-import hexToRgba from "../utils/hexToRgba"
 import { useTheme } from "../hooks/ThemeProvider"
 
 const width = Dimensions.get('window').width
@@ -35,6 +32,8 @@ export default function NotificationBody({
   const release = useRef(false)
   const lightColor = getColorLight(color)
 
+  const clearNotificationTimer = useRef(null)
+
   useEffect(() => {
     Animated.spring(translateY, {
       toValue: 0,
@@ -42,26 +41,39 @@ export default function NotificationBody({
       useNativeDriver: false,
     }).start()
 
-    const clearNotification = setTimeout(() => {
+    resetTimer()
+    return () => {
+      if (clearNotificationTimer.current) {
+        clearTimeout(clearNotificationTimer.current)
+      }
+    }
+  }, [])
+
+  const resetTimer = (time=TIME) => {
+    if (clearNotificationTimer.current) {
+      clearTimeout(clearNotificationTimer.current)
+    }
+    clearNotificationTimer.current = setTimeout(() => {
       Animated.spring(translateY, {
         toValue: -200,
         timing: 1000,
         useNativeDriver: false,
       }).start(() => proceed())
-    }, TIME)
-    return () => clearTimeout(clearNotification)
-  }, [])
+    }, time)
+  }
 
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (e, gestureState) => {
         if (gestureState.dy > 0) {
+          resetTimer()
           const damping = 1 - Math.exp(-gestureState.dy / MAX_DRAG)
           const newTranslateY = damping * MAX_DRAG
           translateY.setValue(newTranslateY)
           release.current = false
         } else if (gestureState.dy < 0) {
+          resetTimer()
           translateY.setValue(gestureState.dy)
           if (gestureState.dy < -30) {
             release.current = true
@@ -83,7 +95,8 @@ export default function NotificationBody({
       toValue: destination,
       timing: 1000,
       useNativeDriver: false,
-    }).start(() => proceed())
+    }).start()
+    resetTimer()
   }
 
   const additional = {
@@ -96,16 +109,15 @@ export default function NotificationBody({
       style={[ styles.container, styles.shadow, additional, ]}
       {...panResponder.panHandlers}
     >
-      {/* <BlurView intensity={50} style={styles.notification} tint={currentTheme}> */}
       <View style={styles.notification}>
-        <TouchableOpacity 
-          activeOpacity={0.2}
+        <TouchableOpacity
+          activeOpacity={1}
           onPress={() => {
             hapticImpactHeavy()
             dismiss(-200)
             navigation.navigate(route.name, { ...route.params })
           }}
-          style={[ styles.notificationInner, { backgroundColor: hexToRgba(color, 0.9) } ]} 
+          style={styles.notificationInner} 
         >
           <View style={[styles.avatarContainer, { borderColor: color }]}>
             <Avatar
@@ -115,13 +127,12 @@ export default function NotificationBody({
             />
           </View>
           <View style={styles.informationContainer}>
-            <Text style={[styles.informationHeader, { color: color }]}>{title}</Text>
-            <Text style={[styles.informationBody, { color: color }]}>{body}</Text>
+            <Text style={styles.informationHeader}>{title}</Text>
+            <Text style={styles.informationBody}>{body}</Text>
           </View>
-          <Icon name='angle-down' size={20} color={color} />
+          <Icon name='angle-down' size={20} color={theme.primaryText} />
         </TouchableOpacity>
       </View>
-      {/* </BlurView> */}
     </Animated.View>
   )
 }
@@ -146,7 +157,8 @@ function style(theme) {
       flexDirection: 'row', 
       alignItems: 'center', 
       padding: 15, 
-      borderRadius: 20 
+      borderRadius: 20,
+      backgroundColor: theme.primaryBackground
     },
     shadow: {
       shadowColor: theme.primaryBorder, // Black shadow color
@@ -172,15 +184,14 @@ function style(theme) {
       justifyContent: 'center',
     },
     informationHeader: {
-      color: theme.primaryColor,
+      color: theme.primaryText,
       fontSize: 15,
       fontWeight: 'bold',
       fontFamily: 'nunito-bold',
       marginBottom: -3
     },
     informationBody: {
-      color: theme.primaryColor,
-      // opacity: 0.8,
+      color: theme.secondaryText,
       fontSize: 14,
       fontFamily: 'nunito-regular',
     },

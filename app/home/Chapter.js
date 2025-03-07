@@ -17,6 +17,7 @@ const windowHeight = Dimensions.get('window').height
 
 function Chapter({ navigation, route }) {
   const { work, book, chapter, plan=null } = route.params
+  console.log("chapter plan: ", plan)
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
@@ -46,7 +47,6 @@ function Chapter({ navigation, route }) {
       setUserInformation({ user_id: userId, })
       const verses = await getVersesFromChapter(work, book, chapter)
       versesInChapter.current = Object.keys(verses).length
-      console.log("verses in chapter: ", versesInChapter.current)
       if (plan.verses !== null) {
         let selected = {};
         const range = Array.from({ length: plan.verses[1] - plan.verses[0] + 1 }, (_, i) => i + plan.verses[0]);

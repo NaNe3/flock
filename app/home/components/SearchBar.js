@@ -5,19 +5,20 @@ import { useTheme } from '../../hooks/ThemeProvider';
 
 export default function SearchBar({
   placeholder = 'Search...',
-  query, 
-  setQuery 
+  query,
+  setQuery,
+  customStyling=null
 }) {
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
-  const [localQuery, setLocalQuery] = useState('');
-  const [typingInterval, setTypingInterval] = useState(null);
+  const [localQuery, setLocalQuery] = useState('')
+  const [typingInterval, setTypingInterval] = useState(null)
 
   useEffect(() => {
-    if (typingInterval) clearTimeout(typingInterval);
+    if (typingInterval) clearTimeout(typingInterval)
     const newTypingInterval = setTimeout(() => {
-      setQuery(localQuery);
+      setQuery(localQuery)
     }, 300);
     setTypingInterval(newTypingInterval);
     return () => clearTimeout(newTypingInterval);
@@ -33,7 +34,7 @@ export default function SearchBar({
   };
 
   return (
-    <View style={styles.searchBar}>
+    <View style={[styles.searchBar, customStyling !== null && { ...customStyling }]}>
       <Icon name="search" size={20} color="gray" style={styles.searchIcon} />
       <TextInput
         style={styles.searchInput}

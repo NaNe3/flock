@@ -70,7 +70,7 @@ export default function AddFriend({ navigation }) {
       const result = await searchForUsersByText(userId, query)
       setSearchResults(result)
     }
-    if (query !== '') {
+    if (query !== '' && userId !== null) {
       getSearchResults()
     } else {
       setSearchResults([])

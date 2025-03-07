@@ -6,7 +6,7 @@ import { useModal } from "../../hooks/UniversalModalProvider"
 
 import BasicButton from "../../components/BasicButton"
 import { getLocallyStoredVariable } from "../../utils/localStorage"
-import { hapticImpactSoft, hapticSelect } from "../../utils/haptics"
+import { hapticImpactSoft } from "../../utils/haptics"
 import PlanSelection from "./PlanSelection"
 import PlanItemRow from "./PlanItemRow"
 

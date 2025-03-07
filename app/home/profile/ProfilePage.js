@@ -80,6 +80,7 @@ export default function ProfilePage({ navigation, route }) {
               hapticSelect()
               navigation.navigate('ProfileSettings')
             }}
+            style={{ marginLeft: 5 }}
           >
             <Icon name="gear" size={22} color={theme.primaryText} />
           </TouchableOpacity>

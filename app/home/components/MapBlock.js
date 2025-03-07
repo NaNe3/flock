@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import Icon from 'react-native-vector-icons/FontAwesome6'
+import HugeIcon from "../../components/HugeIcon"
 
 import { useTheme } from "../../hooks/ThemeProvider";
 import MapLine from "./MapLine";
-import BasicButton from "../../components/BasicButton";
 import { getColorLight, getPrimaryColor } from "../../utils/getColorVariety";
+import TouchableShrink from "../../components/TouchableShrink";
 import { hapticImpactSoft } from "../../utils/haptics";
 
 export default function MapBlock({ 
@@ -61,22 +62,64 @@ export default function MapBlock({
         {(status === "locked" || forceLocked) && (
           <Icon name="lock" size={24} color={theme.secondaryText} />
         )}
-        <View style={{ marginVertical: 10 }}>
-          <Text style={styles.planItemHeader}>{item.book !== "" ? item.book : item.work.replace("Doctrine And Covenants", "D&C")} {item.chapter}</Text>
-          <Text style={styles.planItemVerses}>verses {item.verses}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {(status === "active" && !forceLocked) && (
+            <HugeIcon 
+              icon='laurel-wreath-left'
+              size={35}
+              style={{marginRight: 20}} 
+              color={theme.secondaryText}
+            />
+          )}
+          <View style={{ marginVertical: 10 }}>
+            <Text style={styles.planItemHeader}>{item.book !== "" ? item.book : item.work.replace("Doctrine And Covenants", "D&C")} {item.chapter}</Text>
+            <Text style={styles.planItemVerses}>verses {item.verses}</Text>
+          </View>
+          {(status === "active" && !forceLocked) && (
+            <HugeIcon
+              icon='laurel-wreath-right'
+              size={35}
+              style={{ marginLeft: 15 }}
+              color={theme.secondaryText}
+            />
+          )}
         </View>
         {status === "complete" && (
-          <Icon name={status === "complete" ? "arrow-rotate-right" : "play"} size={24} color={theme.secondaryText} style={{ marginTop: 5 }}/>
+          // <Icon name={status === "complete" ? "arrow-rotate-right" : "play"} size={24} color={theme.secondaryText} style={{ marginTop: 5 }}/>
+          <Text style={[styles.activeText, { color: color, backgroundColor: light, }]}>
+            <Icon name="arrow-rotate-right" size={18} color={color !== null ? color : theme.secondaryText} style={{ marginTop: 5 }}/> study completed
+          </Text>
         )}
         {/* {status === "active" && (
           <View style={styles.depressionContainer} />
         )} */}
+
         {!forceLocked ? (
           <>
             {status === "active" && (
-              <Text style={[styles.activeText, {color: color, backgroundColor: light, }]}>
-                <Icon name="play" size={18} color={color !== null ? color : theme.secondaryText} style={{ marginTop: 5 }}/> begin study
-              </Text>
+              <TouchableShrink
+                onPress={() => {
+                  hapticImpactSoft()
+                  navigation.navigate('Chapter', {
+                    work: item.work,
+                    book: item.book,
+                    chapter: item.chapter,
+                    plan: {
+                      verses: item.verses.split('-').map(verse => parseInt(verse)),
+                      plan_info: {
+                        plan_id: item.plan_id,
+                        plan_name: "Come Follow Me",
+                      },
+                      plan_item_id: item.plan_item_id,
+                    }
+                  })
+                }}
+                style={styles.playButton}
+              >
+                <Text style={[styles.activeText, { color: color, backgroundColor: light, }]}>
+                  <Icon name="play" size={18} color={color !== null ? color : theme.secondaryText} style={{ marginTop: 5 }}/> begin study
+                </Text>
+              </TouchableShrink>
             )}
           </>
         ) : (
@@ -96,38 +139,38 @@ function style(theme) {
       borderRadius: 20,
       paddingVertical: 20,
       paddingHorizontal: 10,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
     },
     locked: {
       borderWidth: 4,
       borderColor: theme.primaryBorder,
-      borderStyle: 'dashed',
+      borderStyle: "dashed",
     },
     active: {
       backgroundColor: theme.primaryBackground,
     },
     complete: {
       backgroundColor: theme.primaryBackground,
-      opacity: 0.5
+      opacity: 0.5,
     },
     planItemHeader: {
       fontSize: 24,
-      fontWeight: 'bold',
-      fontFamily: 'nunito-bold',
-      color: theme.secondaryText,
-      textAlign: 'center',
+      fontWeight: "bold",
+      fontFamily: "nunito-bold",
+      color: theme.actionText,
+      textAlign: "center",
     },
     planItemVerses: {
       fontSize: 16,
-      fontFamily: 'nunito-regular',
+      fontFamily: "nunito-regular",
       color: theme.secondaryText,
-      textAlign: 'center',
+      textAlign: "center",
     },
     completedRow: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
       marginTop: 10,
     },
     completedContainer: {
@@ -137,7 +180,7 @@ function style(theme) {
       backgroundColor: theme.quarternaryBackground,
 
       color: theme.actionText,
-      fontFamily: 'nunito-bold',
+      fontFamily: "nunito-bold",
       fontSize: 16,
 
       // position: 'absolute',
@@ -145,26 +188,38 @@ function style(theme) {
       // right: 10,
     },
     playButton: {
-      width: '100%',
+      width: "75%",
+      marginTop: 5,
     },
     activeText: {
       backgroundColor: theme.primaryBorder,
-      marginTop: 5,
-      paddingVertical: 7,
+      paddingVertical: 12,
       paddingHorizontal: 15,
-      borderRadius: 8,
+      borderRadius: 12,
       fontSize: 18,
-      fontFamily: 'nunito-bold',
+      fontFamily: "nunito-bold",
       color: theme.secondaryText,
-      textAlign: 'center',
+      textAlign: "center",
     },
-    // depressionContainer: {
-    //   backgroundColor: theme.secondaryBackground,
-    //   borderRadius: 10,
-    //   width: '100%',
-    //   height: 50,
-    //   marginTop: 5,
-    //   marginBottom: 15,
-    // }
-  })
+    readingInformation: {
+      backgroundColor: theme.primaryBackground,
+      // borderWidth: 3,
+      // borderColor: theme.primaryBorder,
+      borderRadius: 10,
+      paddingHorizontal: 5,
+      paddingVertical: 22,
+      flexDirection: "row",
+      justifyContent: "space-around",
+    },
+    infoColumn: {
+      width: "30%",
+      alignItems: "center",
+    },
+    infoText: {
+      fontFamily: "nunito-bold",
+      fontSize: 16,
+      marginTop: 5,
+      color: theme.secondaryText,
+    },
+  });
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View, Keyboard, Animated, Text, Dimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import { getPrimaryColor } from "../utils/getColorVariety";
@@ -11,7 +12,6 @@ import { useTheme } from "../hooks/ThemeProvider";
 const width = Dimensions.get('window').width
 
 export default function CommentBar({ 
-  navigation,
   media_id,
   media_type,
   setComments,
@@ -21,6 +21,7 @@ export default function CommentBar({
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
+  const insets = useSafeAreaInsets()
   const [comment, setComment] = useState('')
   const [userId, setUserId] = useState(null)
   const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0));
@@ -34,7 +35,7 @@ export default function CommentBar({
     const keyboardWillShow = Keyboard.addListener('keyboardWillShow', (event) => {
       Animated.spring(keyboardHeight, {
         duration: event.duration,
-        toValue: event.endCoordinates.height-30,
+        toValue: event.endCoordinates.height-insets.bottom,
         useNativeDriver: false,
       }).start();
     });
@@ -45,15 +46,15 @@ export default function CommentBar({
         toValue: 0,
         useNativeDriver: false,
       }).start();
-    });
+    })
 
     init()
 
     return () => {
       keyboardWillShow.remove();
       keyboardWillHide.remove();
-    };
-  }, []);
+    }
+  }, [])
 
 
   const mutual_props = {
@@ -97,7 +98,11 @@ const CommentInput = ({
 
   const handleCancelReply = () => {
     hapticSelect()
-    setReplyingTo(null)
+    setReplyingTo({
+      media_comment_id: null,
+      replying_to: null,
+      recipient_id: null,
+    })
   }
 
   useEffect(() => {
@@ -112,7 +117,7 @@ const CommentInput = ({
 
   return (
     <View style={styles.searchBar}>
-      {replyingTo !== null && (
+      {replyingTo.media_comment_id !== null && (
         <Animated.View style={styles.commentReplyingBar}>
           <Text style={styles.commentReplyingText}>replying</Text>
           <TouchableOpacity onPress={handleCancelReply}>
@@ -133,12 +138,12 @@ const CommentInput = ({
   );
 }
 
-const CommentPublishButton = ({ 
-  comment, 
-  setComment, 
-  user_id, 
-  media_id, 
-  media_type, 
+const CommentPublishButton = ({
+  comment,
+  setComment,
+  user_id,
+  media_id,
+  media_type,
   setComments,
   replyingTo,
   setReplyingTo,
@@ -167,7 +172,8 @@ const CommentPublishButton = ({
       media_id: media_type === 'media' ? media_id : null,
       comment_id: media_type === 'comment' ? media_id : null,
       user_id: user_id,
-      replying_to: replyingTo,
+      replying_to: replyingTo.replying_to,
+      recipient_id: replyingTo.recipient_id,
       comment: comment
     })
     
@@ -175,6 +181,8 @@ const CommentPublishButton = ({
     const newComment = {
       comment: comment,
       created_at: new Date().toISOString(),
+      replying_to: replyingTo.replying_to,
+      recipient_id: replyingTo.recipient_id,
       user: {
         avatar_path: userInfo.avatar_path,
         color_id: { color_hex: userInfo.color.color_hex },
@@ -184,7 +192,13 @@ const CommentPublishButton = ({
 
     setComments(comments => [newComment, ...comments])
     setComment('')
-    if (replyingTo !== null) { setReplyingTo(null) }
+    if (replyingTo !== null) { 
+      setReplyingTo({
+        media_comment_id: null,
+        replying_to: null,
+        recipient_id: null,
+      }) 
+    }
   }
 
   return (

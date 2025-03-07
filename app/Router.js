@@ -35,8 +35,8 @@ import GroupPage from "./home/GroupPage";
 import { getCurrentWeekNumber } from "./utils/plan";
 import { RealtimeProvider } from "./hooks/RealtimeProvider"
 import UniversalModalProvider from "./hooks/UniversalModalProvider";
-import Person from "./home/profile/Person";
 import PersonProfile from "./home/PersonProfile";
+import PersonChat from "./home/profile/PersonChat";
 
 const Stack = createStackNavigator()
 
@@ -45,7 +45,7 @@ export default function Router() {
   const [currentRoute, setCurrentRoute] = useState('Home')
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState(0)
-  const withoutBar = ['PremiumOffer', 'CreateGroup', 'Chapter', 'Capture', 'ReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers', 'ViewImpressions', 'ProfilePageRouter', 'CommentPage', 'StreakView']
+  const withoutBar = ['PremiumOffer', 'CreateGroup', 'Chapter', 'Capture', 'ReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers', 'ViewImpressions', 'ProfilePageRouter', 'CommentPage', 'StreakView', 'PersonChat', 'Group', 'PersonProfile']
   // const withoutBar = []
 
   const [realtimeData, setRealtimeData] = useState({})
@@ -195,8 +195,8 @@ export default function Router() {
                 options={{ animationEnabled: true }}
               />
               <Stack.Screen 
-                name='Person'
-                component={Person}
+                name='PersonChat'
+                component={PersonChat}
                 options={{ animationEnabled: true }}
               />
               <Stack.Screen 

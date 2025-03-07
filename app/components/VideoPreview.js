@@ -30,7 +30,15 @@ export default function VideoPreview({
 
   // This exists to ensure video is playing after video loads
   //   This fixes a bug in Capture.js that previews a video just taken
-  useEffect(() => { if (pausable) { setTimeout(() => { if (player) player.play() }, 1000) } }, [])
+  useEffect(() => { 
+    if (pausable) { 
+      setTimeout(() => { 
+        try {
+          play()
+        } catch (error) { }
+      }, 1000) 
+    } 
+  }, [])
   
   // Listens to muted setting of VideoImpressions
   useEffect(() => { if (player) player.muted = muted }, [muted])
@@ -51,7 +59,7 @@ export default function VideoPreview({
   useEffect(() => {
     if (player) {
       if (playing === true) {
-        player.play()
+        play()
       } else if (playing === false) {
         player.pause()
       }
@@ -62,7 +70,7 @@ export default function VideoPreview({
   useEffect(() => {
     if (status === 'readyToPlay') {
       declareLoadingState(false)
-      player.play()
+      play()
     } else {
       declareLoadingState(true)
     }
@@ -71,7 +79,7 @@ export default function VideoPreview({
   // PAUSE VIDEO WHEN SCREEN IS NOT FOCUSED
   useFocusEffect(
     useCallback(() => {
-      if (player) player.play()
+      if (player) play()
 
       return () => {
         try {
@@ -80,6 +88,12 @@ export default function VideoPreview({
       }
     }, [])
   )
+
+  const play = () => {
+    try {
+      if (player) player.play()
+    } catch (error) { }
+  }
 
   const { status } = useEvent(player, 'statusChange', { status: player.status });
 

@@ -1,8 +1,7 @@
-import { Profiler, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Text, View, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import Icon from 'react-native-vector-icons/FontAwesome5'
-import { CommonActions } from '@react-navigation/native';
 
 import BasicTextInput from '../components/BasicTextInput';
 import EmptySpace from '../components/EmptySpace';
@@ -108,10 +107,12 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
   useEffect(() => { setStyles(style(theme)) }, [theme])
   const [userAvatar, setUserAvatar] = useState(null)
   const [userName, setUserName] = useState('')
+  const [color, setColor] = useState('')
 
   useEffect(() => {
     const getUserInfo = async () => {
-      const { avatar_path, fname, lname } = JSON.parse(await getLocallyStoredVariable('user_information'))
+      const { avatar_path, fname, lname, color } = JSON.parse(await getLocallyStoredVariable('user_information'))
+      setColor(color.color_hex)
       setUserName(`${fname} ${lname}`)
       setUserAvatar(avatar_path)
     }
@@ -126,11 +127,13 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
 
         <View style={[styles.personRow, friendsAdded.length === 0 && { borderBottomWidth: 5 }]}>
           {userAvatar && (
-            <Avatar 
-              imagePath={userAvatar}
-              type="profile"
-              style={styles.friendImage}
-            />
+            <View style={[styles.friendImageContainer, { borderColor: color }]}>
+              <Avatar 
+                imagePath={userAvatar}
+                type="profile"
+                style={styles.friendImage}
+              />
+            </View>
           )}
           <View>
             <Text style={{ fontFamily: 'nunito-bold', fontSize: 18, color: theme.primaryText, marginLeft: 15 }}>{userName}</Text>
@@ -140,10 +143,17 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
 
         {
           friendsAdded.map((friend, index) => {
+            console.log("friend: ", friend)
             const avatar = getLocalUriForFile(friend.avatar_path)
             return (
               <View key={index} style={styles.personRow}>
-                <Image source={{ uri: avatar }} style={styles.friendImage} />
+                <View style={[styles.friendImageContainer, { borderColor: friend.color }]}>
+                  <Avatar
+                    imagePath={friend.avatar_path}
+                    type='profile'
+                    style={styles.friendImage}
+                  />
+                </View>
                 <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: 'center' }}>
                   <View style={{ flex: 1, marginRight: 20 }}>
                     <Text 
@@ -358,10 +368,15 @@ function style(theme) {
       borderBottomWidth: 3,
       borderColor: theme.primaryBorder,
     },
+    friendImageContainer: {
+      padding: 3,
+      borderWidth: 3,
+      borderRadius: 100,
+    },
     friendImage: {
       width: 40,
       height: 40,
-      borderRadius: 10,
+      borderRadius: 40,
     },
     modal: {
       flex: 1,

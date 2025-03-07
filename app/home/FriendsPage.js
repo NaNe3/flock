@@ -15,7 +15,8 @@ import GroupRow from "./components/GroupRow"
 import SearchBar from "./components/SearchBar"
 import { dateIsToday } from "../utils/authenticate"
 import NotificationIndicator from "../components/NotificationIndicator"
-import { getPrimaryColor } from "../utils/getColorVariety"
+import { getColorLight, getPrimaryColor } from "../utils/getColorVariety"
+import HugeIcon from "../components/HugeIcon"
 
 export default function FriendsPage({ navigation }) {
   const { visible, setVisible, setModal, setTitle, closeBottomSheet } = useModal()
@@ -25,6 +26,7 @@ export default function FriendsPage({ navigation }) {
   const [userId, setUserId] = useState(null)
   const [color, setColor] = useState(null)
   const [query, setQuery] = useState('')
+  const [initialQueriesFinished, setInitialQueriesFinished] = useState(false)
 
   const [requests, setRequests] = useState([])
   const [friends, setFriends] = useState([])
@@ -67,6 +69,7 @@ export default function FriendsPage({ navigation }) {
     )
     setDisplay(sortedDisplay)
     setFilteredDisplay(sortedDisplay)
+    setInitialQueriesFinished(true)
 
     const daily = JSON.parse(await getLocallyStoredVariable('daily_impressions'))
     const assigned = sortedDisplay.map(item => {
@@ -127,117 +130,121 @@ export default function FriendsPage({ navigation }) {
           <SearchBar
             query={query}
             setQuery={setQuery}
+            customStyling={{ paddingRight: 0 }}
           />
-          <TouchableOpacity style={styles.addButton} onPress={() => {
+          <TouchableOpacity activeOpacity={0.7} style={styles.addButton} onPress={() => {
             hapticSelect()
             navigation.navigate('CreateGroup')
           }}>
-            <Icon name='circle-plus' size={20} color={theme.actionText} />
+            {/* <Icon name='circle-plus' size={20} color="gray" /> */}
+            <HugeIcon icon='add-square' size={25} color="gray" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.addButton} onPress={() => {
+          <TouchableOpacity activeOpacity={0.7} style={styles.addButton} onPress={() => {
             hapticSelect()
             navigation.navigate('AddFriend')
           }}>
-            <Icon name='user-plus' size={20} color={theme.actionText} />
-            {
-              requests.length > 0 && (
-                <NotificationIndicator
-                  count={requests.length}
-                  offset={-5}
-                />
-              )
-            }
+            {/* <Icon name='user-plus' size={20} color="gray" /> */}
+            <HugeIcon icon='add-user' size={25} color="gray" />
+            {requests.length > 0 && (
+              <NotificationIndicator
+                count={requests.length}
+                offset={-5}
+              />
+            )}
           </TouchableOpacity>
         </View>
       </View>
       <ScrollView 
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.contentContainer}>
-          {display.length === 0 && (
-            <View style={styles.disclaimer}>
-              <Text style={styles.disclaimerText}>add your friends to study the scriptures together!</Text>
-            </View>
-          )}
+        {initialQueriesFinished && (
+          <View style={styles.contentContainer}>
+            {display.length === 0 && (
+              <View style={styles.disclaimer}>
+                <Text style={styles.disclaimerText}>add your friends to study the scriptures together!</Text>
+              </View>
+            )}
 
-          {display.length > 0 && filteredDisplay.length === 0 && (
-            <View style={styles.disclaimer}>
-              <Text style={styles.disclaimerText}>no results for `{query}`</Text>
-            </View>
-          )}
+            {display.length > 0 && filteredDisplay.length === 0 && (
+              <View style={styles.disclaimer}>
+                <Text style={styles.disclaimerText}>you don't have any friends or groups by the name</Text>
+                <Text style={[styles.disclaimerText, styles.disclaimed]}>{query}</Text>
+              </View>
+            )}
 
-          {(display.length === 0 || filteredDisplay.length) === 0 && (
-            <TouchableOpacity 
-              style={[styles.friendButton, { backgroundColor: color }]}
-              activeOpacity={0.7}
-              onPress={() => {
-                hapticSelect()
-                navigation.navigate('AddFriend')
-              }}
-            >
-              <Text style={styles.friendButtonText}>look for friend</Text>
-            </TouchableOpacity>
-          )}
-
-          {filteredDisplay.map((item, index) => {
-            const type = item.group_id ? 'group' : 'person'
-            const id = item.group_id ? item.group_id : item.id
-            let count = 0
-            if (newImpressions.length !== 0) {
-              count = newImpressions.find(impression => (type === 'group' && impression.group_id === id) || (type === 'person' && impression.user_id === id)).count
-            }
-            
-            return (
-              <FadeInView
-                style={styles.itemRow}
-                key={`item-${index}`}
+            {(display.length === 0 || filteredDisplay.length) === 0 && (
+              <TouchableOpacity 
+                style={[styles.friendButton, { backgroundColor: color }]}
+                activeOpacity={0.7}
+                onPress={() => {
+                  hapticSelect()
+                  navigation.navigate('AddFriend', { initialQuery: query })
+                }}
               >
-                {
-                  (item.group_id === undefined || item.group_id === null) ? (
-                    <PersonRow
-                      person={item}
-                      invitationStatus='accepted'
-                      onPress={() => {
-                        hapticSelect()
-                        navigation.navigate('Person', { person: item })
-                      }}
-                      key={`friend-${index}`}
-                    />
-                  ) : (
-                    <GroupRow
-                      group={item}
-                      navigation={navigation} 
-                    />
-                  )
-                }
-                <TouchableOpacity
-                  style={styles.actionRow}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    hapticSelect()
-                    if (type === 'group') {
-                      navigation.navigate('Group', { group: item })
-                    } else {
-                      // navigation.navigate('Person', { person: item })
-                      const content = newImpressions.find(impression => impression.user_id === id).items.map(item => item.activity_id)
-                      navigation.navigate('ViewImpressions', { activity_ids: content, title: item.fname + ' ' + item.lname })
-                    }
-                  }}
-                >
-                  {count > 0 && (
-                    <View style={[styles.unseenContainer, type === 'person' && { backgroundColor: item.color }]}>
-                      <Text style={styles.unseenText}>{ count }</Text>
-                    </View>
-                  )}
-                  <View style={styles.rightIndicator}>
-                    <Icon name="chevron-right" size={16} color={theme.gray} />
-                  </View>
+                <Text style={styles.friendButtonText}>look for friend</Text>
+              </TouchableOpacity>
+            )}
 
-                </TouchableOpacity>
-              </FadeInView>
-            )
-          })}
-        </View>
+            {filteredDisplay.map((item, index) => {
+              const type = item.group_id ? 'group' : 'person'
+              const id = item.group_id ? item.group_id : item.id
+              let count = 0
+              if (newImpressions.length !== 0) {
+                count = newImpressions.find(impression => (type === 'group' && impression.group_id === id) || (type === 'person' && impression.user_id === id)).count
+              }
+              
+              return (
+                <FadeInView
+                  style={styles.itemRow}
+                  key={`item-${index}`}
+                >
+                  {
+                    (item.group_id === undefined || item.group_id === null) ? (
+                      <PersonRow
+                        person={item}
+                        invitationStatus='accepted'
+                        onPress={() => {
+                          hapticSelect()
+                          navigation.navigate('PersonChat', { person: item })
+                        }}
+                        key={`friend-${index}`}
+                      />
+                    ) : (
+                      <GroupRow
+                        group={item}
+                        navigation={navigation} 
+                      />
+                    )
+                  }
+                  <TouchableOpacity
+                    style={styles.actionRow}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      hapticSelect()
+                      if (type === 'group') {
+                        navigation.navigate('Group', { group: item })
+                      } else {
+                        // navigation.navigate('Person', { person: item })
+                        const content = newImpressions.find(impression => impression.user_id === id).items.map(item => item.activity_id)
+                        navigation.navigate('ViewImpressions', { activity_ids: content, title: item.fname + ' ' + item.lname })
+                      }
+                    }}
+                  >
+                    {count > 0 && (
+                      <View style={[styles.unseenContainer, { backgroundColor: type === 'person' ? item.color : color }]}>
+                        <Text style={styles.unseenText}>{ count }</Text>
+                      </View>
+                    )}
+                    <View style={styles.rightIndicator}>
+                      <Icon name="chevron-right" size={16} color={theme.gray} />
+                    </View>
+
+                  </TouchableOpacity>
+                </FadeInView>
+              )
+            })}
+          </View>
+        )}
       </ScrollView>
     </View>
   )
@@ -358,6 +365,16 @@ function style(theme) {
       fontSize: 22,
       color: theme.actionText,
       textAlign: 'center',
+    },
+    disclaimed: {
+      marginTop: 20,
+      marginBottom: 10,
+      borderRadius: 10,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+
+      color: theme.secondaryText,
+      backgroundColor: theme.tertiaryBackground
     },
     friendButton: {
       marginTop: 20,

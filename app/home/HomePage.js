@@ -48,7 +48,7 @@ export default function HomePage({ navigation }) {
         console.log("week study finished")
       }
     } else {
-      const nextPlanItem = planItems.find(pi => pi.plan_item_id === latestLog.plan_item_id + 2)
+      const nextPlanItem = planItems.find(pi => pi.plan_item_id === latestLog.plan_item_id + 1)
       setCurrentPlanItem(nextPlanItem)
     }
   }
@@ -82,19 +82,6 @@ export default function HomePage({ navigation }) {
         scrollEventThrottle={16}
       >
         <View style={styles.homeContent}>
-          {/* <TouchableOpacity
-            style={styles.addFriendsButton}
-            activeOpacity={0.7}
-            onPress={() => {
-              hapticSelect()
-              navigation.navigate('GroupPage')
-            }}
-          >
-            { requestCount > 0 && <NotificationIndicator count={requestCount} offset={-5} /> }
-            <Text style={styles.buttonText}> 
-              <Icon name="users" size={16} color={theme.actionText} /> {groupCount > 0 ? `${groupCount} group${groupCount > 1 ? 's' : ''}` : 'create group'}
-            </Text>
-          </TouchableOpacity> */}
           {currentPlanItem !== null && planItems.map((item, i) => {
             return (
               <MapBlock

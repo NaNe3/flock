@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 import supabase from '../utils/supabase';
-import { createActivityListeners, createReactionListener, incomingRequestListener, requestResponseListener } from '../utils/realtime';
+import { createActivityListeners, createReactionListener, incomingCommentListener, incomingRequestListener, requestResponseListener } from '../utils/realtime';
 import NotificationBody from '../components/NotificationBody';
 import { getInfoFromGroupMember, getSenderInformation } from '../utils/db-relationship';
 import { getLocallyStoredVariable, setLocallyStoredVariable } from '../utils/localStorage';
-import { getLocationOfMedia, getReactionInformation } from '../utils/db-media';
+import { getLocationOfActivity, getReactionInformation } from '../utils/db-media';
+import { getCommentInformation } from '../utils/db-comment';
 
 const RealtimeContext = createContext();
 
@@ -54,6 +55,10 @@ export const RealtimeProvider = ({ children, realtimeData }) => {
         getNewGroupRequest(payload.new)
       }
     })
+    incomingCommentListener(channel.current, userId, (payload) => {
+      console.log('incoming comment reply: ', payload)
+      getNewCommentReply(payload.new)
+    })
       
     channel.current.subscribe()
     return () => {
@@ -63,14 +68,27 @@ export const RealtimeProvider = ({ children, realtimeData }) => {
     }
   }, [])
 
+  const getNewCommentReply = async (comment) => {
+    const { media_comment_id } = comment
+    const user = await getCommentInformation(media_comment_id)
+
+    publishNotification({
+      image: user.avatar_path,
+      title: `${user.full_name} replied`,
+      body: comment.comment,
+      color: user.color,
+      route: { name: 'AddFriend', params: null }
+    })
+  }
+
   const publishReaction = async (reaction) => {
     const { reaction_id } = reaction
     const sender = await getReactionInformation(reaction_id)
-    const location = await getLocationOfMedia(sender.media_id)
+    const location = await getLocationOfActivity(sender.activity_id)
 
     // TODO - find the impression route
-    publishNotification({ 
-      image: sender.avatar_path, 
+    publishNotification({
+      image: sender.avatar_path,
       title: `${sender.full_name}`, 
       body: `reacted with ${reaction.emoji}`, 
       color: sender.color, 

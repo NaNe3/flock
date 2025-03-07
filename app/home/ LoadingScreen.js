@@ -14,7 +14,6 @@ export default function LoadingScreen({
 
   const [primaryColor, setPrimaryColor] = useState(theme.primaryColor)
   const [progressDisplayed] = useState(new Animated.Value(0))
-  const [messageSelected, setMessageSelected] = useState(0)
 
   const messages = [
     'looking for the three nephites',
@@ -26,14 +25,14 @@ export default function LoadingScreen({
     'looking for the iron rod',
     'reading through Isaiah',
   ]
+  const [messageSelected] = useState(
+    Math.floor(Math.random() * messages.length)
+  )
 
   useEffect(() => {
     const init = async () => {
       const color = await getPrimaryColor()
       setPrimaryColor(color)
-
-      const randomMessage = Math.floor(Math.random() * messages.length)
-      setMessageSelected(randomMessage)
     }
 
     init()
@@ -88,7 +87,7 @@ function style(theme) {
     progressBar: {
       width: '75%',
       height: 12,
-      backgroundColor: theme.lightestGray,
+      backgroundColor: theme.tertiaryBackground,
       borderRadius: 10,
       overflow: 'hidden',
     },

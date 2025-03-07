@@ -114,18 +114,25 @@ export const getEmojiHistory = async () => {
   if (history) {
     return JSON.parse(history)
   } else {
-    await setLocallyStoredVariable('emoji_history', JSON.stringify(['💛', '🔥']))
-    return ['💛', '🔥']
+    await setLocallyStoredVariable('emoji_history', JSON.stringify(['💛', '🔥', '🎉', '🙏', '💪', '🐑',]))
+    return ['💛', '🔥', '🎉', '🙏', '💪', '🐑']
   }
 }
 
 export const setEmojiHistory = async (emoji) => {
   const history = JSON.parse(await getLocallyStoredVariable('emoji_history'))
-  const newHistory = history 
-    ? history[1] === emoji
-      ? history
-      : [history[1], emoji] 
-    : [emoji]
+
+  let newHistory
+  if (!history.includes(emoji)) {
+    if (history.length >= 6) {
+      newHistory = [emoji, ...history.slice(0, 5)]
+    } else {
+      newHistory = [emoji, ...history]
+    }
+  } else {
+    newHistory = history
+  }
+
   await setLocallyStoredVariable('emoji_history', JSON.stringify(newHistory))
 }
 

@@ -102,11 +102,13 @@ const styles = StyleSheet.create({
   },
   notPressed: {
     shadowOffset: { width: 0, height: 5 }, // Position the shadow directly at the bottom
+    elevation: 5,
   },
   pressed: {
     shadowOffset: { width: 0, height: 0 }, // Adjust the shadow position when pressed
     marginTop: 5,
     marginBottom: -5,
+    elevation: 0,
   },
   buttonText: {
     color: '#fff',

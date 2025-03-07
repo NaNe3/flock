@@ -11,18 +11,23 @@ import Media from "../components/Media"
 import Avatar from "../components/Avatar"
 import { hapticError, hapticImpactHeavy, hapticSelect } from "../utils/haptics"
 import { timeAgo } from "../utils/timeDiff"
-import { getEmojiHistory, getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../utils/localStorage"
+import { getAttributeFromObjectInLocalStorage, getEmojiHistory, getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../utils/localStorage"
 import EmojiBurst from "../components/EmojiBurst";
-import { reactToMedia } from "../utils/db-media";
+import { getReactionsByActivityId, reactToMedia } from "../utils/db-media";
 import EmojiModal from "../components/EmojiModal";
 import EmojiReaction from "../components/EmojiReaction";
 import { getFontSizeOfComment } from "../utils/format-comment";
 import EmptySpace from "../components/EmptySpace";
 import { getCommentCount } from "../utils/db-comment";
 import { useTheme } from "../hooks/ThemeProvider";
+import { useModal } from "../hooks/UniversalModalProvider";
+import Horizon from "../components/Horizon";
+import ReactionView from "./components/ReactionView";
+import FadeInView from "../components/FadeInView";
 
 export default function ViewImpressions({ navigation, route }) {
   const { title, location, media_id, activity_ids } = route.params
+  const { setVisible, setModal, setTitle, closeBottomSheet } = useModal()
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
@@ -39,19 +44,29 @@ export default function ViewImpressions({ navigation, route }) {
   const currentMediaType = useRef(null)
 
   const [userId, setUserId] = useState(null)
+  // for the user
+  const [avatar, setAvatar] = useState('')
   const [media, setMedia] = useState([])
   const [currentMedia, setCurrentMedia] = useState(0)
   const [preferences, setPreferences] = useState({})
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [timeSincePosted, setTimeSincePosted] = useState('')
+  // for the publisher
   const [userAvatar, setUserAvatar] = useState('')
   const [userName, setUserName] = useState('')
+
   const [loading, setLoading] = useState(false)
+  const [destination, setDestination] = useState("start")
+
+  const [reactions, setReactions] = useState([])
+  const [totalAmountOfReactions, setTotalAmountOfReactions] = useState(0)
   const [commentCount, setCommentCount] = useState(null)
 
   const [defaultEmojis, setDefaultEmojis] = useState([])
   const [emojiModalVisible, setEmojiModalVisible] = useState(false)
+
   const isScrollEnabled = useRef(false)
+  const isScrollHorizontalEnabled = useRef(false)
 
   useFocusEffect(
     useCallback(() => {
@@ -90,6 +105,7 @@ export default function ViewImpressions({ navigation, route }) {
       }
 
       alreadySwiped.current = false
+      getDefaultEmojis()
       getImpressions()
     }, [])
   )
@@ -100,14 +116,22 @@ export default function ViewImpressions({ navigation, route }) {
       if (preferences === null) await setLocallyStoredVariable('media_preferences', JSON.stringify({ soundEnabled: true }))
       if (preferences.soundEnabled !== undefined) setSoundEnabled(preferences.soundEnabled)
     }
+  const getUserProfile = async () => {
+    const avatar = await getAttributeFromObjectInLocalStorage('user_information', 'avatar_path')
+    setAvatar(avatar)
+  }
 
+    getUserProfile()
     getMediaPreferences()
+
     const checkForSwipe = setInterval(() => {
       if (mediaChangeDirection.current !== null) {
+        setDestination("next")
         handleMediaChange(mediaChangeDirection.current)
         mediaChangeDirection.current = null
       }
       if (mediaChangeValue.current !== null) {
+        setDestination("next")
         setCurrentMedia(mediaChangeValue.current)
         // currentMediaId.current = media[mediaChangeValue.current].media.media_id
         mediaChangeValue.current = null
@@ -122,13 +146,22 @@ export default function ViewImpressions({ navigation, route }) {
       getTimeSincePosted()
       currentMediaId.current = media[currentMedia].media !== null ? media[currentMedia].media.media_id : media[currentMedia].comment.comment_id
       currentMediaType.current = media[currentMedia].media !== null ? 'media' : 'comment'
-      getCommentInformation()
-    }
-  }, [currentMedia])
 
-  useEffect(() => {
-    if (!emojiModalVisible) getDefaultEmojis()
-  }, [emojiModalVisible])
+      if (destination !== null) {
+        if (destination === "start" || destination === "next") {
+          loadComments()
+          loadReactions()
+        }
+        if (destination === "comments") {
+          loadComments()
+        }
+        if (destination === "reactions") {
+          loadReactions()
+        }
+        setDestination(null)
+      }
+    }
+  }, [currentMedia, media])
 
   const getTimeSincePosted = () => {
     const timeCreated = media[currentMedia].media !== null ? media[currentMedia].media.created_at : media[currentMedia].comment.created_at
@@ -143,14 +176,30 @@ export default function ViewImpressions({ navigation, route }) {
     setDefaultEmojis(defaults)
   }
 
+  const loadComments = async () => {
+    setCommentCount(null)
+    await getCommentInformation()
+  }
+
   const getCommentInformation = async () => {
     const mediaId = media[currentMedia].media !== null ? media[currentMedia].media.media_id : media[currentMedia].comment.comment_id
     const commentCount = await getCommentCount(mediaId, media[currentMedia].media !== null ? 'media_id' : 'comment_id')
     setCommentCount(commentCount)
   }
 
+  const loadReactions = async () => {
+    setReactions([])
+    setTotalAmountOfReactions(0)
+    await getReactions()
+  }
+
+  const getReactions = async () => {
+    const { reactions, count} = await getReactionsByActivityId(media[currentMedia].activity_id)
+    setReactions(reactions)
+    setTotalAmountOfReactions(count)
+  }
+
   const handleEmojiPress = async (emoji) => {
-    setEmojiModalVisible(false)
     setEmojis(prev => [...prev,
       <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />,
       <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />,
@@ -160,12 +209,16 @@ export default function ViewImpressions({ navigation, route }) {
     setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 150)
     setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 200)
     setTimeout(() => { setEmojis(prev => [...prev, <EmojiBurst key={`emoji-burst-${Math.random()}`} emoji={emoji} callback={() => setEmojis(prev => prev.slice(1))} />, ]) }, 250)
-    await reactToMedia({
+    reactToMedia({
       emoji: emoji,
-      media_id: media[currentMedia].media.media_id,
+      activity_id: media[currentMedia].activity_id,
       recipient_id: media[currentMedia].user.id,
       sender_id: userId,
     })
+    setTotalAmountOfReactions(prev => prev + 1)
+    setReactions(prev => [...prev, { emoji: emoji, user: { color: theme.primaryText, avatar_path: avatar } }])
+    getDefaultEmojis()
+    closeBottomSheet()
   }
 
   const handleMediaChange = (event) => {
@@ -196,10 +249,12 @@ export default function ViewImpressions({ navigation, route }) {
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onPanResponderMove: (evt, gestureState) => {
-        if (gestureState.dy < 0) {
-          pan.setValue({ x: gestureState.dx, y: !isScrollEnabled.current ? gestureState.dy : 0 });
-        } else {
-          pan.setValue({ x: gestureState.dx, y: 0 });
+        if (!isScrollHorizontalEnabled.current) {
+          if (gestureState.dy < 0) {
+            pan.setValue({ x: gestureState.dx, y: !isScrollEnabled.current ? gestureState.dy : 0 });
+          } else {
+            pan.setValue({ x: !isScrollHorizontalEnabled.current ? gestureState.dx : 0, y: 0 });
+          }
         }
 
         if (!isScrollEnabled.current) {
@@ -210,11 +265,13 @@ export default function ViewImpressions({ navigation, route }) {
         }
       },
       onPanResponderRelease: (evt, gestureState) => {
-        if (gestureState.dx > 50) {
-          mediaChangeDirection.current = "right"
-        }
-        if (gestureState.dx < -50) {
-          mediaChangeDirection.current = "left"
+        if (!isScrollHorizontalEnabled.current) {
+          if (gestureState.dx > 50) {
+            mediaChangeDirection.current = "right"
+          }
+          if (gestureState.dx < -50) {
+            mediaChangeDirection.current = "left"
+          }
         }
         Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
       },
@@ -229,6 +286,7 @@ export default function ViewImpressions({ navigation, route }) {
         media_id: currentMediaId.current,
         media_type: currentMediaType.current
       })
+      setDestination("comments")
     }
   }
 
@@ -243,8 +301,8 @@ export default function ViewImpressions({ navigation, route }) {
     extrapolate: 'clamp',
   })
 
+  // SAHKING ANIMATION OF THE CAMERA
   const shakeAnimation = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
     const shake = Animated.sequence([
       Animated.timing(shakeAnimation, {
@@ -267,7 +325,7 @@ export default function ViewImpressions({ navigation, route }) {
     const loop = Animated.loop(
       Animated.sequence([
         shake,
-        Animated.delay(1700), // Wait for 1.7 seconds before the next shake
+        Animated.delay(1700),
       ])
     );
 
@@ -289,13 +347,21 @@ export default function ViewImpressions({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.contentContainer, { marginTop: insets.top, marginBottom: insets.bottom === 0 ? 10 : insets.bottom }]} >
+      <View
+        style={[
+          styles.contentContainer,
+          {
+            marginTop: insets.top,
+            marginBottom: insets.bottom === 0 ? 10 : insets.bottom,
+          },
+        ]}
+      >
         <View style={styles.contentActionBar}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => {
-              hapticSelect()
-              navigation.goBack()
+              hapticSelect();
+              navigation.goBack();
             }}
             style={styles.actionButton}
           >
@@ -304,14 +370,15 @@ export default function ViewImpressions({ navigation, route }) {
           <Text style={styles.headerText}>{title}</Text>
           <TouchableOpacity
             onPress={() => {
-              hapticImpactHeavy()
+              hapticImpactHeavy();
               const destination = {
                 work: location.work,
                 book: location.book,
                 chapter: location.chapter,
-                verse: location.verse
-              }
-              navigation.navigate("Capture", { location: location })
+                verse: location.verse,
+              };
+              navigation.navigate("Capture", { location: location });
+              setDestination("capture")
             }}
             style={styles.actionButton}
           >
@@ -323,146 +390,194 @@ export default function ViewImpressions({ navigation, route }) {
         {media.length > 1 && (
           <View style={styles.mediaBarList}>
             {media.map((item, index) => (
-              <View 
+              <View
                 key={`media-bar-${index}`}
-                style={[styles.mediaBar, index === currentMedia && { backgroundColor: theme.mediaUnseen}]} 
+                style={[
+                  styles.mediaBar,
+                  index === currentMedia && {
+                    backgroundColor: theme.mediaUnseen,
+                  },
+                ]}
               />
             ))}
           </View>
         )}
-        {
-          media.length > 0 ? (
-            <Animated.View
-              {...panResponder.panHandlers}
-              style={[{transform: [{ translateY }, { translateX }]}, styles.impressionContainer]}
-            >
-              {media[currentMedia].media !== null ? (
-                <>
-                  <Media
-                    path={media[currentMedia].media.media_path}
-                    type={media[currentMedia].media.media_type}
-                    style={styles.impression}
-                    includeBottomShadow={true}
-                    soundEnabled={soundEnabled}
-                    declareLoadingState={setLoading}
-                  />
-                  {
-                    media[currentMedia].media.media_type === 'video' && (
-                      <TouchableOpacity 
-                        activeOpacity={0.7}
-                        style={styles.videoSoundContainer}
-                        onPress={toggleSound}
-                      >
-                        <Icon name={soundEnabled ? "volume-high" : 'volume-xmark'} size={16} color={theme.lightestGray} />
-                      </TouchableOpacity>
-                    )
-                  }
-                  {
-                    media[currentMedia].media.media_type === 'picture' &&
-                    <LinearGradient
-                      colors={['transparent', hexToRgba(theme.heckaGray, 0.8), theme.heckaGray]}
-                      style={{ height: 130, width: '100%', position: 'absolute', bottom: 0, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 }}
-                    />
-                  }
-                </>
-              ) : (
-                <View style={[styles.impression, styles.commentContainer, { backgroundColor: media[currentMedia].user.color }]}>
-                  <ScrollView 
-                    style={{ width: '100%', marginBottom: 60, paddingTop: 50 }}
-                    onTouchStart={() => isScrollEnabled.current = true}
-                    onTouchEnd={() => isScrollEnabled.current = false}
-                    showsVerticalScrollIndicator={false}
+        {media.length > 0 ? (
+          <Animated.View
+            {...panResponder.panHandlers}
+            style={[
+              { transform: [{ translateY }, { translateX }] },
+              styles.impressionContainer,
+            ]}
+          >
+            {media[currentMedia].media !== null ? (
+              <>
+                <Media
+                  path={media[currentMedia].media.media_path}
+                  type={media[currentMedia].media.media_type}
+                  style={styles.impression}
+                  includeBottomShadow={true}
+                  soundEnabled={soundEnabled}
+                  declareLoadingState={setLoading}
+                />
+                {media[currentMedia].media.media_type === "video" && (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    style={styles.videoSoundContainer}
+                    onPress={toggleSound}
                   >
-                    <Text style={[
-                      styles.comment,
-                      { fontSize: getFontSizeOfComment(media[currentMedia].comment.comment) }
-                    ]}>{media[currentMedia].comment.comment}</Text>
-                    <EmptySpace size={60} />
-                  </ScrollView>
-                  <LinearGradient
-                    colors={[hexToRgba(media[currentMedia].user.color, 1), hexToRgba(media[currentMedia].user.color, 1), hexToRgba(media[currentMedia].user.color, 0)]}
-                    style={[styles.gradient, { top: 10 }]}
-                  />
-                  <LinearGradient
-                    colors={[hexToRgba(media[currentMedia].user.color, 0), hexToRgba(media[currentMedia].user.color, 1), hexToRgba(media[currentMedia].user.color, 1)]}
-                    style={[styles.gradient, { bottom: 60 }]}
-                  />
-                </View>
-              )}
-              {
-                media[currentMedia].group && (
-                  <View style={styles.impressionGroupContainer}>
-                    <Avatar 
-                      imagePath={media[currentMedia].group.group_image}
-                      type="group"
-                      style={styles.groupAvatar}
+                    <Icon
+                      name={soundEnabled ? "volume-high" : "volume-xmark"}
+                      size={16}
+                      color={theme.lightestGray}
                     />
-                    <Text 
-                      style={styles.groupText}
-                      numberOfLines={1}
-                      ellipsizeMode='tail'
-                    >{media[currentMedia].group.group_name}</Text>
+                  </TouchableOpacity>
+                )}
+                {media[currentMedia].media.media_type === "picture" && (
+                  <LinearGradient
+                    colors={[
+                      "transparent",
+                      hexToRgba(theme.heckaGray, 0.8),
+                      theme.heckaGray,
+                    ]}
+                    style={{
+                      height: 130,
+                      width: "100%",
+                      position: "absolute",
+                      bottom: 0,
+                      borderBottomLeftRadius: 40,
+                      borderBottomRightRadius: 40,
+                    }}
+                  />
+                )}
+              </>
+            ) : (
+              <View
+                style={[
+                  styles.impression,
+                  styles.commentContainer,
+                  { backgroundColor: media[currentMedia].user.color },
+                ]}
+              >
+                <ScrollView
+                  style={{ width: "100%", marginBottom: 120, paddingTop: 50 }}
+                  onTouchStart={() => (isScrollEnabled.current = true)}
+                  onTouchEnd={() => (isScrollEnabled.current = false)}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <Text
+                    style={[
+                      styles.comment,
+                      { fontSize: getFontSizeOfComment( media[currentMedia].comment.comment), },
+                    ]}
+                  >
+                    {media[currentMedia].comment.comment}
+                  </Text>
+                  <EmptySpace size={60} />
+                </ScrollView>
+                <Horizon
+                  size={60}
+                  direction="top"
+                  color={media[currentMedia].user.color}
+                  style={[styles.gradient, {top : 10}]}
+                />
+                <Horizon
+                  size={60}
+                  direction="bottom"
+                  color={media[currentMedia].user.color}
+                  style={[styles.gradient, {bottom : 120}]}
+                />
+              </View>
+            )}
+            {media[currentMedia].group && (
+              <View style={styles.impressionGroupContainer}>
+                <Avatar
+                  imagePath={media[currentMedia].group.group_image}
+                  type="group"
+                  style={styles.groupAvatar}
+                />
+                <Text
+                  style={styles.groupText}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {media[currentMedia].group.group_name}
+                </Text>
+              </View>
+            )}
+            <View style={styles.footerContainer}>
+              <View style={styles.firstLevelBottom}>
+                <View style={styles.authorContent}>
+                  <View
+                    style={[
+                      styles.avatarContainer,
+                      { borderColor: media[currentMedia].user.color },
+                    ]}
+                  >
+                    <Avatar
+                      imagePath={userAvatar}
+                      type="profile"
+                      style={styles.avatar}
+                    />
                   </View>
-                )
-              }
-              <View style={styles.footerContainer}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                  <View style={styles.authorContent}>
-                    <View style={[styles.avatarContainer, { borderColor: media[currentMedia].user.color }]}>
-                      <Avatar
-                        imagePath={userAvatar}
-                        type="profile"
-                        style={styles.avatar}
-                      />
-                    </View>
-                    <View style={styles.authorInformation}>
-                      <Text style={styles.authorName}>{userName}</Text>
-                      <Text style={styles.authorCreatedAt}>posted {timeSincePosted} ago</Text>
-                    </View>
+                  <View style={styles.authorInformation}>
+                    <Text style={styles.authorName} numberOfLines={1} ellipsizeMode="tail" >{userName}</Text>
+                    <Text style={styles.authorCreatedAt} numberOfLines={1} ellipsizeMode="tail">
+                      posted {timeSincePosted} ago
+                    </Text>
                   </View>
-                  <View style={styles.reactionBarContainer}>
-                    <View style={styles.actionBar}>
-                      <View style={styles.action}>
-                        <EmojiReaction 
-                          emoji={<Text style={{ fontSize: 30 }}>💬</Text>}
-                          onPress={handleSwipeUp}
-                        />
-                        <Text style={styles.actionText}>{commentCount}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.reactionBar}>
-                      {defaultEmojis.map((emoji, index) => (
-                        <EmojiReaction key={`emoji-button-${index}`} emoji={emoji} size={30} onPress={handleEmojiPress}/>
-                      ))}
-                      <EmojiReaction
-                        emoji={ <Icon name="circle-plus" size={30} color={theme.actionText} /> }
-                        onPress={() => {
-                          hapticImpactHeavy()
-                          setEmojiModalVisible(true) 
-                        }}
-                      />
-                    </View>
-                  </View>
+                </View>
+                <View style={styles.actionBar}>
+                  {reactions.length > 0 && (
+                    <ReactionView
+                      reactions={reactions}
+                      count={totalAmountOfReactions}
+                    />
+                  )}
+                  <FadeInView style={styles.action}>
+                    <EmojiReaction
+                      emoji={<Text style={{ fontSize: 30 }}>💬</Text>}
+                      onPress={handleSwipeUp}
+                    />
+                    <Text style={styles.actionText}>{commentCount}</Text>
+                  </FadeInView>
                 </View>
               </View>
-              {/* {loading && (
+              <View style={styles.reactionBarContainer}>
+                <View style={styles.reactionBar}>
+                  <View style={styles.emojiHistoryContainer}>
+                    {defaultEmojis.map((emoji, index) => (
+                      <EmojiReaction
+                        key={`emoji-button-${index}`}
+                        emoji={emoji}
+                        size={30}
+                        onPress={handleEmojiPress}
+                      />
+                    ))}
+                  </View>
+                  <EmojiReaction
+                    emoji={ <Icon name="circle-plus" size={30} color={'#fff'} /> }
+                    onPress={() => {
+                      hapticImpactHeavy();
+                      setModal(<EmojiModal emojiOnPress={handleEmojiPress} />);
+                      setVisible(true);
+                      setTitle(null);
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+            {/* {loading && (
                 <LoadingOverlay />
               )} */}
-            </Animated.View>
-          ) : (
-            <View style={styles.impression} />
-          )
-        }
+          </Animated.View>
+        ) : (
+          <View style={styles.impression} />
+        )}
       </View>
-      { emojis.map(emoji => emoji) }
-      {emojiModalVisible && (
-        <EmojiModal
-          setEmojiModalVisible={setEmojiModalVisible} 
-          emojiOnPress={handleEmojiPress}
-        />
-      )}
+      {emojis.map((emoji) => emoji)}
     </View>
-  )
+  );
 }
 
 function style(theme) {
@@ -500,13 +615,21 @@ function style(theme) {
     },
     footerContainer: {
       width: '100%',
-      paddingHorizontal: 10,
-      paddingBottom: 10,
+      paddingHorizontal: 0,
+      paddingBottom: 15,
       position: 'absolute',
       bottom: 0,
       flexDirection: 'column',
     },
+    firstLevelBottom: {
+      flex: 1,
+      paddingHorizontal: 15,
+      width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
     authorContent: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: 10
@@ -520,7 +643,7 @@ function style(theme) {
     authorCreatedAt: {
       fontSize: 13,
       fontFamily: 'nunito-bold',
-      color: theme.lightGray,
+      color: theme.lightestGray,
     },
     impressionContainer: {
       width: '100%',
@@ -533,20 +656,30 @@ function style(theme) {
       borderRadius: 40,
     },
     reactionBarContainer: {
+      paddingHorizontal: 10,
       justifyContent: 'center',
       alignItems: 'center',
     },
     reactionBar: {
       paddingHorizontal: 10,
       paddingVertical: 10,
-      flexDirection: 'column',
+      flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: hexToRgba(theme.primaryBackground, 0.8),
+      backgroundColor: hexToRgba(theme.primaryBackground, 0.5),
       borderRadius: 40,
     },
-    actionBar: { marginVertical: 10, },
+    emojiHistoryContainer: {
+      flex: 1,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginRight: 5,
+    },
+    actionBar: {
+      marginVertical: 10, 
+      flexDirection: 'row',
+    },
     action: {
       flexDirection: 'column',
       alignItems: 'center',
@@ -635,6 +768,25 @@ function style(theme) {
       position: 'absolute', 
       width: '100%', 
       height: 60
+    },
+    reactionBox: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+
+      position: 'absolute',
+    },
+    reactionText: {
+      fontSize: 30,
+    },
+    seeReactions: {
+      position: 'absolute',
+      bottom: 190,
+      left: 15,
+      fontSize: 16,
+      color: '#fff',
+      fontFamily: 'nunito-bold',
     }
   })
 }

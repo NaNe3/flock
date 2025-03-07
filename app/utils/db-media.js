@@ -159,13 +159,13 @@ export const updateLastImpression = async ({ user_id, recipient_id }) => {
 
 
 // media_id, sender_id, recipient_id, emoji
-export const reactToMedia = async ({ emoji, media_id, sender_id, recipient_id }) => {
+export const reactToMedia = async ({ emoji, activity_id, sender_id, recipient_id }) => {
   const { data, error } = await supabase
     .from('reaction')
     .insert([
       { 
         emoji: emoji, 
-        media_id: media_id, 
+        activity_id: activity_id, 
         sender_user_id: sender_id, 
         recipient_user_id: recipient_id 
       }
@@ -179,11 +179,48 @@ export const reactToMedia = async ({ emoji, media_id, sender_id, recipient_id })
   return { error: null } 
 }
 
+export const getReactionsByActivityId = async (activity_id) => {
+  const { data, error, count } = await supabase
+    .from('reaction')
+    .select(
+      `
+      reaction_id,
+      emoji,
+      sender_user_id ( id, full_name, avatar_path, color_id(color_hex))
+      `,
+      { count: 'exact' }
+    )
+    .eq('activity_id', activity_id)
+    .order('reaction_id', { ascending: false }) // adjust if needed (e.g. order by created_at)
+    .range(0, 2)  // gets the last three rows (based on this ordering)
+
+  if (error) {
+    console.error('Error getting reactions by activity id:', error)
+    return { error: error }
+  }
+
+  return {
+    count: count,
+    reactions: data.map(reaction => {
+      const { sender_user_id, ...other } = reaction
+      const { color_id, ...user } = sender_user_id
+
+      return {
+        ...other,
+        user: {
+          ...user,
+          color: color_id.color_hex
+        }
+      }
+    })
+  }
+}
+
 export const getReactionInformation = async (reaction_id) => {
   const { data, error } = await supabase
     .from('reaction')
     .select(`
-      media_id,
+      activity_id,
       sender_user_id ( id, full_name, avatar_path, color_id(color_hex))
     `)
     .eq('reaction_id', reaction_id)
@@ -200,11 +237,11 @@ export const getReactionInformation = async (reaction_id) => {
     full_name: full_name,
     avatar_path: avatar_path,
     color: color_id.color_hex,
-    media_id: data[0].media_id
+    activity_id: data[0].activity_id
   }
 }
 
-export const getLocationOfMedia = async (media_id) => {
+export const getLocationOfActivity = async (activity_id) => {
   const { data, error } = await supabase
     .from('activity')
     .select(`
@@ -213,7 +250,7 @@ export const getLocationOfMedia = async (media_id) => {
       chapter,
       verse
     `)
-    .eq('media_id', media_id)
+    .eq('activity_id', activity_id)
 
   if (error) {
     console.error('Error getting location of media:', error)
