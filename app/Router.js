@@ -21,7 +21,6 @@ import ReadingSummary from "./home/ReadingSummary";
 import ProfilePageRouter from './home/profile/ProfilePageRouter';
 import GroupDetailsRouter from './home/group/GroupDetailsRouter';
 
-import NavigationBar from "./components/NavigationBar";
 import FadeInView from "./components/FadeInView";
 
 import { dictateImpressionsSeen, getUserIdFromLocalStorage, setLocallyStoredVariable } from "./utils/localStorage"
@@ -45,8 +44,6 @@ export default function Router() {
   const [currentRoute, setCurrentRoute] = useState('Home')
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState(0)
-  const withoutBar = ['PremiumOffer', 'CreateGroup', 'Chapter', 'Capture', 'ReadingSummary', 'Profile', 'GroupDetails', 'EditGroupInfo', 'GroupDetailsRouter', 'AllGroupMembers', 'ViewImpressions', 'ProfilePageRouter', 'CommentPage', 'StreakView', 'PersonChat', 'Group', 'PersonProfile']
-  // const withoutBar = []
 
   const [realtimeData, setRealtimeData] = useState({})
 
@@ -145,9 +142,10 @@ export default function Router() {
             >
               <Stack.Screen
                 name='Landing'
-                component={Home}
                 options={{ animationEnabled: false }}
-              />
+              >
+                {props => <Home {...props} currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />}
+              </Stack.Screen>
 
               <Stack.Screen
                 name='Book'
@@ -258,12 +256,6 @@ export default function Router() {
                 }}
               />
             </Stack.Navigator>
-            {!withoutBar.includes(currentRoute) && (
-              <NavigationBar
-                currentRoute={currentRoute}
-                setCurrentRoute={setCurrentRoute}
-              />
-            )}
           </UniversalModalProvider>
         </RealtimeProvider>
       </NavigationContainer>

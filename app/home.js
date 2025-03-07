@@ -14,10 +14,11 @@ import { useTheme } from './hooks/ThemeProvider';
 import { useEffect, useState } from 'react';
 import FriendsPage from './home/FriendsPage';
 import { forPushFromLeft } from './utils/interpolations/forPushFromBottom';
+import NavigationBar from './components/NavigationBar';
 
 const Stack = createStackNavigator()
 
-export default function Home() {
+export default function Home({ currentRoute, setCurrentRoute }) {
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
@@ -53,6 +54,10 @@ export default function Home() {
           component={LibraryPage} 
         />
       </Stack.Navigator>
+      <NavigationBar
+        currentRoute={currentRoute}
+        setCurrentRoute={setCurrentRoute}
+      />
     </View>
   );
 }
