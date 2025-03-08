@@ -28,11 +28,6 @@ export default function NavigationBar({ currentRoute, setCurrentRoute }) {
       route: 'Home',
       name: 'home',
     },
-    // {
-    //   icon: 'users',
-    //   route: 'GroupPage',
-    //   name: 'groups',
-    // },
     {
       icon: 'message-bubble',
       route: 'FriendsPage',

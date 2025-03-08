@@ -62,8 +62,7 @@ export const getRelationships = async (user_id) => {
     const { data, error } = await supabase
       .from('relationship')
       .select(`
-        status,
-        invited_by,
+        status, invited_by, created_at,
         user_two (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex), last_impression),
         user_one (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex), last_impression)
       `)
@@ -145,6 +144,7 @@ const organizeGroupData = (user_id, data) => {
       ...user,
       is_leader: item.is_leader, 
       status: item.status,
+      created_at: item.created_at,
       last_studied: item.user.last_studied ? item.user.last_studied.created_at : null,
       color: color_id.color_hex
     })
@@ -175,11 +175,8 @@ export const getGroupsForUser = async (user_id) => {
     const { data, error } = await supabase
       .from('group_member')
       .select(`
-        group_id,
-        user_id,
-        is_leader,
-        status,
-        group (group_name, group_image, last_impression, plan_id),
+        group_id, user_id, is_leader, status,
+        group (group_name, group_image, last_impression, plan_id, created_at),
         user (id, fname, lname, avatar_path, last_studied(created_at), color_id(color_hex))
       `)
       .in('group_id', groupIds)

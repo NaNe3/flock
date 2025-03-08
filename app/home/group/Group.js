@@ -10,12 +10,14 @@ import { getLocalUriForFile } from '../../utils/db-download'
 import { hapticSelect } from '../../utils/haptics'
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from '../../utils/localStorage'
 import InviteRow from '../components/InviteRow'
-import { useTheme } from '../../hooks/ThemeProvider'
 import ChatView from '../components/ChatView'
 import { getMessagesInGroupChat } from '../../utils/db-message'
+import { useTheme } from '../../hooks/ThemeProvider'
+import { useHolos } from '../../hooks/HolosProvider'
 
 export default function Group({ navigation, route }) {
   const { theme } = useTheme()
+  const { messages: data } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
   const { group } = route.params
@@ -31,7 +33,7 @@ export default function Group({ navigation, route }) {
   const [groupMembers, setGroupMembers] = useState(members)
   const [groupStatus, setGroupStatus] = useState(status)
 
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(data[`group-${group_id}`])
 
   const init = async () => {
     const userGroups = JSON.parse(await getLocallyStoredVariable('user_groups'))
@@ -40,8 +42,8 @@ export default function Group({ navigation, route }) {
     const userId = await getUserIdFromLocalStorage()
     setUserId(userId)
 
-    const messages = await getMessagesInGroupChat({ group_id })
-    setMessages(messages)
+    // const messages = await getMessagesInGroupChat({ group_id })
+    // setMessages(messages)
   }
 
   useFocusEffect(

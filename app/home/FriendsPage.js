@@ -4,36 +4,36 @@ import { useFocusEffect } from "@react-navigation/native"
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from "../utils/localStorage"
-import PersonRow from "./components/PersonRow"
-import Avatar from "../components/Avatar"
-import { hapticImpactSoft, hapticSelect } from "../utils/haptics"
-import FadeInView from "../components/FadeInView"
+import { hapticSelect } from "../utils/haptics"
+import { getPrimaryColor } from "../utils/getColorVariety"
 import { useTheme } from "../hooks/ThemeProvider"
 import { useModal } from "../hooks/UniversalModalProvider"
-import GroupSelection from "./components/GroupSelection"
+import { useHolos } from "../hooks/HolosProvider"
+
+import PersonRow from "./components/PersonRow"
+import FadeInView from "../components/FadeInView"
 import GroupRow from "./components/GroupRow"
 import SearchBar from "./components/SearchBar"
-import { dateIsToday } from "../utils/authenticate"
 import NotificationIndicator from "../components/NotificationIndicator"
-import { getColorLight, getPrimaryColor } from "../utils/getColorVariety"
 import HugeIcon from "../components/HugeIcon"
 
 export default function FriendsPage({ navigation }) {
   const { visible, setVisible, setModal, setTitle, closeBottomSheet } = useModal()
+  const { chats } = useHolos()
   const { theme, currentTheme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
   const [userId, setUserId] = useState(null)
   const [color, setColor] = useState(null)
   const [query, setQuery] = useState('')
-  const [initialQueriesFinished, setInitialQueriesFinished] = useState(false)
+  const [initialQueriesFinished, setInitialQueriesFinished] = useState(true)
 
   const [requests, setRequests] = useState([])
   const [friends, setFriends] = useState([])
   const [groups, setGroups] = useState([])
 
   const [display, setDisplay] = useState([])
-  const [filteredDisplay, setFilteredDisplay] = useState([])
+  const [filteredDisplay, setFilteredDisplay] = useState(chats)
   const [newImpressions, setNewImpressions] = useState([])
 
   const [avatar, setAvatar] = useState(null)
@@ -58,40 +58,40 @@ export default function FriendsPage({ navigation }) {
     const userId = await getUserIdFromLocalStorage()
     setUserId(userId)
 
-    const result = JSON.parse(await getLocallyStoredVariable('user_groups')).map(group => {
-      const isGroupAccessible = group.members.find(member => member.id === userId).status
-      return { ...group, status: isGroupAccessible }
-    })
-    setGroups(result)
-    const display = [...friends, ...result]
-    const sortedDisplay = display.sort(
-      (a, b) => new Date(b.last_impression) - new Date(a.last_impression)
-    )
-    setDisplay(sortedDisplay)
-    setFilteredDisplay(sortedDisplay)
-    setInitialQueriesFinished(true)
+    // const result = JSON.parse(await getLocallyStoredVariable('user_groups')).map(group => {
+    //   const isGroupAccessible = group.members.find(member => member.id === userId).status
+    //   return { ...group, status: isGroupAccessible }
+    // })
+    // setGroups(result)
+    // const display = [...friends, ...result]
+    // const sortedDisplay = display.sort(
+    //   (a, b) => new Date(b.last_impression) - new Date(a.last_impression)
+    // )
+    // setDisplay(sortedDisplay)
+    // setFilteredDisplay(sortedDisplay)
+    // setInitialQueriesFinished(true)
 
-    const daily = JSON.parse(await getLocallyStoredVariable('daily_impressions'))
-    const assigned = sortedDisplay.map(item => {
-      if (item.group_id) {
-        const groupImpressions = daily.filter(impression => parseInt(item.group_id) === impression.group_id)
-        return {
-          group_id: item.group_id,
-          user_id: null,
-          count: groupImpressions.length,
-          items: groupImpressions
-        }
-      } else {
-        const userImpressions = daily.filter(impression => impression.user_id === item.id && impression.group_id === null)
-        return {
-          group_id: null,
-          user_id: item.id,
-          count: userImpressions.length,
-          items: userImpressions
-        }
-      }
-    })
-    setNewImpressions(assigned)
+    // const daily = JSON.parse(await getLocallyStoredVariable('daily_impressions'))
+    // const assigned = sortedDisplay.map(item => {
+    //   if (item.group_id) {
+    //     const groupImpressions = daily.filter(impression => parseInt(item.group_id) === impression.group_id)
+    //     return {
+    //       group_id: item.group_id,
+    //       user_id: null,
+    //       count: groupImpressions.length,
+    //       items: groupImpressions
+    //     }
+    //   } else {
+    //     const userImpressions = daily.filter(impression => impression.user_id === item.id && impression.group_id === null)
+    //     return {
+    //       group_id: null,
+    //       user_id: item.id,
+    //       count: userImpressions.length,
+    //       items: userImpressions
+    //     }
+    //   }
+    // })
+    // setNewImpressions(assigned)
 
     const user = JSON.parse(await getLocallyStoredVariable('user_information'))
     const userAvatar = user.avatar_path
@@ -113,7 +113,7 @@ export default function FriendsPage({ navigation }) {
 
   useEffect(() => { handleFilter() }, [query, display])
   const handleFilter = () => {
-    setFilteredDisplay(display.filter(item => {
+    setFilteredDisplay(chats.filter(item => {
       if (item.group_id) {
         return item.group_name.toLowerCase().includes(query.toLowerCase())
       } else {
@@ -143,7 +143,6 @@ export default function FriendsPage({ navigation }) {
             hapticSelect()
             navigation.navigate('AddFriend')
           }}>
-            {/* <Icon name='user-plus' size={20} color="gray" /> */}
             <HugeIcon icon='add-user' size={25} color="gray" />
             {requests.length > 0 && (
               <NotificationIndicator
@@ -159,21 +158,21 @@ export default function FriendsPage({ navigation }) {
       >
         {initialQueriesFinished && (
           <View style={styles.contentContainer}>
-            {display.length === 0 && (
+            {chats.length === 0 && (
               <View style={styles.disclaimer}>
                 <Text style={styles.disclaimerText}>add your friends to study the scriptures together!</Text>
               </View>
             )}
 
-            {display.length > 0 && filteredDisplay.length === 0 && (
+            {chats.length > 0 && filteredDisplay.length === 0 && (
               <View style={styles.disclaimer}>
                 <Text style={styles.disclaimerText}>you don't have any friends or groups by the name</Text>
                 <Text style={[styles.disclaimerText, styles.disclaimed]}>{query}</Text>
               </View>
             )}
 
-            {(display.length === 0 || filteredDisplay.length) === 0 && (
-              <TouchableOpacity 
+            {(chats.length === 0 || filteredDisplay.length === 0) && (
+              <TouchableOpacity
                 style={[styles.friendButton, { backgroundColor: color }]}
                 activeOpacity={0.7}
                 onPress={() => {
@@ -188,14 +187,12 @@ export default function FriendsPage({ navigation }) {
             {filteredDisplay.map((item, index) => {
               const type = item.group_id ? 'group' : 'person'
               const id = item.group_id ? item.group_id : item.id
-              let count = 0
-              if (newImpressions.length !== 0) {
-                count = newImpressions.find(impression => (type === 'group' && impression.group_id === id) || (type === 'person' && impression.user_id === id)).count
-              }
+              let count = item.unread
               
               return (
                 <FadeInView
                   style={styles.itemRow}
+                  time={300}
                   key={`item-${index}`}
                 >
                   {
@@ -224,9 +221,9 @@ export default function FriendsPage({ navigation }) {
                       if (type === 'group') {
                         navigation.navigate('Group', { group: item })
                       } else {
-                        // navigation.navigate('Person', { person: item })
-                        const content = newImpressions.find(impression => impression.user_id === id).items.map(item => item.activity_id)
-                        navigation.navigate('ViewImpressions', { activity_ids: content, title: item.fname + ' ' + item.lname })
+                        navigation.navigate('PersonChat', { person: item })
+                        // const content = newImpressions.find(impression => impression.user_id === id).items.map(item => item.activity_id)
+                        // navigation.navigate('ViewImpressions', { activity_ids: content, title: item.fname + ' ' + item.lname })
                       }
                     }}
                   >

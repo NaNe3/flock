@@ -20,6 +20,7 @@ export const formatFriendsFromSupabase = (data, user_id) => {
         invited_by: item.invited_by,
         color: color_id.color_hex,
         ...user,
+        created_at: item.created_at,
         last_studied: lastStudied,
       }
     })
@@ -33,6 +34,7 @@ export const formatFriendsFromSupabase = (data, user_id) => {
       invited_by: data.invited_by,
       color: color_id.color_hex,
       ...user,
+      created_at: data.created_at,
       last_studied: lastStudied,
     }
   }

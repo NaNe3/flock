@@ -6,7 +6,7 @@ import hexToRgba from "../../utils/hexToRgba"
 import Avatar from "../../components/Avatar"
 import FadeInView from "../../components/FadeInView"
 
-export default function ReactionView({ reactions, count }) {
+export default function ReactionView({ reactions, count, onPress }) {
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   const [displayedReactions, setDisplayedReactions] = useState([])
@@ -25,9 +25,7 @@ export default function ReactionView({ reactions, count }) {
     >
       <TouchableOpacity 
         activeOpacity={0.9}
-        onPress={() => {
-          console.log("see reactions")
-        }}
+        onPress={onPress}
         style={styles.avatars}
       >
         {displayedReactions.map((reaction, index) => {

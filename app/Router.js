@@ -36,6 +36,8 @@ import { RealtimeProvider } from "./hooks/RealtimeProvider"
 import UniversalModalProvider from "./hooks/UniversalModalProvider";
 import PersonProfile from "./home/PersonProfile";
 import PersonChat from "./home/profile/PersonChat";
+import ReactionPage from "./home/ReactionPage";
+import { HolosProvider } from "./hooks/HolosProvider";
 
 const Stack = createStackNavigator()
 
@@ -126,137 +128,146 @@ export default function Router() {
       setLoading={setLoading}
     />
   ) : (
-    <FadeInView time={1000} style={{ flex: 1, backgroundColor: theme.primaryBackground }} >
+    <FadeInView time={700} style={{ flex: 1, backgroundColor: theme.primaryBackground }} >
       <NavigationContainer
         theme={currentTheme === 'dark' ? DarkTheme : undefined}
         onStateChange={handleStateChange}
       >
         <RealtimeProvider realtimeData={realtimeData}>
-          <UniversalModalProvider>
-            <Stack.Navigator 
-              initialRouteName='Landing'
-              screenOptions={{
-                cardStyle: { backgroundColor: theme.primaryBackground },
-                headerShown: false,
-              }}
-            >
-              <Stack.Screen
-                name='Landing'
-                options={{ animationEnabled: false }}
+          <HolosProvider>
+            <UniversalModalProvider>
+              <Stack.Navigator 
+                initialRouteName='Landing'
+                screenOptions={{
+                  cardStyle: { backgroundColor: theme.primaryBackground },
+                  headerShown: false,
+                }}
               >
-                {props => <Home {...props} currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />}
-              </Stack.Screen>
+                <Stack.Screen
+                  name='Landing'
+                  options={{ animationEnabled: false }}
+                >
+                  {props => <Home {...props} currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />}
+                </Stack.Screen>
 
-              <Stack.Screen
-                name='Book'
-                component={Book}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen
-                name='Chapters'
-                component={Chapters}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen
-                name='Chapter'
-                component={Chapter}
-                options={{ animationEnabled: true, gestureEnabled: false }}
-              />
-              <Stack.Screen
-                name='Notifications'
-                component={NotificationsPage}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen
-                name='ProfilePageRouter'
-                component={ProfilePageRouter}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen
-                name='CreateGroup'
-                component={CreateGroup}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen
-                name='AddFriend'
-                component={AddFriend}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen
-                name='GroupPage'
-                component={GroupPage}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen
-                name='AddPeopleToGroup'
-                component={AddPeopleToGroup}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen 
-                name='PersonChat'
-                component={PersonChat}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen 
-                name='PersonProfile'
-                component={PersonProfile}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen 
-                name='Group'
-                component={Group}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen
-                name='GroupDetailsRouter'
-                component={GroupDetailsRouter}
-                options={{ animationEnabled: true }}
-              />
-              <Stack.Screen
-                name='PremiumOffer'
-                component={PremiumOffer}
-                options={{
-                  animationEnabled: true,
-                  ...TransitionPresets.ScaleFromCenterAndroid,
-                }}
-              />
-              <Stack.Screen
-                name='Capture'
-                component={Capture}
-                options={{
-                  animationEnabled: true,
-                  ...TransitionPresets.ScaleFromCenterAndroid,
-                }}
-              />
-              <Stack.Screen
-                name='ViewImpressions'
-                component={ViewImpressions}
-                options={{ 
-                  animationEnabled: true, gestureEnabled: false,
-                  ...TransitionPresets.ScaleFromCenterAndroid,
-                }}
-              />
-              <Stack.Screen 
-                name='ReadingSummary' component={ReadingSummary} options={{ 
-                  animationEnabled: true,
-                  ...TransitionPresets.ScaleFromCenterAndroid
-                }}
-              />
-              <Stack.Screen 
-                name='StreakView' component={StreakView} options={{ 
-                  animationEnabled: true, 
-                  ...TransitionPresets.ScaleFromCenterAndroid
-                }}
-              />
-              <Stack.Screen
-                name='CommentPage' component={CommentPage} options={{
-                  animationEnabled: true,
-                  gestureEnabled: false,
-                  cardStyleInterpolator: forPushFromBottom
-                }}
-              />
-            </Stack.Navigator>
-          </UniversalModalProvider>
+                <Stack.Screen
+                  name='Book'
+                  component={Book}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen
+                  name='Chapters'
+                  component={Chapters}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen
+                  name='Chapter'
+                  component={Chapter}
+                  options={{ animationEnabled: true, gestureEnabled: false }}
+                />
+                <Stack.Screen
+                  name='Notifications'
+                  component={NotificationsPage}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen
+                  name='ProfilePageRouter'
+                  component={ProfilePageRouter}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen
+                  name='CreateGroup'
+                  component={CreateGroup}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen
+                  name='AddFriend'
+                  component={AddFriend}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen
+                  name='GroupPage'
+                  component={GroupPage}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen
+                  name='AddPeopleToGroup'
+                  component={AddPeopleToGroup}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen 
+                  name='PersonChat'
+                  component={PersonChat}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen 
+                  name='PersonProfile'
+                  component={PersonProfile}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen 
+                  name='Group'
+                  component={Group}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen
+                  name='GroupDetailsRouter'
+                  component={GroupDetailsRouter}
+                  options={{ animationEnabled: true }}
+                />
+                <Stack.Screen
+                  name='PremiumOffer'
+                  component={PremiumOffer}
+                  options={{
+                    animationEnabled: true,
+                    ...TransitionPresets.ScaleFromCenterAndroid,
+                  }}
+                />
+                <Stack.Screen
+                  name='Capture'
+                  component={Capture}
+                  options={{
+                    animationEnabled: true,
+                    ...TransitionPresets.ScaleFromCenterAndroid,
+                  }}
+                />
+                <Stack.Screen
+                  name='ViewImpressions'
+                  component={ViewImpressions}
+                  options={{ 
+                    animationEnabled: true, gestureEnabled: false,
+                    ...TransitionPresets.ScaleFromCenterAndroid,
+                  }}
+                />
+                <Stack.Screen 
+                  name='ReadingSummary' component={ReadingSummary} options={{ 
+                    animationEnabled: true,
+                    ...TransitionPresets.ScaleFromCenterAndroid
+                  }}
+                />
+                <Stack.Screen 
+                  name='StreakView' component={StreakView} options={{ 
+                    animationEnabled: true, 
+                    ...TransitionPresets.ScaleFromCenterAndroid
+                  }}
+                />
+                <Stack.Screen
+                  name='CommentPage' component={CommentPage} options={{
+                    animationEnabled: true,
+                    gestureEnabled: false,
+                    cardStyleInterpolator: forPushFromBottom
+                  }}
+                />
+                <Stack.Screen
+                  name='ReactionPage' component={ReactionPage} options={{
+                    animationEnabled: true,
+                    gestureEnabled: false,
+                    cardStyleInterpolator: forPushFromBottom
+                  }}
+                />
+              </Stack.Navigator>
+            </UniversalModalProvider>
+          </HolosProvider>
         </RealtimeProvider>
       </NavigationContainer>
     </FadeInView>

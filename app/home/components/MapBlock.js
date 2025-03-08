@@ -9,6 +9,7 @@ import MapLine from "./MapLine";
 import { getColorLight, getPrimaryColor } from "../../utils/getColorVariety";
 import TouchableShrink from "../../components/TouchableShrink";
 import { hapticImpactSoft } from "../../utils/haptics";
+import FlagIcon from "../../svg/Flag";
 
 export default function MapBlock({ 
   navigation,
@@ -53,7 +54,7 @@ export default function MapBlock({
   return (
     <>
       <MapLine />
-      <Animated.View
+      <View
         style={[
           styles.container,
           (status === "locked" || forceLocked) ? styles.locked : status === "active" ? styles.active : styles.complete,
@@ -86,13 +87,16 @@ export default function MapBlock({
         </View>
         {status === "complete" && (
           // <Icon name={status === "complete" ? "arrow-rotate-right" : "play"} size={24} color={theme.secondaryText} style={{ marginTop: 5 }}/>
-          <Text style={[styles.activeText, { color: color, backgroundColor: light, }]}>
-            <Icon name="arrow-rotate-right" size={18} color={color !== null ? color : theme.secondaryText} style={{ marginTop: 5 }}/> study completed
-          </Text>
+          <View style={styles.completedContainer}>
+            <View style={[styles.flagContainer, { backgroundColor: light }]}>
+              <FlagIcon size={24} color={color} />
+              {/* <Text style={styles.flagText}>completed</Text> */}
+            </View>
+            <Text style={[styles.activeText, { color: theme.secondaryText, backgroundColor: theme.tertiaryBackground, }]}>
+              <Icon name="arrow-rotate-right" size={18} color={theme.secondaryText} style={{ marginTop: 10 }}/> review chapter
+            </Text>
+          </View>
         )}
-        {/* {status === "active" && (
-          <View style={styles.depressionContainer} />
-        )} */}
 
         {!forceLocked ? (
           <>
@@ -128,7 +132,7 @@ export default function MapBlock({
           </Text>
         )}
 
-      </Animated.View>
+      </View>
     </>
   )
 }
@@ -167,26 +171,6 @@ function style(theme) {
       color: theme.secondaryText,
       textAlign: "center",
     },
-    completedRow: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginTop: 10,
-    },
-    completedContainer: {
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 10,
-      backgroundColor: theme.quarternaryBackground,
-
-      color: theme.actionText,
-      fontFamily: "nunito-bold",
-      fontSize: 16,
-
-      // position: 'absolute',
-      // top: -15,
-      // right: 10,
-    },
     playButton: {
       width: "75%",
       marginTop: 5,
@@ -220,6 +204,16 @@ function style(theme) {
       fontSize: 16,
       marginTop: 5,
       color: theme.secondaryText,
+    },
+    completedContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    flagContainer: {
+      borderRadius: 10,
+      padding: 12,
+      backgroundColor: theme.tertiaryBackground,
+      marginRight: 10,
     },
   });
 }

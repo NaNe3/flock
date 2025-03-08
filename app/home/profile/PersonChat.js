@@ -2,33 +2,26 @@ import { useEffect, useState } from "react"
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
 import { useTheme } from "../../hooks/ThemeProvider"
+import { useHolos } from "../../hooks/HolosProvider"
 
 import SimpleHeader from "../../components/SimpleHeader"
 import PersonRow from "../components/PersonRow"
-import { getMessagesInPrivateChat } from "../../utils/db-message"
-import { getUserIdFromLocalStorage } from "../../utils/localStorage"
 import ChatView from "../components/ChatView"
 import HugeIcon from "../../components/HugeIcon"
-import { getPrimaryColor } from "../../utils/getColorVariety"
+import { getUserIdFromLocalStorage } from "../../utils/localStorage"
 
 export default function PersonChat({ navigation, route }) {
   const { person } = route.params
   const { theme } = useTheme()
+  const { messages: data } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(data[`friend-${person.id}`])
 
   const init = async () => {
     const userId = await getUserIdFromLocalStorage()
-    const messages = await getMessagesInPrivateChat({ sender_id: userId, recipient_id: person.id })
-    // const startBlocks = messages.reduce((acc, message, index) => {
-    //   if (index === 0 || message.author.id !== messages[index - 1].author.id) acc.push(index)
-    //   return acc
-    // }, [])
-    // setStartBlocks(startBlocks)
-
-    setMessages(messages)
+    await changeAllMessagesToSeenIn({ user_id: userId, friend_id: person.id })
   }
 
   useEffect(() => {

@@ -290,6 +290,14 @@ export default function ViewImpressions({ navigation, route }) {
     }
   }
 
+  const handleReactionPress = () => {
+    hapticImpactHeavy()
+    navigation.navigate("ReactionPage", {
+      activity_id: media[currentMedia].activity_id,
+    })
+    setDestination("reactions")
+  }
+
   const translateY = pan.y.interpolate({
     inputRange: [-300, 0, 300],
     outputRange: [-50, 0, 50],
@@ -532,6 +540,7 @@ export default function ViewImpressions({ navigation, route }) {
                     <ReactionView
                       reactions={reactions}
                       count={totalAmountOfReactions}
+                      onPress={handleReactionPress}
                     />
                   )}
                   <FadeInView style={styles.action}>

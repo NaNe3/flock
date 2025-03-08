@@ -374,8 +374,8 @@ function style(theme) {
       borderRadius: 100,
     },
     friendImage: {
-      width: 40,
-      height: 40,
+      width: 35,
+      height: 35,
       borderRadius: 40,
     },
     modal: {

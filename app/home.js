@@ -1,20 +1,15 @@
+import { useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native'
 import { createStackNavigator } from '@react-navigation/stack';
 
 import HomePage from './home/HomePage'
-// import MapPage from './home/MapPage';
-import GroupPage from './home/GroupPage'
-// import FriendsPage from './home/FriendsPage';
+import FriendsPage from './home/FriendsPage';
 import LibraryPage from './home/LibraryPage'
 
 import InteractiveHeaderBar from './components/InteractiveHeaderBar'
-import { View } from 'react-native'
-import { StyleSheet } from 'react-native'
-
-import { useTheme } from './hooks/ThemeProvider';
-import { useEffect, useState } from 'react';
-import FriendsPage from './home/FriendsPage';
-import { forPushFromLeft } from './utils/interpolations/forPushFromBottom';
 import NavigationBar from './components/NavigationBar';
+import { useTheme } from './hooks/ThemeProvider';
+import { forPushFromLeft } from './utils/interpolations/forPushFromBottom';
 
 const Stack = createStackNavigator()
 
