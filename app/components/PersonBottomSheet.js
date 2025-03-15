@@ -53,7 +53,7 @@ export default function PersonBottomSheet({
     setBuffering(true)
     if (state === 'friend' || state === 'pending') {
       // cancel request
-      await removeRelationship(userId, person.id)
+      await removeRelationship(person.relationship_id)
 
       const newFriends = friends.filter(friend => friend.id !== person.id)
       await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))

@@ -63,7 +63,7 @@ export default function BasicMessage({
       >
         <View style={styles.infoColumn}>
           <View style={[styles.replyBar, { backgroundColor: color }]} />
-          {isFirstInBlock && (
+          {/* {isFirstInBlock && (
             <View style={[styles.avatarContainer, { borderColor: color }]}>
               <Avatar
                 imagePath={message.author.avatar_path}
@@ -71,7 +71,7 @@ export default function BasicMessage({
                 style={styles.avatar}
               />
             </View>
-          )}
+          )} */}
         </View>
         <View style={styles.messageContent}>
           {/* <Text 
@@ -90,7 +90,7 @@ function style(theme) {
   return StyleSheet.create({
     message: {
       borderRadius: 10,
-      paddingVertical: 2,
+      // paddingVertical: 2,
       paddingHorizontal: 5,
       flexDirection: 'row',
     },
@@ -111,6 +111,7 @@ function style(theme) {
       flex: 1,
       flexDirection: 'column',
       marginLeft: 10,
+      paddingVertical: 2,
       justifyContent: 'center',
     },
     messageUser: {

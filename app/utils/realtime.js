@@ -1,8 +1,14 @@
-// LISTENERS
+export const createMessageListeners = (channel, user_id, group_ids, callback) => {
+  createListener(channel, 'INSERT', 'message', `recipient_id=eq.${user_id}`, (payload) => { callback(payload) })
+
+  group_ids.forEach(group_id => {
+    createListener(channel, 'INSERT', 'message', `group_id=eq.${group_id}`, (payload) => { callback(payload) })
+  })
+}
 
 export const createActivityListeners = (channel, users, callback) => {
-  users.forEach(user_id => {
-    createListener(channel, 'INSERT', 'activity', `user_id=eq.${user_id}`, (payload) => { callback(payload) })
+  users.forEach(user => {
+    createListener(channel, 'INSERT', 'activity', `user_id=eq.${user.id}`, (payload) => { callback(payload) })
   })
 }
 
@@ -36,6 +42,3 @@ const createListener = (channel, event, table, filter, callback) => {
     event: event, schema: 'public', table: table, filter: filter
   }, (payload) => callback(payload))
 }
-
-// REACT TO DATA UPDATING
-

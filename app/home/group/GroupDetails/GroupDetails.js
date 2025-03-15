@@ -13,10 +13,12 @@ import PersonBottomSheet from "../../../components/PersonBottomSheet"
 import { timeAgoGeneral } from "../../../utils/timeDiff"
 import { useTheme } from "../../../hooks/ThemeProvider"
 import PersonRow from "../../components/PersonRow"
+import { useHolos } from "../../../hooks/HolosProvider"
 
 export default function GroupDetails({ navigation, route }) {
   const { group_id, group_name, group_image, group_plan, members } = route.params.group
   const { theme } = useTheme()
+  const { groups } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
@@ -52,20 +54,18 @@ export default function GroupDetails({ navigation, route }) {
     getNecessaryData()
   }, [groupMembers])
 
-  const getUserGroupsFromLocalStorage = async () => {
-    const result = JSON.parse(await getLocallyStoredVariable('user_groups')).find(group => group.group_id === group_id)
+  const updateGroupDetailsInformation = async () => {
+    const group = groups.find(group => group.group_id === group_id)
 
-    setGroupName(result.group_name)
-    setGroupPlan(result.group_plan)
-    setGroupMembers(result.members)
-    setGroupAvatar(result.group_image)
+    setGroupName(group.group_name)
+    setGroupPlan(group.group_plan)
+    setGroupMembers(group.members)
+    setGroupAvatar(group.group_image)
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      getUserGroupsFromLocalStorage()
-    }, [])
-  )
+  useEffect(() => {
+    updateGroupDetailsInformation()
+  }, [groups])
 
   return (
     <View style={styles.container}>
@@ -120,7 +120,7 @@ export default function GroupDetails({ navigation, route }) {
                 })
               }}
             >
-              <Text style={styles.optionRowText}>invite friends</Text>
+              <Text style={styles.optionRowText}>Invite friends</Text>
               <Icon name="chevron-right" size={16} color={theme.secondaryText} />
             </TouchableOpacity>
             <TouchableOpacity 
@@ -135,7 +135,7 @@ export default function GroupDetails({ navigation, route }) {
                 })
               }}
             >
-              <Text style={styles.optionRowText}>see all members</Text>
+              <Text style={styles.optionRowText}>See all members</Text>
               <Icon name="chevron-right" size={16} color={theme.secondaryText} />
             </TouchableOpacity>
           </StrongContentBox>
@@ -244,18 +244,18 @@ function style(theme) {
       paddingBottom: 100
     },
     groupPhoto: {
-      borderRadius: 10,
+      borderRadius: 100,
       flex: 1,
       width: '100%',
     },
     groupPhotoContainer: {
-      width: 150,
+      width: 200,
       height: 200,
-      padding: 5,
+      padding: 7,
       marginVertical: 20,
-      borderWidth: 5,
+      borderRadius: 100,
+      borderWidth: 7,
       borderColor: theme.primaryBorder,
-      borderRadius: 20,
     }, 
     groupNameText: {
       fontFamily: 'nunito-bold',

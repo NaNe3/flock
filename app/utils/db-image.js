@@ -155,6 +155,13 @@ const createGroupMemberRelationships = async (group_id, leader, members) => {
       })
     ]
 
+    const chatStateRowsToAdd = [
+      { user_id: leader, group_id: group_id, },
+      ...members.map((member) => {
+        return { group_id: group_id, user_id: member.id, }
+      })
+    ]
+
     const { error } = await supabase
       .from('group_member')
       .insert(rowsToAdd)
@@ -162,9 +169,11 @@ const createGroupMemberRelationships = async (group_id, leader, members) => {
     if (error) {
       console.error('Error creating group member relationships:', error)
       return { error: error }
+    } else {
+      await supabase.from('chat_state').insert(chatStateRowsToAdd)
+      return { error: null }
     }
 
-    return { error: null }
   } catch (error) {
     console.error('Error creating group member relationships:', error)
     return { error: error }
@@ -185,7 +194,7 @@ export const createGroup = async (name, image, leader = 9, members, plan) => {
           return { error: groupMemberError }
         }
       }
-      return { status: "ok"}
+      return { status: "ok", group_id: groupData[0].group_id }
     } else {
       return { error: error }
     }
@@ -224,17 +233,7 @@ export const updateGroupAvatar = async ({ groupId, oldImage, newImage }) => {
     }
   }
 
-  // 5 - change group avatar in group local storage
-  const userGroups = JSON.parse(await getLocallyStoredVariable('user_groups'))
-  const newUserGroups = userGroups.map(group => {
-    if (group.group_id === groupId) {
-      return { ...group, group_image: uploadData.path }
-    }
-    return group
-  })
-  await setLocallyStoredVariable('user_groups', JSON.stringify(newUserGroups))
-
-  return { error: null }
+  return { path: uploadData.path, error: null }
 }
 
 export const updateGroupName = async ({ groupId, groupName }) => {
@@ -248,21 +247,6 @@ export const updateGroupName = async ({ groupId, groupName }) => {
     console.error('Error updating group name:', error)
     return { error: error }
   }
-
-  // 2 - change group name in group local storage
-  try {
-    const userGroups = JSON.parse(await getLocallyStoredVariable('user_groups'))
-    const newUserGroups = userGroups.map(group => {
-      if (group.group_id === groupId) {
-        return { ...group, group_name: groupName }
-      }
-      return group
-    })
-    await setLocallyStoredVariable('user_groups', JSON.stringify(newUserGroups))
-  } catch (error) {
-    console.log(error)
-  }
-
   return { error: null }
 }
 
@@ -290,9 +274,9 @@ export const deleteGroupByGroupId = async (groupId, groupAvatar) => {
       }
 
       // 5 - delete group from local storage
-      const userGroups = JSON.parse(await getLocallyStoredVariable('user_groups'))
-      const newGroups = userGroups.filter(group => group.group_id !== groupId)
-      await setLocallyStoredVariable('user_groups', JSON.stringify(newGroups))
+      // const userGroups = JSON.parse(await getLocallyStoredVariable('user_groups'))
+      // const newGroups = userGroups.filter(group => group.group_id !== groupId)
+      // await setLocallyStoredVariable('user_groups', JSON.stringify(newGroups))
       return { error: null }
     }
   } catch (error) {
@@ -312,6 +296,7 @@ export const leaveGroupByGroupId = async (groupId, userId, newLeader) => {
 
     // 2 - if newLeader is not null, create new leader
     if (!error) {
+      await supabase.from('chat_state').delete().eq('group_id', groupId).eq('user_id', userId)
       if (newLeader !== null) {
         const { error: newLeaderError } = await supabase
           .from('group_member')
@@ -329,7 +314,7 @@ export const leaveGroupByGroupId = async (groupId, userId, newLeader) => {
         return { error: null }
       }
     } else {
-      console.log('Error leaving group (supa):', error)
+      console.log('Error leaving group (super):', error)
       return { error: error }
     }
   } catch (error) {

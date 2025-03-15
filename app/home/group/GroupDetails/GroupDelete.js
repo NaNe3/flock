@@ -8,10 +8,12 @@ import BasicButton from "../../../components/BasicButton"
 
 import { deleteGroupByGroupId } from "../../../utils/db-image"
 import { useTheme } from "../../../hooks/ThemeProvider"
+import { useHolos } from "../../../hooks/HolosProvider"
 
 export default function GroupDelete({ navigation, route }) {
   const { group_id, group_name, group_image } = route.params
   const { theme } = useTheme()
+  const { setGroups } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
@@ -31,6 +33,8 @@ export default function GroupDelete({ navigation, route }) {
   const handleDeleteGroup = async () => {
     setDeleteButtonDisabled(true) 
     const { error } = await deleteGroupByGroupId(group_id, group_image)
+    setGroups(groups => groups.filter(group => group.group_id !== group_id))
+
     // TODO - handle error in group delete
     navigation.navigate('FriendsPage')
   }

@@ -117,7 +117,7 @@ function style(theme) {
       color: theme.darkGray,
     },
     premiumButton: {
-      backgroundColor: theme.secondaryColor,
+      backgroundColor: theme.primaryColor,
       paddingVertical: 8,
       paddingHorizontal: 10,
       borderRadius: 20,
@@ -153,9 +153,10 @@ function style(theme) {
       alignItems: 'center',
       borderRadius: 20,
       marginLeft: 10,
+      padding: 3,
     },
     streakText: {
-      marginHorizontal: 5,
+      marginRight: 5,
       fontSize: 14,
       color: '#fff',
     },

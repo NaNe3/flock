@@ -55,7 +55,7 @@ export default function NotificationBody({
     }
     clearNotificationTimer.current = setTimeout(() => {
       Animated.spring(translateY, {
-        toValue: -200,
+        toValue: -300,
         timing: 1000,
         useNativeDriver: false,
       }).start(() => proceed())
@@ -128,7 +128,11 @@ export default function NotificationBody({
           </View>
           <View style={styles.informationContainer}>
             <Text style={styles.informationHeader}>{title}</Text>
-            <Text style={styles.informationBody}>{body}</Text>
+            <Text 
+              style={styles.informationBody}
+              numberOfLines={3}
+              ellipsizeMode='tail'
+            >{body}</Text>
           </View>
           <Icon name='angle-down' size={20} color={theme.primaryText} />
         </TouchableOpacity>
@@ -147,6 +151,8 @@ function style(theme) {
       marginHorizontal: 20,
       borderRadius: 20,
       overflow: 'hidden',
+      borderWidth: 2,
+      borderColor: theme.primaryBorder,
     },
     notification: {
       flexDirection: 'row',
@@ -181,6 +187,7 @@ function style(theme) {
     },
     informationContainer: {
       flex: 1,
+      paddingRight: 10,
       justifyContent: 'center',
     },
     informationHeader: {
@@ -188,12 +195,11 @@ function style(theme) {
       fontSize: 15,
       fontWeight: 'bold',
       fontFamily: 'nunito-bold',
-      marginBottom: -3
     },
     informationBody: {
       color: theme.secondaryText,
-      fontSize: 14,
-      fontFamily: 'nunito-regular',
+      fontSize: 15,
+      fontFamily: 'nunito-bold',
     },
   })
 }

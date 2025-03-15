@@ -15,10 +15,11 @@ import { createGroup } from '../utils/db-image';
 import { hapticImpactSoft, hapticSelect } from '../utils/haptics';
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from '../utils/localStorage';
 import Avatar from '../components/Avatar';
-import { getGroupsForUser } from '../utils/db-relationship';
+import { getGroupById, getGroupsForUser } from '../utils/db-relationship';
 import { useTheme } from '../hooks/ThemeProvider';
 import PlanSelection from './components/PlanSelection';
 import { useModal } from '../hooks/UniversalModalProvider';
+import { useHolos } from '../hooks/HolosProvider';
 
 const GroupDetails = ({
   image,
@@ -143,7 +144,6 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
 
         {
           friendsAdded.map((friend, index) => {
-            console.log("friend: ", friend)
             const avatar = getLocalUriForFile(friend.avatar_path)
             return (
               <View key={index} style={styles.personRow}>
@@ -195,6 +195,7 @@ const GroupMembers = ({ friendsAdded, setFriendsAdded, setScreenVisible }) => {
 
 export default function CreateGroup({ navigation }) {
   const { theme } = useTheme()
+  const { setGroups } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
   const [leader, setLeader] = useState(null)
@@ -229,12 +230,15 @@ export default function CreateGroup({ navigation }) {
     setDisabled(true)
     setButtonText('Creating...')
 
-    const {status, error} = await createGroup(groupName, image, leader, friendsAdded, plan)
+    const {status, group_id, error} = await createGroup(groupName, image, leader, friendsAdded, plan)
 
     if (status === 'ok') {
       // ADD NEW GROUP TO LOCAL STORAGE
-      const { data } = await getGroupsForUser(leader)
-      await setLocallyStoredVariable('user_groups', JSON.stringify(data))
+      // const { data } = await getGroupsForUser(leader)
+      // await setLocallyStoredVariable('user_groups', JSON.stringify(data))
+
+      const { data, error } = await getGroupById(leader, group_id)
+      setGroups((prev) => [...prev, data[0]])
 
       navigation.goBack()
     } else {

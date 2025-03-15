@@ -9,24 +9,59 @@ import PersonRow from "../components/PersonRow"
 import ChatView from "../components/ChatView"
 import HugeIcon from "../../components/HugeIcon"
 import { getUserIdFromLocalStorage } from "../../utils/localStorage"
+import { updateLastMessageSeen } from "../../utils/db-message"
 
 export default function PersonChat({ navigation, route }) {
   const { person } = route.params
   const { theme } = useTheme()
-  const { messages: data } = useHolos()
+  const { messages, setChatStates } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
-  const [messages, setMessages] = useState(data[`friend-${person.id}`])
+  const [userId, setUserId] = useState(null)
+  const [chatMessages, setChatMessages] = useState(messages[`friend-${person.id}`])
 
-  const init = async () => {
-    const userId = await getUserIdFromLocalStorage()
-    await changeAllMessagesToSeenIn({ user_id: userId, friend_id: person.id })
-  }
 
   useEffect(() => {
+    const init = async () => {
+      const userId = await getUserIdFromLocalStorage()
+      setUserId(userId)
+
+      // actualizeChatState(userId)
+    }
+
     init()
   }, [])
+
+  useEffect(() => {
+    const msgs = messages[`friend-${person.id}`]
+    setChatMessages(msgs)
+  }, [messages])
+
+  // useEffect(() => {
+  //   if (userId !== null) {
+  //     actualizeChatState(userId)
+  //   }
+  // }, [chatMessages])
+
+  // const actualizeChatState = async (userId) => {
+  //   const msgs = messages[`friend-${person.id}`]
+  //   if (msgs) {
+  //     const lastMessage = msgs[msgs.length - 1].message_id
+  //     if (lastMessage) {
+  //       setChatStates(prev => {
+  //         return prev.map(chatState => {
+  //           if (chatState.relationship_id) {
+  //             if (chatState.relationship_id.user_one === person.id || chatState.relationship_id.user_two === person.id) {
+  //               return { ...chatState, new_message_count: 0 }
+  //             } else { return chatState }
+  //           } else { return chatState }
+  //         })
+  //       })
+  //       await updateLastMessageSeen({ user_id: userId, message_id: lastMessage, relationship_id: person.relationship_id })
+  //     }
+  //   }
+  // }
 
   return (
     <View style={styles.container}>
@@ -54,8 +89,7 @@ export default function PersonChat({ navigation, route }) {
       />
       <ChatView
         person={person}
-        messages={messages}
-        setMessages={setMessages}
+        messages={chatMessages}
       />
     </View>
   )
@@ -65,7 +99,7 @@ function style(theme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.primaryBackground,
+      backgroundColor: theme.secondaryBackground,
     },
     activeImpressionContainer: {
       flexDirection: 'row',

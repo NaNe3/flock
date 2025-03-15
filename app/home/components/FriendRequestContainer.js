@@ -7,9 +7,11 @@ import { hapticSelect } from "../../utils/haptics"
 import { resolveFriendRequest } from "../../utils/db-relationship"
 import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../../utils/localStorage"
 import { useTheme } from "../../hooks/ThemeProvider"
+import { useHolos } from "../../hooks/HolosProvider"
 
 export default function FriendRequestContainer({ navigation, requests, setRequests }) {
   const { theme } = useTheme()
+  const { setFriends, friends } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
   const [userId, setUserId] = useState(null)
@@ -24,6 +26,7 @@ export default function FriendRequestContainer({ navigation, requests, setReques
   }, [])
   
   const resolveRequest = async (friend, action) => {
+    console.log('Resolving request: ', friend, action)
     hapticSelect()
     // set status to accepted in relationship
     
@@ -31,20 +34,19 @@ export default function FriendRequestContainer({ navigation, requests, setReques
       const { error } = await resolveFriendRequest(userId, friend.id, action)
       if (!error) {
         // add request into friends
-        const friends = JSON.parse(await getLocallyStoredVariable('user_friends'))
         if (action === 'accepted') {
           const newFriends = [...friends, {...friend, status: 'accepted'}]
-          await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
+          setFriends(newFriends)
+          // await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
         } else {
           const newFriends = friends.filter(f => f.id !== friend.id)
-          await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
+          setFriends(newFriends)
+          // await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
         }
 
         // remove request from requests via setRequests
         const updatedRequests = requests.filter(request => request.id !== friend.id)
         setRequests(updatedRequests)
-
-        // localStorage friendRequests change to reflect new state
         await setLocallyStoredVariable('user_friend_requests', JSON.stringify(updatedRequests))
       }
     } catch (error) {

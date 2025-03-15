@@ -15,9 +15,11 @@ import { useTheme } from '../hooks/ThemeProvider'
 import SimpleHeader from '../components/SimpleHeader'
 import InvitePersonRow from './components/InvitePersonRow'
 import PersonRow from './components/PersonRow'
+import { useHolos } from '../hooks/HolosProvider'
 
 export default function AddFriend({ navigation }) {
   const { theme } = useTheme()
+  const { friends, setFriends, friendRequests, setFriendRequests } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
   const { incoming, requested } = useRealtime()
@@ -25,27 +27,20 @@ export default function AddFriend({ navigation }) {
   const [userId, setUserId] = useState(null)
   const [query, setQuery] = useState('')
 
-  const [friendIds, setFriendIds] = useState([])
-  const [friends, setFriends] = useState([])
+  const [friendIds, setFriendIds] = useState(friends.map(friend => friend.id))
+  // const [friends, setFriends] = useState([])
   const [outgoing, setOutgoing] = useState([])
   const [readyForFriends, setReadyForFriends] = useState(false)
-  const [friendRequests, setFriendRequests] = useState([])
+  // const [friendRequests, setFriendRequests] = useState([])
 
   const [searchResults, setSearchResults] = useState([])
   const [resultsBuffering, setResultsBuffering] = useState([])
 
-  const getUserFriends = async () => {
-    const result = JSON.parse(await getLocallyStoredVariable('user_friends'))
-    setFriends(result)
-    setFriendIds(result.map(friend => friend.id))
-
-    setOutgoing(result.filter(friend => friend.status === 'pending' && friend.invited_by === userId))
-  }
-
   const init = async () => {
-    const id = await getUserIdFromLocalStorage()
-    setUserId(id)
-    getFriendRequests()
+    const userId = await getUserIdFromLocalStorage()
+    setUserId(userId)
+
+    setOutgoing(friends.filter(friend => friend.status === 'pending' && friend.invited_by === userId))
   }
 
   const getFriendRequests = async () => {
@@ -56,7 +51,6 @@ export default function AddFriend({ navigation }) {
 
   useEffect(() => {
     if (incoming !== null || requested !== null) {
-      getUserFriends()
       getFriendRequests()
     }
   }, [incoming, requested])
@@ -77,10 +71,6 @@ export default function AddFriend({ navigation }) {
     }
   }, [query])
 
-  useEffect(() => {
-    if (readyForFriends) getUserFriends()
-  }, [friendRequests])
-
   const handleRequest = async (friendId) => {
     hapticSelect()
     setResultsBuffering([...resultsBuffering, friendId])
@@ -89,11 +79,11 @@ export default function AddFriend({ navigation }) {
       try {
         const { data } = await createRelationship(userId, friendId, 'pending')
 
-        const newFriends = [...friends, { 
+        const newFriends = [...friends, {
           status: 'pending',
           ...data
         }]
-        await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
+        // await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
         setFriends(newFriends)
         setOutgoing(prev => [...prev, data])
         setFriendIds(prev => [...prev, friendId])
@@ -104,10 +94,11 @@ export default function AddFriend({ navigation }) {
     } else {
       // IF FRIEND IS BEING REMOVED
       try {
-        await removeRelationship(userId, friendId)
+        const relationshipId = friends.find(friend => friend.id === friendId).relationship_id
+        await removeRelationship(relationshipId)
 
         const newFriends = friends.filter(friend => friend.id !== friendId)
-        await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
+        // await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
         setFriends(newFriends)
         setOutgoing(newFriends.filter(friend => friend.status === 'pending' && friend.invited_by === userId))
         setFriendIds(prev => prev.filter(id => id !== friendId))
@@ -128,9 +119,6 @@ export default function AddFriend({ navigation }) {
       <SimpleHeader
         navigation={navigation}
         title='Add friends'
-        rightIcon={
-          <Icon name='inbox' size={20} color={theme.primaryText} />
-        }
       />
       <View style={styles.headerContainer}>
         <View style={styles.searchBarContainer}>

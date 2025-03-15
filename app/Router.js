@@ -6,13 +6,12 @@ import Home from "./home";
 import Book from './home/Book';
 import Capture from "./home/Capture";
 import Chapter from './home/Chapter';
-import Group from './home/group/Group';
 import Chapters from './home/Chapters';
 import AddFriend from './home/AddFriend';
-// import CreatePlan from './home/CreatePlan';
 import StreakView from "./home/StreakView";
 import CommentPage from "./home/CommentPage";
 import CreateGroup from './home/CreateGroup';
+import GroupChat from "./home/group/GroupChat";
 import PremiumOffer from './home/PremiumOffer';
 import ViewImpressions from "./home/ViewImpressions";
 import AddPeopleToGroup from './home/AddPeopleToGroup';
@@ -38,16 +37,19 @@ import PersonProfile from "./home/PersonProfile";
 import PersonChat from "./home/profile/PersonChat";
 import ReactionPage from "./home/ReactionPage";
 import { HolosProvider } from "./hooks/HolosProvider";
+import { getChatStates, getMessagesFromFriendsAndGroups } from "./utils/db-message";
 
 const Stack = createStackNavigator()
 
 export default function Router() {
   const { theme, currentTheme } = useTheme()
   const [currentRoute, setCurrentRoute] = useState('Home')
+  const [route, setRoute] = useState(null)
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState(0)
 
   const [realtimeData, setRealtimeData] = useState({})
+  const [holosData, setHolosData] = useState({})
 
   const handleStateChange = (state) => {
     const routeName = state.routes[state.index].name
@@ -55,15 +57,32 @@ export default function Router() {
       const indexRoute = state.routes[state.index].state.index
       const route = state.routes[state.index].state.routes[indexRoute].name
       setCurrentRoute(route)
+      setRoute(state.routes[state.index].state.routes[indexRoute])
     } else {
       setCurrentRoute(routeName)
+      // console.log(state.routes[state.index])
+      setRoute(state.routes[state.index])
     }
   }
 
   useEffect(() => {
+    let groupIdsLocal = []
+    let friendIdsLocal = []
+
     const getUserGroups = async (userId) => {
       const { data } = await getGroupsForUser(userId)
-      await setLocallyStoredVariable('user_groups', JSON.stringify(data))
+      const groups = data.map(group => {
+        const isGroupAccessible = group.members.find(member => member.id === userId).status
+        return {
+          ...group,
+          status: isGroupAccessible,
+        }
+      })
+      const groupIds = groups.map(group => group.group_id)
+      groupIdsLocal = groupIds
+
+      setRealtimeData(prev => ({ ...prev, groups: groups, groupIds: groupIds }))
+      await setLocallyStoredVariable('user_groups', JSON.stringify(groups))
       setProgress(prev => prev + 1)
     }
     const getUserPlan = async (userId) => {
@@ -78,12 +97,15 @@ export default function Router() {
     }
     const getUserFriends = async (userId) => {
       const { data } = await getRelationships(userId)
-      setRealtimeData(prev => ({ ...prev, friends: data }))
+      const friendIds = data.filter(friend => friend.status === 'accepted').map(friend => friend.id)
+      friendIdsLocal = friendIds
+      setRealtimeData(prev => ({ ...prev, friends: data, friendIds: friendIds }))
       await setLocallyStoredVariable('user_friends', JSON.stringify(data))
       setProgress(prev => prev + 1)
     }
     const getUserFriendRequests = async (userId) => {
       const { data } = await getFriendRequestsByUserId(userId)
+      setRealtimeData(prev => ({ ...prev, friendRequests: data }))
       await setLocallyStoredVariable('user_friend_requests', JSON.stringify(data))
       setProgress(prev => prev + 1)
     }
@@ -98,6 +120,21 @@ export default function Router() {
       await setLocallyStoredVariable('daily_impressions', JSON.stringify(data))
       await dictateImpressionsSeen()
 
+      setProgress(prev => prev + 1)
+    }
+    const getChatStatesOfUser = async (userId) => {
+      // ORGANIZE THE CHATS BY LATEST MESSAGE/UPDATE
+      // potential problem: each chat will require an additional API call
+      const chatStates = await getChatStates({ user_id: userId })
+      setHolosData(prev => ({ ...prev, chatStates: chatStates }))
+      setProgress(prev => prev + 1)
+    }
+    const getMessages = async (userId) => {
+      const groupIds = groupIdsLocal
+      const friendIds = friendIdsLocal
+      // potential problem: each chat will require an additional API call for messages
+      const messages = await getMessagesFromFriendsAndGroups({ sender_id: userId, group_ids: groupIds, friend_ids: friendIds })
+      setHolosData(prev => ({ ...prev, messages: messages }))
       setProgress(prev => prev + 1)
     }
     const checkNotifications = async () => {
@@ -115,6 +152,10 @@ export default function Router() {
       await getUserFriendRequests(userId)
       await getUserLogs(userId)
       await getImpressions(userId)
+      // potentially move back to holosProvider to ensure quick loading times
+      await getChatStatesOfUser(userId)
+      await getMessages(userId)
+      // above =====================================
       await checkNotifications()
     }
 
@@ -124,17 +165,23 @@ export default function Router() {
   return loading ? (
     <LoadingScreen 
       progress={progress} 
-      steps={7} 
+      steps={9} 
       setLoading={setLoading}
     />
   ) : (
-    <FadeInView time={700} style={{ flex: 1, backgroundColor: theme.primaryBackground }} >
+    <FadeInView time={1000} style={{ flex: 1, backgroundColor: theme.primaryBackground }} >
       <NavigationContainer
         theme={currentTheme === 'dark' ? DarkTheme : undefined}
         onStateChange={handleStateChange}
       >
-        <RealtimeProvider realtimeData={realtimeData}>
-          <HolosProvider>
+        <HolosProvider 
+          realtimeData={realtimeData}
+          holosData={holosData}
+        >
+          <RealtimeProvider 
+            realtimeData={realtimeData}
+            route={route}
+          >
             <UniversalModalProvider>
               <Stack.Navigator 
                 initialRouteName='Landing'
@@ -206,8 +253,8 @@ export default function Router() {
                   options={{ animationEnabled: true }}
                 />
                 <Stack.Screen 
-                  name='Group'
-                  component={Group}
+                  name='GroupChat'
+                  component={GroupChat}
                   options={{ animationEnabled: true }}
                 />
                 <Stack.Screen
@@ -267,8 +314,8 @@ export default function Router() {
                 />
               </Stack.Navigator>
             </UniversalModalProvider>
-          </HolosProvider>
-        </RealtimeProvider>
+          </RealtimeProvider>
+        </HolosProvider>
       </NavigationContainer>
     </FadeInView>
   )

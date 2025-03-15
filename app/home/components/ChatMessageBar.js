@@ -4,13 +4,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import { useTheme } from "../../hooks/ThemeProvider"
-import { getPrimaryColor } from "../../utils/getColorVariety"
-import { getLocallyStoredVariable, getUserIdFromLocalStorage } from "../../utils/localStorage"
+import { getLocallyStoredVariable } from "../../utils/localStorage"
 import { sendMessageInPrivateChat, sendMessageToGroupChat } from "../../utils/db-message"
+import { useHolos } from "../../hooks/HolosProvider"
 
-
-export default function ChatMessageBar({ recipient_id, group_id, setMessages }) {
+export default function ChatMessageBar({ recipient_id, group_id }) {
   const { theme } = useTheme()
+  const { setMessages } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
   const insets = useSafeAreaInsets()
@@ -59,24 +59,17 @@ export default function ChatMessageBar({ recipient_id, group_id, setMessages }) 
 
   const handlePress = async () => {
     if (message.length > 0) {
+      let published
       if (recipientId !== null && recipientId !== undefined) {
-        await sendMessageInPrivateChat({ sender_id: userId, recipient_id: recipientId, message })
+        published = await sendMessageInPrivateChat({ sender_id: userId, recipient_id: recipientId, message })
       } else {
-        await sendMessageToGroupChat({ group_id: group_id, sender_id: userId, message })
+        published = await sendMessageToGroupChat({ group_id: group_id, sender_id: userId, message })
       }
 
-      const newMessages = {
-        message: message,
-        created_at: new Date().toISOString(),
-        author: {
-          id: userId,
-          avatar_path: avatarPath,
-          color: color,
-          full_name: 'You'
-        }
-      }
-
-      setMessages(prev => [...prev, newMessages])
+      const key = (recipientId !== null && recipientId !== undefined) ? `friend-${recipientId}` : `group-${group_id}`
+      setMessages(prev => {
+        return { ...prev, [key]: [...prev[key], published] }
+      })
       setMessage('')
     }
   }
@@ -91,7 +84,7 @@ export default function ChatMessageBar({ recipient_id, group_id, setMessages }) 
         <TextInput
           multiline
           style={styles.messageInput}
-          placeholder={'I dislike Laman'}
+          placeholder={'I dislike Laban'}
           placeholderTextColor="gray"
           value={message}
           onChangeText={handleChangeMessage}

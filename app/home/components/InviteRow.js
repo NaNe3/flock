@@ -5,8 +5,12 @@ import { acceptGroupInvitation, rejectGroupInvitation } from "../../utils/db-rel
 import { hapticSelect } from "../../utils/haptics"
 
 import AcceptReject from "./AcceptReject"
+import { removeSingleGroupChatState } from "../../utils/db-message"
+import { useHolos } from "../../hooks/HolosProvider"
 
-export default InviteRow = ({ navigation, groups, setGroups, setGroupStatus, userId, groupId }) => {
+export default InviteRow = ({ navigation, setGroupStatus, userId, groupId }) => {
+  const { groups, setGroups } = useHolos()
+
   const accept = () => {
     hapticSelect()
     acceptGroupInvitation(userId, groupId)
@@ -21,20 +25,12 @@ export default InviteRow = ({ navigation, groups, setGroups, setGroupStatus, use
   const reject = async () => {
     hapticSelect()
     await rejectGroupInvitation(userId, groupId)
-    // update group status in local storage and hook
+    await removeSingleGroupChatState(userId, groupId)
 
-    if (setGroupStatus) {
-      setGroupStatus('rejected')
-      const newGroups = groups.filter(g => g.group_id !== groupId)
-      await setLocallyStoredVariable('user_groups', JSON.stringify(newGroups))
-      navigation.goBack()
-    }
-    if (!setGroups) return
     setGroups(prev => {
-      const newGroups = prev.filter(g => g.group_id !== groupId)
-      setLocallyStoredVariable('user_groups', JSON.stringify(newGroups))
-      return newGroups
+      return prev.filter(g => g.group_id !== groupId)
     })
+    navigation.goBack()
   }
   return (
     <AcceptReject accept={accept} reject={reject} />

@@ -23,15 +23,13 @@ export default function TouchableShrink({ onPress, style, children }) {
       toValue: 1,
       duration: 100,
       useNativeDriver: true
-    }).start(() => {
-      onPress()
-    })
+    }).start()
   }
 
   return (
     <TouchableOpacity
       activeOpacity={1} 
-      // onPress={handlePress}
+      onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={style}

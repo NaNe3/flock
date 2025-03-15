@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
-import { useFocusEffect } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import SimpleHeader from '../../components/SimpleHeader'
@@ -11,24 +10,22 @@ import { hapticSelect } from '../../utils/haptics'
 import { getLocallyStoredVariable, getUserIdFromLocalStorage } from '../../utils/localStorage'
 import InviteRow from '../components/InviteRow'
 import ChatView from '../components/ChatView'
-import { getMessagesInGroupChat } from '../../utils/db-message'
+import { updateLastMessageSeen } from '../../utils/db-message'
 import { useTheme } from '../../hooks/ThemeProvider'
 import { useHolos } from '../../hooks/HolosProvider'
 
-export default function Group({ navigation, route }) {
-  const { theme } = useTheme()
-  const { messages: data } = useHolos()
-  const [styles, setStyles] = useState(style(theme))
-  useEffect(() => { setStyles(style(theme)) }, [theme])
+export default function GroupChat({ navigation, route }) {
   const { group } = route.params
   const { group_id, group_name, group_image, group_plan, members, status } = group
-  const group_avatar = getLocalUriForFile(group_image)
+  const { theme } = useTheme()
+  const { messages: data, groups } = useHolos()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
   
   const [userId, setUserId] = useState(null)
-  const [groups, setGroups] = useState([])
 
   const [groupName, setGroupName] = useState(group_name)
-  const [groupAvatar, setGroupAvatar] = useState(group_avatar)
+  const [groupAvatar, setGroupAvatar] = useState(getLocalUriForFile(group_image))
   const [groupPlan, setGroupPlan] = useState(group_plan)
   const [groupMembers, setGroupMembers] = useState(members)
   const [groupStatus, setGroupStatus] = useState(status)
@@ -36,31 +33,38 @@ export default function Group({ navigation, route }) {
   const [messages, setMessages] = useState(data[`group-${group_id}`])
 
   const init = async () => {
-    const userGroups = JSON.parse(await getLocallyStoredVariable('user_groups'))
-    setGroups(userGroups)
-
     const userId = await getUserIdFromLocalStorage()
     setUserId(userId)
 
-    // const messages = await getMessagesInGroupChat({ group_id })
-    // setMessages(messages)
+    const messages = data[`group-${group_id}`]
+    if (messages) {
+      const lastMessage = messages[messages.length - 1]
+      if (lastMessage) {
+        await updateLastMessageSeen({ user_id: userId, message_id: lastMessage.message_id, group_id })
+      }
+    }
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      const getUserGroupsFromLocalStorage = async () => {
-        const result = JSON.parse(await getLocallyStoredVariable('user_groups')).find(group => group.group_id === group_id)
+  const updateGroupDetailsInformation = async () => {
+    const group = groups.find(group => group.group_id === group_id)
 
-        setGroupName(result.group_name)
-        setGroupAvatar(result.group_image)
-        setGroupPlan(result.group_plan)
-        setGroupMembers(result.members)
-      }
+    setGroupName(group.group_name)
+    setGroupPlan(group.group_plan)
+    setGroupMembers(group.members)
+    setGroupAvatar(group.group_image)
+  }
 
-      init()
-      getUserGroupsFromLocalStorage()
-    }, [])
-  )
+  useEffect(() => {
+    init()
+  }, [])
+
+  useEffect(() => {
+    setMessages(data[`group-${group_id}`])
+  }, [data])
+
+  useEffect(() => {
+    updateGroupDetailsInformation()
+  }, [groups])
 
   return (
     <View style={styles.container}>
@@ -82,12 +86,14 @@ export default function Group({ navigation, route }) {
               )
             }}
           >
-            <Avatar 
-              imagePath={groupAvatar}
-              type="group"
-              style={styles.groupPhoto}
-            />
-            <View style={{ flex: 1 }}>
+            <View style={styles.groupPhotoContainer}>
+              <Avatar 
+                imagePath={groupAvatar}
+                type="group"
+                style={styles.groupPhoto}
+              />
+            </View>
+            <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={styles.groupName} numberOfLines={1} ellipsizeMode='tail' >{groupName}</Text>
               <Text style={{ color: theme.gray, fontFamily: 'nunito-bold' }}>
                 <Icon name="users" color={theme.gray }/> {groupMembers.length} MEMBERS
@@ -101,7 +107,7 @@ export default function Group({ navigation, route }) {
         groupStatus === 'pending' && (
           <View style={styles.landingContainer}>
             <View style={styles.planLayoutContainer}>
-              <InviteRow 
+              <InviteRow
                 navigation={navigation}
                 groups={groups}
                 setGroupStatus={setGroupStatus} 
@@ -144,12 +150,20 @@ function style(theme) {
       // marginTop: -600,
       // display: 'none'
     },
+    groupPhotoContainer: {
+      padding: 2,
+      borderWidth: 3,
+      borderColor: theme.primaryBorder,
+      width: 50,
+      height: 50,
+      borderRadius: 50,
+      overflow: 'hidden',
+    },
     groupPhoto: {
-      width: 35,
-      height: 42,
-      backgroundColor: theme.lightestGray,
-      borderRadius: 5,
-      marginRight: 10
+      width: '100%',
+      height: '100%',
+      borderRadius: 50,
+      backgroundColor: theme.tertiaryBackground,
     },
     groupName: {
       fontSize: 18,

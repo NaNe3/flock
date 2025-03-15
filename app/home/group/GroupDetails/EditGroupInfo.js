@@ -11,10 +11,12 @@ import { hapticSelect } from "../../../utils/haptics"
 import { updateGroupAvatar, updateGroupName } from "../../../utils/db-image"
 import { getLocalUriForFile } from "../../../utils/db-download"
 import { useTheme } from "../../../hooks/ThemeProvider"
+import { useHolos } from "../../../hooks/HolosProvider"
 
 export default function EditGroupInfo({ navigation, route }) {
   const { group_id, group_name, group_image } = route.params
   const { theme } = useTheme()
+  const { setGroups } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
@@ -48,10 +50,30 @@ export default function EditGroupInfo({ navigation, route }) {
   const handleSaveButtonPress = async () => {
     setSaveButtonDisabled(true)
     if (image !== avatarFormatted) {
-      const { error } = await updateGroupAvatar({ groupId: group_id, newImage: image, oldImage: group_image })
+      const { path, error } = await updateGroupAvatar({ groupId: group_id, newImage: image, oldImage: group_image })
+      if (!error) {
+        setGroups(prev => {
+          return prev.map(group => {
+            if (group.group_id === group_id) {
+              return { ...group, group_image: path }
+            }
+            return group
+          })
+        })
+      }
     }
     if (groupName !== group_name) {
       const { error } = await updateGroupName({ groupId: group_id, groupName: groupName })
+      if (!error) {
+        setGroups(prev => {
+          return prev.map(group => {
+            if (group.group_id === group_id) {
+              return { ...group, group_name: groupName }
+            }
+            return group
+          })
+        })
+      }
     }
     navigation.goBack()
   }

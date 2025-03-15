@@ -1,26 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome6'
 
 import { useTheme } from "../hooks/ThemeProvider";
+import { useHolos } from "../hooks/HolosProvider";
 import SimpleHeader from "../components/SimpleHeader";
 import Avatar from "../components/Avatar";
-import { getColorLight } from "../utils/getColorVariety";
-import FAIcon from "../components/FAIcon";
-import { getLocallyStoredVariable, getUserIdFromLocalStorage, setLocallyStoredVariable } from "../utils/localStorage";
+import { getUserIdFromLocalStorage } from "../utils/localStorage";
 import { createRelationship, removeRelationship } from "../utils/db-relationship";
 import { hapticSelect } from "../utils/haptics";
 
 export default function PersonProfile({ navigation, route }) {
   const { person } = route.params
   const { theme } = useTheme()
+  const { friends, setFriends } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
   const [userId, setUserId] = useState(null)
-  const [friends, setFriends] = useState([])
   const [state, setState] = useState(null)
   const [buffering, setBuffering] = useState(false)
+  const noLongerFriend = useRef(false)
 
   const [streak, setStreak] = useState(person.current_streak)
   const [impressionCount, setImpressionCount] = useState(0)
@@ -30,9 +30,7 @@ export default function PersonProfile({ navigation, route }) {
   useEffect(() => {
     const init = async () => {
       const userId = await getUserIdFromLocalStorage()
-      const friends = JSON.parse(await getLocallyStoredVariable('user_friends'))
       setUserId(userId)
-      setFriends(friends)
     }
 
     init()
@@ -54,11 +52,11 @@ export default function PersonProfile({ navigation, route }) {
     setBuffering(true)
     if (state === 'friend' || state === 'pending') {
       // cancel request
-      await removeRelationship(userId, person.id)
+      await removeRelationship(person.relationship_id)
 
       const newFriends = friends.filter(friend => friend.id !== person.id)
-      await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
       setFriends(newFriends)
+      noLongerFriend.current = true
     } else {
       // add friend
       const { data } = await createRelationship(userId, person.id, 'pending')
@@ -67,7 +65,6 @@ export default function PersonProfile({ navigation, route }) {
         status: 'pending',
         ...data
       }]
-      await setLocallyStoredVariable('user_friends', JSON.stringify(newFriends))
       setFriends(newFriends)
     }
     setBuffering(false)
@@ -77,6 +74,13 @@ export default function PersonProfile({ navigation, route }) {
     <View style={styles.container}>
       <SimpleHeader
         navigation={navigation}
+        functionalNavigation={() => {
+          if (noLongerFriend.current) {
+            navigation.navigate('FriendsPage')
+          } else {
+            navigation.goBack()
+          }
+        }}
         title={`${person.fname} ${person.lname}`}
       />
       <ScrollView style={styles.contentContainer}>

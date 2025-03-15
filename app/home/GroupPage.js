@@ -37,7 +37,7 @@ const GroupBox = ({
         activeOpacity={0.7}
         style={styles.groupContainer}
         onPress={() => {
-          navigation.navigate('Group', {
+          navigation.navigate('GroupChat', {
             groups,
             group_id,
             group_name,

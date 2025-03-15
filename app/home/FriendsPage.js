@@ -58,41 +58,6 @@ export default function FriendsPage({ navigation }) {
     const userId = await getUserIdFromLocalStorage()
     setUserId(userId)
 
-    // const result = JSON.parse(await getLocallyStoredVariable('user_groups')).map(group => {
-    //   const isGroupAccessible = group.members.find(member => member.id === userId).status
-    //   return { ...group, status: isGroupAccessible }
-    // })
-    // setGroups(result)
-    // const display = [...friends, ...result]
-    // const sortedDisplay = display.sort(
-    //   (a, b) => new Date(b.last_impression) - new Date(a.last_impression)
-    // )
-    // setDisplay(sortedDisplay)
-    // setFilteredDisplay(sortedDisplay)
-    // setInitialQueriesFinished(true)
-
-    // const daily = JSON.parse(await getLocallyStoredVariable('daily_impressions'))
-    // const assigned = sortedDisplay.map(item => {
-    //   if (item.group_id) {
-    //     const groupImpressions = daily.filter(impression => parseInt(item.group_id) === impression.group_id)
-    //     return {
-    //       group_id: item.group_id,
-    //       user_id: null,
-    //       count: groupImpressions.length,
-    //       items: groupImpressions
-    //     }
-    //   } else {
-    //     const userImpressions = daily.filter(impression => impression.user_id === item.id && impression.group_id === null)
-    //     return {
-    //       group_id: null,
-    //       user_id: item.id,
-    //       count: userImpressions.length,
-    //       items: userImpressions
-    //     }
-    //   }
-    // })
-    // setNewImpressions(assigned)
-
     const user = JSON.parse(await getLocallyStoredVariable('user_information'))
     const userAvatar = user.avatar_path
     setAvatar(userAvatar)
@@ -103,6 +68,7 @@ export default function FriendsPage({ navigation }) {
 
     const color = await getPrimaryColor()
     setColor(color)
+    setInitialQueriesFinished(true)
   }
 
   useFocusEffect(
@@ -111,7 +77,7 @@ export default function FriendsPage({ navigation }) {
     }, [])
   )
 
-  useEffect(() => { handleFilter() }, [query, display])
+  useEffect(() => { handleFilter() }, [query, chats])
   const handleFilter = () => {
     setFilteredDisplay(chats.filter(item => {
       if (item.group_id) {
@@ -187,7 +153,7 @@ export default function FriendsPage({ navigation }) {
             {filteredDisplay.map((item, index) => {
               const type = item.group_id ? 'group' : 'person'
               const id = item.group_id ? item.group_id : item.id
-              let count = item.unread
+              let count = item.new_message_count
               
               return (
                 <FadeInView
@@ -219,7 +185,7 @@ export default function FriendsPage({ navigation }) {
                     onPress={() => {
                       hapticSelect()
                       if (type === 'group') {
-                        navigation.navigate('Group', { group: item })
+                        navigation.navigate('GroupChat', { group: item })
                       } else {
                         navigation.navigate('PersonChat', { person: item })
                         // const content = newImpressions.find(impression => impression.user_id === id).items.map(item => item.activity_id)

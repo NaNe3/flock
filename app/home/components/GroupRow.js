@@ -36,7 +36,7 @@ export default function GroupRow({ group, navigation }) {
       activeOpacity={group.status === 'pending' ? 0.4 : 0.7}
       onPress={() => {
         hapticSelect()
-        navigation.navigate('Group', { 
+        navigation.navigate('GroupChat', { 
           group
         }
       )}}

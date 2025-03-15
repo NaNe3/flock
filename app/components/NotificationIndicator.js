@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../hooks/ThemeProvider";
 
 export default function NotificationIndicator({ count, offset }) {
+  const { theme } = useTheme()
+  const [styles, setStyles] = useState(style(theme))
+  useEffect(() => { setStyles(style(theme)) }, [theme])
+  
   const pulseAnim = useRef(new Animated.Value(0)).current
   const [primaryColor, setPrimaryColor] = useState(null)
   const [primaryColorLight, setPrimaryColorLight] = useState(null)
@@ -25,33 +30,38 @@ export default function NotificationIndicator({ count, offset }) {
 
   const backgroundColor = pulseAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["#ff8480", "#FF0800"],
+    outputRange: ["#ff8480", "#FF5F50"],
   })
 
   return (
     <Animated.View style={[styles.container, { backgroundColor, right: offset }]}>
-      <Text style={styles.text}>{count}</Text>
+      <Text 
+        style={styles.text}
+        numberOfLines={1}
+        ellipsizeMode="clip"
+      >{count}</Text>
     </Animated.View>
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    zIndex: 1,
-    top: -5,
-    right: -5,
-    height: 23,
-    paddingHorizontal: 5,
-    minWidth: 20,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    color: '#FFF',
-    fontSize: 13,
-    fontWeight: 'bold',
-    fontFamily: 'nunito-bold',
-  },
-});
+function style(theme) {
+  return StyleSheet.create({
+    container: {
+      position: 'absolute',
+      zIndex: 1,
+      top: -5,
+      right: -5,
+      paddingHorizontal: 5,
+      borderRadius: 20,
+      alignItems: 'center',
+      borderWidth: 3,
+      borderColor: theme.primaryBackground,
+    },
+    text: {
+      color: '#FFF',
+      fontSize: 13,
+      fontWeight: 'bold',
+      fontFamily: 'nunito-bold',
+    },
+  });
+}

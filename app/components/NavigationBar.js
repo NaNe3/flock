@@ -10,16 +10,19 @@ import { getLocallyStoredVariable } from "../utils/localStorage";
 import NotificationIndicator from "./NotificationIndicator";
 import { useRealtime } from "../hooks/RealtimeProvider";
 import { useTheme } from "../hooks/ThemeProvider";
+import { useHolos } from "../hooks/HolosProvider";
 
 export default function NavigationBar({ currentRoute, setCurrentRoute }) {
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
   const { incoming } = useRealtime()
+  const { totalUnseenMessages } = useHolos()
   const insets = useSafeAreaInsets()
   const navigation = useNavigation()
 
   const [invitationCount, setInvitationCount] = useState(0)
+  const [totalIndications, setTotalIndications] = useState(0)
   const [friendsOpened, setFriendsOpened] = useState(false)
 
   const routes = [
@@ -51,6 +54,10 @@ export default function NavigationBar({ currentRoute, setCurrentRoute }) {
     const trigger = async () => { await init() }
     if (incoming !== null) { trigger() }
   }, [incoming])
+
+  useEffect(() => {
+    setTotalIndications(totalUnseenMessages + invitationCount)
+  }, [totalUnseenMessages, invitationCount])
 
   const changePage = (route) => {
     hapticSelect()
@@ -90,8 +97,8 @@ export default function NavigationBar({ currentRoute, setCurrentRoute }) {
             onPressOut={() => handleRoutePressOut(i)}
           >
             <Animated.View style={[styles.iconContainer, { transform: [{ scale: routeScale[i] }] }]}>
-              {r.route === 'FriendsPage' && invitationCount > 0 && !friendsOpened && (
-                <NotificationIndicator count={invitationCount} offset={-15} />
+              {r.route === 'FriendsPage' && totalIndications > 0 && !friendsOpened && (
+                <NotificationIndicator count={totalIndications} offset={-15} />
               )}
               <HugeIcon
                 icon={r.icon} 

@@ -10,12 +10,14 @@ import { hapticSelect } from "../../../utils/haptics";
 import { leaveGroupByGroupId } from "../../../utils/db-image";
 import { getLocallyStoredVariable, setLocallyStoredVariable } from "../../../utils/localStorage";
 import { getPrimaryColor } from "../../../utils/getColorVariety";
+import { removeSingleGroupChatState } from "../../../utils/db-message";
 import { useTheme } from "../../../hooks/ThemeProvider";
+import { useHolos } from "../../../hooks/HolosProvider";
 
 export default function GroupLeave ({ navigation, route }) {
   const { group_name, group_id, members, userId } = route.params
-  console.log("GroupLeave: ", group_name, group_id, members, userId)
   const { theme } = useTheme()
+  const { setGroups } = useHolos()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])
 
@@ -43,14 +45,13 @@ export default function GroupLeave ({ navigation, route }) {
   const handleGroupLeave = async () => {
     setLeaving(true)
     // leave group
-    console.log("I AM LEAVING THE GROUP: ", group_id, userId, newLeader)
     const { error } = await leaveGroupByGroupId(group_id, userId, newLeader)
+    await removeSingleGroupChatState(userId, group_id)
 
     // remove group from user_groups in local storage
     if (error === null) {
       const groups = JSON.parse(await getLocallyStoredVariable('user_groups'))
-      const newGroups = groups.filter(group => group.group_id !== group_id)
-      await setLocallyStoredVariable('user_groups', JSON.stringify(newGroups))
+      setGroups(groups.filter(group => group.group_id !== group_id))
 
       navigation.navigate('FriendsPage')
     } else {

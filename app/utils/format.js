@@ -21,6 +21,7 @@ export const formatFriendsFromSupabase = (data, user_id) => {
         color: color_id.color_hex,
         ...user,
         created_at: item.created_at,
+        relationship_id: item.relationship_id,
         last_studied: lastStudied,
       }
     })
@@ -35,6 +36,7 @@ export const formatFriendsFromSupabase = (data, user_id) => {
       color: color_id.color_hex,
       ...user,
       created_at: data.created_at,
+      relationship_id: data.relationship_id,
       last_studied: lastStudied,
     }
   }

@@ -17,7 +17,6 @@ const windowHeight = Dimensions.get('window').height
 
 function Chapter({ navigation, route }) {
   const { work, book, chapter, plan=null } = route.params
-  console.log("chapter plan: ", plan)
   const { theme } = useTheme()
   const [styles, setStyles] = useState(style(theme))
   useEffect(() => { setStyles(style(theme)) }, [theme])

@@ -88,7 +88,6 @@ export default function VerseContainer({
 
   const handleVersePress = (verse) => {
     hapticImpactSoft()
-    console.log("Verse Pressed: ", verse)
     if (uniqueVersesWithMedia[verse] !== undefined) {
       navigation.navigate('ViewImpressions', { title: `${book} ${chapter}:${verse}`, location: { work, book, chapter, verse } })
     } else {

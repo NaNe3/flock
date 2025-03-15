@@ -106,7 +106,7 @@ export default function MapBlock({
                   hapticImpactSoft()
                   navigation.navigate('Chapter', {
                     work: item.work,
-                    book: item.book,
+                    book: item.work === "Doctrine And Covenants" ? "Doctrine And Covenants" : item.book,
                     chapter: item.chapter,
                     plan: {
                       verses: item.verses.split('-').map(verse => parseInt(verse)),
